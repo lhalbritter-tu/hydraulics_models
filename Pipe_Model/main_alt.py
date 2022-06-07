@@ -1,3 +1,4 @@
+
 import sys
 
 from PyQt5.QtCore import QPointF
@@ -5,8 +6,8 @@ from PyQt5.QtWidgets import QApplication, QMainWindow
 from PyQt5 import QtCore
 from PyQt5.Qt import QGraphicsScene, QRectF, QLineF, QGraphicsEllipseItem, QPen, QBrush, QLinearGradient, QColor, \
     QPolygonF, QGradient, QRadialGradient
-from model import Model, SimplePipe, IntersectionForm, Circle, Rect, AdvancedPipe
-import view_alt as view
+from Pipe_Model.model import Model, SimplePipe, IntersectionForm, Circle, Rect, AdvancedPipe
+import Pipe_Model.view_alt as view
 
 
 class App(QMainWindow):
