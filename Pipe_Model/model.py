@@ -28,7 +28,7 @@ class Circle(IntersectionForm):
     def __init__(self, d, y):
         super().__init__(y, "Circle")
         self.d = d
-        self.r = self.d * 100 / 2
+        self.r = self.rx = self.ry = self.d * 100 / 2
 
     def area(self):
         return (math.pi * self.d ** 2) / 4
@@ -38,13 +38,13 @@ class Circle(IntersectionForm):
 
     def draw(self, dw=0):
         self.x = dw
-        self.r = self.d * 100 / 2
+        self.r = self.rx = self.ry = self.d * 100 / 2
         return QRectF(self.x, self.y, self.r / 4, self.r)
         pass
 
     def display(self, dw=0):
         self.x = dw
-        self.r = self.d * 10 / 2
+        self.r = self.rx = self.ry = self.d * 10 / 2
         return self.x, self.y, self.r
 
 

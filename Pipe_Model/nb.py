@@ -231,8 +231,7 @@ class AdvancedDemo(Demo):
     def show(self):
         self.end1 = widgets.VBox([self.end1Label, self.end1ChoiceGroup, self.end1SliderOutput])
         self.end2 = widgets.VBox([self.end2Label, self.end2ChoiceGroup, self.end2SliderOutput])
-        display(widgets.HBox([self.end1, self.end2]))
-        display(self.u1Slider)
+        display(widgets.VBox([widgets.HBox([self.end1, self.end2]), self.u1Slider]))
         display(widgets.VBox([self.canvas, self.output]))
 
         self.choose_node(None)
@@ -361,10 +360,18 @@ class AdvancedDemo(Demo):
         #self.canvas.end_path()
 
     def draw_details(self):
-        hi1 = self.model.i1.y + (self.model.i1.r / 4 if self.model.i1.type == "Circle" else self.model.i1.ry / 2)
+        hi1 = self.model.i1.y + (self.model.i1.ry / 2)
+        hi2 = self.model.i2.y + (self.model.i2.ry / 2)
+        self.draw_heights(hi1, hi2)
+        x1 = self.model.i1.x + (self.model.i1.rx / 4)
+        x2 = x1 + 50
+        self.draw_arrow_hor(x1, x2, hi1 - self.model.i1.ry / 4, 5, 10, (50, 50, 130), "U1")
+        
+
+    def draw_heights(self, hi1, hi2):
         halfLine1 = (0.0, hi1, self.canvas.width, hi1)
-        hi2 = self.model.i2.y + (self.model.i2.r / 4 if self.model.i2.type == "Circle" else self.model.i2.ry / 2)
         halfLine2 = (0.0, hi2, self.canvas.width, hi2)
+
         if hi1 == hi2:
             return
         self.canvas.set_line_dash([10, 5])
@@ -373,9 +380,21 @@ class AdvancedDemo(Demo):
         self.canvas.stroke_line(*halfLine2)
         self.canvas.set_line_dash([0, 0])
         self.canvas.stroke_style = "black"
-        xi = (self.model.i2.r if self.model.i2.type == "Circle" else self.model.i2.rx) + self.model.i2.x + 25
+        xi = self.model.i2.rx + self.model.i2.x + 25
         self.canvas.stroke_line(xi, hi1, xi, hi2)
         self.canvas.stroke_text("Delta H", xi + 25, (hi1 + hi2) / 2)
+    
+    def draw_arrow_hor(self, x1, x2, y, y_offs, x_offs, rgb, label = ""):
+        self.canvas.stroke_style = hex(rgb)
+        self.canvas.begin_path()
+        self.canvas.move_to(x1, y)
+        self.canvas.line_to(x2, y)
+        self.canvas.line_to(x2 - x_offs, y + y_offs)
+        self.canvas.move_to(x2, y)
+        self.canvas.line_to(x2 - x_offs, y - y_offs)
+        self.canvas.stroke()
+        self.canvas.stroke_text(label, x1 - x_offs, y - y_offs)
+        self.canvas.stroke_style = "black"
 
 
 def hex(rgb):
