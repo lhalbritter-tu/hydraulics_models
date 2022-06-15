@@ -7,24 +7,47 @@ from PyQt5.Qt import QRectF
 
 
 class IntersectionForm(ABC):
+    """
+    Interface for Pipe Intersection Types. Defines the height of the Form
+    """
     def __init__(self, y, type):
         self.y = y
         self.type = type
 
     @abc.abstractmethod
     def area(self):
+        """
+        Calculates the area of this specific Form
+        :return: the correct area
+        """
         pass
 
     @abc.abstractmethod
     def draw(self, dw=0):
+        """
+        Returns a QtGraphicsItem, using the form's attributes as values
+
+        :param dw: specifies the margin to the left side of the canvas
+        :return: Specific QtGraphicsItem implementation corresponding to the type of this form
+        """
         pass
 
     @abc.abstractmethod
     def display(self, dw=0):
+        """
+        Returns a tuple of correctly sorted attributes of this form, for jupyter notebook usage
+
+        :param dw: specifies the margin to the left side of the canvas
+        :return: tuple of attributes
+        """
         pass
 
 
 class Circle(IntersectionForm):
+    """
+    Concrete Implementation of IntersectionForm, representing a circular form. Additional
+    attribute d is for the diameter of the circle.
+    """
     def __init__(self, d, y):
         super().__init__(y, "Circle")
         self.d = d
@@ -49,6 +72,10 @@ class Circle(IntersectionForm):
 
 
 class Rect(IntersectionForm):
+    """
+    Concrete Implementation of IntersectionForm, representing a rectangular Form. Additional attributes
+    w for width and h for height of the rectangle.
+    """
     def __init__(self, w, h, y):
         super().__init__(y, "Rectangle")
         self.w = w
@@ -72,28 +99,56 @@ class Rect(IntersectionForm):
 
 
 class Model(ABC):
+    """
+    Interface for pipe models
+    """
     @abc.abstractmethod
     def calculate(self):
+        """
+        Returns a string showing all the important calculations for this specific Model
+        :return: Representation of all the important calculations
+        """
         pass
 
     @abc.abstractmethod
     def lines(self):
+        """
+        Returns lines, connecting IntersectionForm 1 with IntersectionForm 2 of this Pipe
+        :return: A list of points, which will create a pipe from i1 to i2
+        """
         pass
 
 
 class SimplePipe(Model):
+    """
+    Concrete implementation of Model, which represents a simple pipe with two circular endings.
+    """
     def __init__(self, d1, d2, u1):
         self.d1 = d1
         self.d2 = d2
         self.u1 = u1
 
     def q1(self):
+        """
+        Calculates the pressure of the water flowing in the pipe
+        Invariance: Must be equal to self.q2()
+        :return: the calculated pressure
+        """
         return (math.pi * self.d1 ** 2) / 4 * self.u1
 
     def q2(self):
+        """
+        Calculates the pressure of the water flowing out of the pipe.
+        Invariance: Must be equal to self.q1()
+        :return: the calculated pressure
+        """
         return (math.pi * self.d2 ** 2) / 4 * self.u2()
 
     def u2(self):
+        """
+        Calculates the velocity of the water after flowing through the pipe
+        :return: the velocity of the water at the second end
+        """
         return (self.d1 ** 2) / (self.d2 ** 2) * self.u1
 
     def calculate(self):
@@ -106,27 +161,48 @@ class SimplePipe(Model):
 
 
 class AdvancedPipe(Model):
+    """
+    Concrete implementation of Model, representing a Pipe with changeable Ends.
+    """
     def __init__(self, i1: IntersectionForm, i2: IntersectionForm, u1):
         self.u1 = u1
         self.i1 = i1
         self.i2 = i2
 
     def q1(self):
+        """
+        Calculates the pressure of the water flowing in the pipe
+        Invariance: Must be equal to self.q2()
+        :return: the calculated pressure
+        """
         if self.i1 is None:
             return 0
         return self.i1.area() * self.u1
 
     def q2(self):
+        """
+        Calculates the pressure of the water flowing in the pipe
+        Invariance: Must be equal to self.q1()
+        :return: the calculated pressure
+        """
         if self.i1 is None or self.i2 is None:
             return 0
         return self.i2.area() * self.u2()
 
     def u2(self):
+        """
+        Calculates the velocity of the water after flowing through the pipe
+        :return: the velocity of the water at the second end
+        """
         if self.i1 is None or self.i2 is None:
             return 0
         return self.i1.area() / self.i2.area() * self.u1
 
     def dp(self):
+        """
+        Calculates the change of pressure in this pipe, depending on the height change
+        :return: the change of pressure
+        """
         if self.i1 is None or self.i2 is None:
             return 0
         return self.u1 ** 2 - self.u2() ** 2 + self.i1.y - self.i2.y
