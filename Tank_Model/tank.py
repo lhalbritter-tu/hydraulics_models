@@ -37,8 +37,6 @@ class Tank:
             hole.d = d
 
     def get_depth(self):
-        #if not self.check_holes():
-        #    return -1
         d_holes = self.holes[0].d / 100
         n_holes = len(self.holes)
 
