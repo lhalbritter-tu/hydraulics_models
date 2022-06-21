@@ -10,11 +10,12 @@ class Hole:
 
 
 class Tank:
-    def __init__(self, holes: list[Hole](), q: float, max_depth=1, max_holes=50):
+    def __init__(self, holes: list[Hole](), q: float, max_depth=1, max_holes=50, width=200):
         self.holes: list[Hole]() = holes
         self.hole_callback = self.holes + create_holes(max_holes - len(self.holes), self.holes[0].d)
         self.q: float = q
         self.depth: float = max_depth
+        self.width = width
 
     def add_hole(self, hole: Hole):
         self.holes.append(self.hole_callback[0])
@@ -46,7 +47,32 @@ class Tank:
         return (1 / (2 * G)) * (((4 * self.q) / (n_holes * math.pi * (d_holes ** 2))) ** 2)
 
     def get_dimensions(self, x, y):
-        return [x, y, len(self.holes) * self.holes[0].d, self.depth * M_TO_PIXELS]
+        return [x, y, self.width, self.depth * M_TO_PIXELS]
+
+    def draw_holes(self, sx, x, y, ly):
+        m = len(self.holes) // sx
+        offs = self.width // m
+        rects = []
+        for i in range(0, m):
+            rects.append([(offs + self.holes[i].d) * i + x, y, self.holes[i].d, ly])
+        return rects
+
+    def alt_draw_holes(self, x_off, x_0, y, ly):
+        container = len(self.holes)
+        fx = self.width / 2 + x_0
+        rects = [[fx, y, self.holes[0].d, ly]]
+        container -= 1
+
+        for i in range(1, len(self.holes)):
+            if container <= 0:
+                return rects
+            if (fx - x_off * i) < 0 or (fx + x_off * i) >= self.width + x_0:
+                return rects
+            rects.append([fx - x_off * i, y, self.holes[i].d, ly])
+            container -= 1
+            rects.append([fx + x_off * i, y, self.holes[i].d, ly])
+            container -= 1
+        return rects
 
 
 def create_holes(n: int, d: float):
