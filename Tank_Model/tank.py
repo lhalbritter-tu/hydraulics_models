@@ -10,8 +10,8 @@ class Hole:
 
 
 class Tank:
-    def __init__(self, holes: list[Hole](), q: float, max_depth=1, max_holes=50, width=200):
-        self.holes: list[Hole]() = holes
+    def __init__(self, holes, q: float, max_depth=1, max_holes=50, width=200):
+        self.holes = holes
         self.hole_callback = self.holes + create_holes(max_holes - len(self.holes), self.holes[0].d)
         self.q: float = q
         self.depth: float = max_depth
