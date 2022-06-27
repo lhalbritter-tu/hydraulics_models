@@ -7,4 +7,4 @@ dependencies:
   - ipyevents
   - branca
   - ipywidgets>=7.6
-
+  - pythreejs
