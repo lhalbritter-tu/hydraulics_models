@@ -3,9 +3,6 @@ import abc
 import math
 from demo import *
 
-from PyQt5.QtWidgets import QGraphicsEllipseItem, QGraphicsRectItem
-from PyQt5.Qt import QRectF
-
 
 class IntersectionForm(ABC):
     """
@@ -65,7 +62,6 @@ class Circle(IntersectionForm):
     def draw(self, dw=0):
         self.x = dw
         self.r = self.rx = self.ry = self.d * 100 / 2
-        return QRectF(self.x, self.y, self.r / 4, self.r)
         pass
 
     def display(self, dw=0):
@@ -93,7 +89,6 @@ class Rect(IntersectionForm):
 
     def draw(self, dw=0):
         self.x = dw
-        return QGraphicsRectItem(self.x, self.y, self.w, self.h)
 
     def display(self, dw=0):
         self.x = dw
@@ -205,11 +200,14 @@ class AdvancedPipe(Model):
 
         self.u1Param = FloatChangeable(u1, _min=u1, _max=u1 * 5, desc="U1: ", unit="m/s")
         self.i1ChoiceGroup = ToggleGroup(['Circle', 'Rectangle'], ['Choose a circular end', 'Choose a rectangular end'])
-        self.i1dParam = FloatChangeable(self.i1.d if self.i1.type == "Circle" else 1, _min=1, _max=5, desc="Diameter: ", unit="m")
+        self.i1dParam = FloatChangeable(self.i1.d if self.i1.type == "Circle" else 1, _min=1, _max=5, desc="Diameter: ",
+                                        unit="m")
         self.i1dParam.set_active(self.i1.type == "Circle")
 
-        self.i1wParam = FloatChangeable(self.i1.w if self.i1.type != "Circle" else 1, _min=1, _max=5, desc="Width: ", unit="m")
-        self.i1hParam = FloatChangeable(self.i1.h if self.i1.type != "Circle" else 1, _min=1, _max=5, desc="Height: ", unit="m")
+        self.i1wParam = FloatChangeable(self.i1.w if self.i1.type != "Circle" else 1, _min=1, _max=5, desc="Width: ",
+                                        unit="m")
+        self.i1hParam = FloatChangeable(self.i1.h if self.i1.type != "Circle" else 1, _min=1, _max=5, desc="Height: ",
+                                        unit="m")
         self.i1wParam.set_active(self.i1.type == "Rectangle")
         self.i1hParam.set_active(self.i1.type == "Rectangle")
         self.i1yParam = FloatChangeable(self.i1.y, _min=-25, _max=25, desc="Y Position: ")
@@ -228,7 +226,8 @@ class AdvancedPipe(Model):
         self.i2yParam = FloatChangeable(self.i2.y, _min=-25, _max=25, desc="Y Position: ")
 
         self.params = [
-            ChangeableContainer([self.i1ChoiceGroup, self.i1dParam, self.i1wParam, self.i1hParam, self.i1yParam, self.u1Param]),
+            ChangeableContainer(
+                [self.i1ChoiceGroup, self.i1dParam, self.i1wParam, self.i1hParam, self.i1yParam, self.u1Param]),
             ChangeableContainer([self.i2ChoiceGroup, self.i2dParam, self.i2wParam, self.i2hParam, self.i2yParam])
         ]
 
@@ -311,7 +310,7 @@ class AdvancedPipe(Model):
         self.canvas.stroke_line(0, 0, self.canvas.width, 0)
         self.canvas.stroke_line(0, self.canvas.height - 1, self.canvas.width, self.canvas.height - 1)
         self.canvas.filter = "drop-shadow(-9px 9px 3px #ccc)"
-        self.canvas.fill_style = hex((200, 182, 195))
+        self.canvas.fill_style = hexcode((200, 182, 195))
 
         connectors = self.lines()
         self.canvas.begin_path()
@@ -327,9 +326,9 @@ class AdvancedPipe(Model):
             connectors[2][3],  # End position (x1, y1)
             # List of color stops
             [
-                (0, hex((222, 202, 215))),
+                (0, hexcode((222, 202, 215))),
                 (0.5, "white"),
-                (1, hex((158, 144, 153))),
+                (1, hexcode((158, 144, 153))),
             ],
         )
 
@@ -342,13 +341,13 @@ class AdvancedPipe(Model):
         self.canvas.filter = "none"
 
         if self.i1.type == "Circle":
-            self.draw_ellipse(argsi1[0], argsi1[1], argsi1[2] / 2, argsi1[2], hex((222, 202, 215)))
+            self.draw_ellipse(argsi1[0], argsi1[1], argsi1[2] / 2, argsi1[2], hexcode((222, 202, 215)))
             # self.canvas.fill_circle(*argsi1)
         else:
             self.canvas.stroke_rect(*argsi1)
             self.canvas.fill_rect(*argsi1)
         if self.i2.type == "Circle":
-            self.draw_ellipse(argsi2[0], argsi2[1], argsi2[2] / 2, argsi2[2], hex((158, 144, 153)))
+            self.draw_ellipse(argsi2[0], argsi2[1], argsi2[2] / 2, argsi2[2], hexcode((158, 144, 153)))
         else:
             self.canvas.stroke_rect(*argsi2)
             self.canvas.fill_rect(*argsi2)
@@ -388,7 +387,7 @@ class AdvancedPipe(Model):
         self.canvas.stroke_text("Delta H", xi + 25, (hi1 + hi2) / 2)
 
     def draw_arrow_hor(self, x1, x2, y, y_offs, x_offs, rgb, label=""):
-        self.canvas.stroke_style = hex(rgb)
+        self.canvas.stroke_style = hexcode(rgb)
         self.canvas.begin_path()
         self.canvas.move_to(x1, y)
         self.canvas.line_to(x2, y)
@@ -399,7 +398,13 @@ class AdvancedPipe(Model):
         self.canvas.stroke_text(label, x1 - x_offs, y - y_offs)
         self.canvas.stroke_style = "black"
 
-def hex(rgb):
+
+class AdvancedPipe3D(AdvancedPipe):
+    def draw(self):
+        pass
+
+
+def hexcode(rgb):
     return '#%02x%02x%02x' % rgb
 
 
