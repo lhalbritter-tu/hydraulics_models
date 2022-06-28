@@ -1,18 +1,5 @@
 import math
-
-
-class Variable:
-    def __init__(self, value, base=0, unit=" "):
-        self.value = value
-        self.unit = unit
-        self.base = base
-
-    def real(self):
-        return self.value * 10 ** self.base
-
-    def __repr__(self):
-        return str(self.value) + " [" + self.unit + "]"
-
+from demo import *
 
 class Angle:
     def __init__(self, mass: Variable, feather: Variable, start_angle: Variable):
@@ -42,6 +29,9 @@ class Angle:
     def __repr__(self):
         return f'Elastisch gelagerter, starrer Winkel\nMasse m = {self.mass}\nFedersteifigkeit k = {self.feather}\nAnfangswinkelgeschwindigkeit phi_0 = {self.start_angle}' \
                f'\n\nEigenkreisfrequenz w_0 = {self.circular_frequency()}\nSchwingungsdauer T = {self.duration()}\nEigenfrequenz f_0 = {self.frequency()}\nPhi(t) = {self.get_evaluation()}'
+
+    def __str__(self):
+        return self.__repr__()
 
 
 def setup_angle(m, k, w):
