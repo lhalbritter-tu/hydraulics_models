@@ -1,4 +1,5 @@
 import math
+from demo import *
 
 G = 9.81
 M_TO_PIXELS = 100
@@ -9,12 +10,30 @@ class Hole:
         self.d: float = diameter
 
 
-class Tank:
-    def __init__(self, holes, q: float, max_depth=1, max_holes=50, width=200):
+class Tank(Model):
+    def lines(self):
+        pass
+
+    def calculate(self):
+        return "Depth h = " + str(self.get_depth())
+
+    def update(self, args):
+        if self.canvas is not None:
+            self.draw()
+        super().update(args)
+
+    def __init__(self, holes, q: float, max_depth=1, max_holes=50, width=200, c=None):
         self.holes = holes
         self.hole_callback = self.holes + create_holes(max_holes - len(self.holes), self.holes[0].d)
-        self.q: float = q
-        self.depth: float = max_depth
+        self.canvas = c
+        self.q = FloatChangeable(q, _min=0.01, _max=1.0, desc="Water flow Q = ", unit="m³s⁻¹")
+        self.depth = FloatChangeable(max_depth, _min=0.5, _max=5.0, desc="Tank depth = ", unit="m")
+        self.nHoles = IntChangeable(len(holes), _min=5, _max=max_holes, desc="Nr of Holes: ")
+        self.dHoles = FloatChangeable(holes[0].d, unit="cm", base=-2, _min=0.5, _max=10, desc="Diameter d = ")
+        self.params = [
+            ChangeableContainer([self.q, self.depth]),
+            ChangeableContainer([self.nHoles, self.dHoles])
+        ]
         self.width = width
 
     def add_hole(self, hole: Hole):
@@ -41,16 +60,16 @@ class Tank:
     def get_depth(self):
         if not self.check_holes():
             return -1
-        d_holes = self.holes[0].d / 100
-        n_holes = len(self.holes)
+        d_holes = self.dHoles.real()
+        n_holes = self.nHoles.real()
 
-        return (1 / (2 * G)) * (((4 * self.q) / (n_holes * math.pi * (d_holes ** 2))) ** 2)
+        return Variable((1 / (2 * G)) * (((4 * self.q.real()) / (n_holes * math.pi * (d_holes ** 2))) ** 2), unit="m")
 
     def get_dimensions(self, x, y):
-        return [x, y, self.width, self.depth * M_TO_PIXELS]
+        return [x, y, self.width, self.depth.real() * M_TO_PIXELS]
 
     def draw_holes(self, sx, x, y, ly):
-        m = len(self.holes) // sx
+        m = self.nHoles.real() // sx
         offs = self.width // m
         rects = []
         for i in range(0, m):
@@ -58,9 +77,9 @@ class Tank:
         return rects
 
     def alt_draw_holes(self, x_off, x_0, y, ly):
-        container = len(self.holes)
+        container = self.nHoles.real()
         fx = self.width / 2 + x_0
-        rects = [[fx, y, self.holes[0].d, ly]]
+        rects = [[fx, y, self.dHoles.value, ly]]
         container -= 1
 
         for i in range(1, len(self.holes)):
@@ -68,11 +87,66 @@ class Tank:
                 return rects
             if (fx - x_off * i) < 0 or (fx + x_off * i) >= self.width + x_0:
                 return rects
-            rects.append([fx - x_off * i, y, self.holes[i].d, ly])
+            rects.append([fx - x_off * i, y, self.dHoles.value, ly])
             container -= 1
-            rects.append([fx + x_off * i, y, self.holes[i].d, ly])
+            rects.append([fx + x_off * i, y, self.dHoles.value, ly])
             container -= 1
         return rects
+
+    def draw(self):
+        self.canvas.clear()
+        rect = self.get_dimensions(50, 50)
+        x_0 = rect[0]
+        y_0 = rect[1]
+        x_1 = x_0 + rect[2]
+        y_1 = y_0 + rect[3]
+
+        self.canvas.height = y_1 + 50
+
+        if self.get_depth().real() > self.depth.real():
+            wy_0 = y_0 - 5
+            self.canvas.stroke_style = 'red'
+            self.canvas.stroke_text("OVERFLOW!", x_1 + 15, y_0 - 5)
+            self.canvas.stroke_style = 'black'
+        else:
+            wy_0 = y_1 - self.get_depth().real() * 100
+        gradient = self.canvas.create_linear_gradient(
+            x_0, wy_0, x_1, y_1,
+            # List of color stops
+            [
+                (0, '#CAFAD4'),
+                (1, '#90D3D6'),
+            ],
+        )
+        self.canvas.fill_style = gradient
+        self.canvas.global_alpha = 0.75
+        self.canvas.fill_rect(x_0 + 1, wy_0, rect[2] - 1.5, y_1 - wy_0 - 1)
+
+        """if 15 <= len(self.tank.holes) < 40:
+            holes = self.tank.draw_holes(5, x_0, y_1, 20)
+        elif len(self.tank.holes) >= 40:
+            holes = self.tank.draw_holes(7, x_0, y_1, 20)
+        elif len(self.tank.holes) < 15:
+            holes = self.tank.draw_holes(1, x_0, y_1, 20)
+        """
+        self.canvas.global_alpha = 1
+
+        line = [x_0 - 10, wy_0, x_0 - 10, y_1]
+        self.canvas.stroke_line(*line)
+        self.canvas.stroke_text("h", x_0 - 30, (wy_0 + y_1) // 2)
+
+        holes = self.alt_draw_holes(15, x_0, y_1, 20)
+        for hole in holes:
+            self.canvas.fill_rect(*hole)
+
+        self.canvas.line_width = 3.0
+        self.canvas.begin_path()
+        self.canvas.move_to(x_0, y_0)
+        self.canvas.line_to(x_0, y_1)
+        self.canvas.line_to(x_1, y_1)
+        self.canvas.line_to(x_1, y_0)
+        self.canvas.stroke()
+        self.canvas.line_width = 1.0
 
 
 def create_holes(n: int, d: float):

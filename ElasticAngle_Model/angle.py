@@ -1,11 +1,22 @@
 import math
 from demo import *
 
-class Angle:
-    def __init__(self, mass: Variable, feather: Variable, start_angle: Variable):
-        self.mass = mass
-        self.feather = feather
-        self.start_angle = start_angle
+
+class Angle(Model):
+    def calculate(self):
+        return str(self)
+
+    def lines(self):
+        pass
+
+    def __init__(self, mass, feather, start_angle):
+        self.mass = FloatChangeable(mass, unit="kg", _min=1.0, desc="Mass m = ")
+        self.feather = FloatChangeable(feather, unit="kN/m", base=3, _min=1.0, desc="Feather stiffness k = ")
+        self.start_angle = FloatChangeable(start_angle, unit="rad", _min=0.1, desc="Initial angular velocity Phi(0) = ")
+
+        self.params = [
+            ChangeableContainer([self.mass, self.feather, self.start_angle])
+        ]
 
     def circular_frequency(self):
         return Variable(math.sqrt((2 * self.feather.real()) / ((5 / 3) * self.mass.real())), unit='rad/s')
@@ -27,8 +38,14 @@ class Angle:
         return f'{self.start_angle.real() / w_0} * sin({w_0}t)'
 
     def __repr__(self):
-        return f'Elastisch gelagerter, starrer Winkel\nMasse m = {self.mass}\nFedersteifigkeit k = {self.feather}\nAnfangswinkelgeschwindigkeit phi_0 = {self.start_angle}' \
-               f'\n\nEigenkreisfrequenz w_0 = {self.circular_frequency()}\nSchwingungsdauer T = {self.duration()}\nEigenfrequenz f_0 = {self.frequency()}\nPhi(t) = {self.get_evaluation()}'
+        return f'$\large Elastisch ~~ gelagerter, ~~ starrer ~~ Winkel\\\\ ' \
+               f'Masse ~~ m = {self.mass}\\\\ ' \
+               f'Federsteifigkeit ~~ k = {self.feather}\\\\ ' \
+               f'Anfangswinkelgeschwindigkeit ~~ phi_0 = {self.start_angle}\\\\ ' \
+               f'\\\\Eigenkreisfrequenz ~~ w_0 = {self.circular_frequency()}\\\\ ' \
+               f'Schwingungsdauer ~~ T = {self.duration()}\\\\ ' \
+               f'Eigenfrequenz ~~ f_0 = {self.frequency()}\\\\ ' \
+               f'Phi(t) = {self.get_evaluation()}$'
 
     def __str__(self):
         return self.__repr__()

@@ -133,6 +133,7 @@ class Demo:
         else:
             display(widgets.VBox([self.canvas, self.output]))
         self.update_output()
+        self.model.update(None)
 
     def update_output(self):
         self.widget_output.clear_output()
