@@ -186,7 +186,7 @@ class AdvancedPipe(Model):
         if self.canvas is not None:
             self.draw()
 
-        self.rendering.geometry = CylinderBufferGeometry(self.i1.d, self.i2.d, 5, 16, 1)
+        self.rendering.geometry = CylinderBufferGeometry(self.i1.d / 2, self.i2.d / 2, 5, 16, 1)
 
     def __init__(self, i1: IntersectionForm, i2: IntersectionForm, u1, canvas=None):
         self.u1 = u1
@@ -200,8 +200,11 @@ class AdvancedPipe(Model):
         self.i1 = i1
         self.i2 = i2
 
+        self.i1.display(0)
+        self.i2.display(0)
+
         self.rendering = Mesh(
-            CylinderBufferGeometry(self.i1.d, self.i2.d, 5, 16, 1),
+            CylinderBufferGeometry(self.i1.d / 2, self.i2.d / 2, 5, 16, 1),
             position=[0, 0, 0],
             rotation=[0, 0, pymath.pi / 2, 'XYZ'],
             scale=[1, 3, 1],

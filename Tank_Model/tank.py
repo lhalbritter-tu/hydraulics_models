@@ -20,6 +20,17 @@ class Tank(Model):
     def update(self, args):
         if self.canvas is not None:
             self.draw()
+        # self.tank_rendering.geometry = BoxBufferGeometry(self.width / 100, self.depth.real(), 1)
+        # self.water_rendering.geometry = BoxBufferGeometry(self.width / 100, self.get_depth().real(), 1)
+
+        if args is not None:
+            print(args['name'])
+
+            if args['name'] == 'depth':
+                self.tank_rendering.scale = [1, self.depth.real(), 1]
+                self.water_rendering.scale = [1, -self.get_depth().real(), 1]
+                self.water_rendering.position = [0, self.water_rendering.position[1] + (args['new'] - args['old']), 0]
+
         super().update(args)
 
     def __init__(self, holes, q: float, max_depth=1, max_holes=50, width=200, c=None):
@@ -35,6 +46,18 @@ class Tank(Model):
             ChangeableContainer([self.nHoles, self.dHoles])
         ]
         self.width = width
+
+        self.tank_rendering = Mesh(
+            BoxBufferGeometry(self.width / 100, 1, 1),
+            MeshPhongMaterial(transparent=True, opacity=0.4, color='black'),
+            scale=[1, self.depth.real(), 1]
+        )
+        self.water_rendering = Mesh(
+            BoxBufferGeometry(self.width / 100, 1, 1),
+            MeshPhongMaterial(color='blue'),
+            scale=[1, self.get_depth().real(), 1],
+            position=[0, 0, 0]
+        )
 
     def add_hole(self, hole: Hole):
         self.holes.append(self.hole_callback[0])

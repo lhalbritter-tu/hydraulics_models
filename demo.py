@@ -4,6 +4,10 @@ from IPython.display import display, Latex
 from pythreejs import *
 
 
+key_light = DirectionalLight(color='white', position=[3, 5, 1], intensity=0.5)
+camera = PerspectiveCamera(position=[0, 0, 5], up=[0, 1, 0], children=[key_light], aspect=600 / 200)
+
+
 class Variable:
     def __init__(self, value, base=0, unit=" "):
         self.value = value
