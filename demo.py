@@ -1,6 +1,7 @@
 import abc
 import ipywidgets as widgets
 from IPython.display import display, Latex
+from pythreejs import *
 
 
 class Variable:
@@ -95,8 +96,12 @@ class Model(abc.ABC):
         """
         pass
 
+    def render(self):
+        return BoxBufferGeometry(0, 0, 0)
+
     def update(self, args):
-        self.callback.update_output()
+        if self.callback is not None:
+            self.callback.update_output()
 
     def set_callback(self, callback):
         self.callback = callback

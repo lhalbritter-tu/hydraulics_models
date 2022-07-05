@@ -1,6 +1,6 @@
 from abc import ABC
 import abc
-import math
+import math as pymath
 from demo import *
 
 
@@ -54,7 +54,7 @@ class Circle(IntersectionForm):
         self.r = self.rx = self.ry = self.d * 100 / 2
 
     def area(self):
-        return (math.pi * self.d ** 2) / 4
+        return (pymath.pi * self.d ** 2) / 4
 
     def __str__(self):
         return "D: " + str(self.d)
@@ -123,7 +123,7 @@ class SimplePipe(Model):
         Invariance: Must be equal to self.q2()
         :return: the calculated pressure
         """
-        return (math.pi * self.d1 ** 2) / 4 * self.u1
+        return (pymath.pi * self.d1 ** 2) / 4 * self.u1
 
     def q2(self):
         """
@@ -131,7 +131,7 @@ class SimplePipe(Model):
         Invariance: Must be equal to self.q1()
         :return: the calculated pressure
         """
-        return (math.pi * self.d2 ** 2) / 4 * self.u2()
+        return (pymath.pi * self.d2 ** 2) / 4 * self.u2()
 
     def u2(self):
         """
@@ -186,6 +186,8 @@ class AdvancedPipe(Model):
         if self.canvas is not None:
             self.draw()
 
+        self.rendering.geometry = CylinderBufferGeometry(self.i1.d, self.i2.d, 5, 16, 1)
+
     def __init__(self, i1: IntersectionForm, i2: IntersectionForm, u1, canvas=None):
         self.u1 = u1
         self.canvas = canvas
@@ -197,6 +199,14 @@ class AdvancedPipe(Model):
 
         self.i1 = i1
         self.i2 = i2
+
+        self.rendering = Mesh(
+            CylinderBufferGeometry(self.i1.d, self.i2.d, 5, 16, 1),
+            position=[0, 0, 0],
+            rotation=[0, 0, pymath.pi / 2, 'XYZ'],
+            scale=[1, 3, 1],
+            material=MeshLambertMaterial(color='red')
+        )
 
         self.u1Param = FloatChangeable(u1, _min=u1, _max=u1 * 5, desc="U1: ", unit="m/s")
         self.i1ChoiceGroup = ToggleGroup(['Circle', 'Rectangle'], ['Choose a circular end', 'Choose a rectangular end'])
@@ -356,7 +366,7 @@ class AdvancedPipe(Model):
 
     def draw_ellipse(self, x, y, rx, ry, fill_col="white", rot=0):
         self.canvas.begin_path()
-        self.canvas.ellipse(x, y, rx, ry, rot, 0, 2 * math.pi)
+        self.canvas.ellipse(x, y, rx, ry, rot, 0, 2 * pymath.pi)
         self.canvas.fill_style = fill_col
         self.canvas.stroke()
         self.canvas.fill()

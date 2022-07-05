@@ -1,4 +1,4 @@
-import math
+import math as pymath
 from demo import *
 
 G = 9.81
@@ -63,7 +63,7 @@ class Tank(Model):
         d_holes = self.dHoles.real()
         n_holes = self.nHoles.real()
 
-        return Variable((1 / (2 * G)) * (((4 * self.q.real()) / (n_holes * math.pi * (d_holes ** 2))) ** 2), unit="m")
+        return Variable((1 / (2 * G)) * (((4 * self.q.real()) / (n_holes * pymath.pi * (d_holes ** 2))) ** 2), unit="m")
 
     def get_dimensions(self, x, y):
         return [x, y, self.width, self.depth.real() * M_TO_PIXELS]

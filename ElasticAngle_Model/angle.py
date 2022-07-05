@@ -1,4 +1,4 @@
-import math
+import math as pymath
 from demo import *
 
 
@@ -19,16 +19,16 @@ class Angle(Model):
         ]
 
     def circular_frequency(self):
-        return Variable(math.sqrt((2 * self.feather.real()) / ((5 / 3) * self.mass.real())), unit='rad/s')
+        return Variable(pymath.sqrt((2 * self.feather.real()) / ((5 / 3) * self.mass.real())), unit='rad/s')
 
     def evaluate(self, t):
         if t == 0:
             return self.start_angle
         w_0 = self.circular_frequency().real()
-        return Variable((self.start_angle.real() / w_0) * math.sin(w_0 * t), unit='rad')
+        return Variable((self.start_angle.real() / w_0) * pymath.sin(w_0 * t), unit='rad')
 
     def frequency(self):
-        return Variable(self.circular_frequency().real() / (2 * math.pi), unit='Hz')
+        return Variable(self.circular_frequency().real() / (2 * pymath.pi), unit='Hz')
 
     def duration(self):
         return Variable(1 / self.frequency().real(), unit='s')
