@@ -82,7 +82,7 @@ class AngleCanvas(threading.Thread):
         self.t = 0
         self.L = L
         self.angle.observe(self.draw)
-        self.draw(None)
+        self.canvas.on_client_ready(self.draw)
 
     def run(self):
         while True:
