@@ -244,6 +244,10 @@ class AdvancedPipe(Model):
             ChangeableContainer([self.i2ChoiceGroup, self.i2dParam, self.i2wParam, self.i2hParam, self.i2yParam])
         ]
 
+        self.i1.y = self.i1yParam.widget.max - self.i1yParam.real() + 75
+        self.i2.y = self.i2yParam.widget.max - self.i2yParam.real() + 75
+        self.canvas.on_client_ready(self.draw)
+
     def q1(self):
         """
         Calculates the pressure of the water flowing in the pipe

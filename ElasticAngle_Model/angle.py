@@ -1,18 +1,35 @@
+import abc
 import math as pymath
 from demo import *
+from abc import *
+from ipycanvas import hold_canvas
 
 
 class Angle(Model):
     def calculate(self):
         return str(self)
 
+    def draw(self):
+        if self.canvas is None:
+            return
+
+        with hold_canvas():
+            while True:
+                self.canvas.clear()
+                phi = self.evaluate(self.t).real()
+                self.canvas.fill_rect(50 + phi, 50, 20, 20)
+                self.t = (self.t + 1) % 20
+                self.canvas.sleep(20)
+
     def lines(self):
         pass
 
-    def __init__(self, mass, feather, start_angle):
+    def __init__(self, mass, feather, start_angle, c=None):
         self.mass = FloatChangeable(mass, unit="kg", _min=1.0, desc="Mass m = ")
         self.feather = FloatChangeable(feather, unit="kN/m", base=3, _min=1.0, desc="Feather stiffness k = ")
         self.start_angle = FloatChangeable(start_angle, unit="rad", _min=0.1, desc="Initial angular velocity Phi(0) = ")
+        self.canvas = c
+        self.t = 0
 
         self.params = [
             ChangeableContainer([self.mass, self.feather, self.start_angle])

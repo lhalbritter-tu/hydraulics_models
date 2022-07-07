@@ -15,21 +15,17 @@ class Tank(Model):
         pass
 
     def calculate(self):
-        return "Depth h = " + str(self.get_depth())
+        return "Depth h = " + str(self.get_depth().rounded(cut=3))
 
     def update(self, args):
         if self.canvas is not None:
-            self.draw()
-        # self.tank_rendering.geometry = BoxBufferGeometry(self.width / 100, self.depth.real(), 1)
-        # self.water_rendering.geometry = BoxBufferGeometry(self.width / 100, self.get_depth().real(), 1)
+            self.draw() #self.canvas.on_client_ready(self.draw)
+
+        self.tank_rendering.scale = [1, self.depth.real(), 1]
+        self.water_rendering.scale = [1, -self.get_depth().real(), 1]
 
         if args is not None:
-            print(args['name'])
-
-            if args['name'] == 'depth':
-                self.tank_rendering.scale = [1, self.depth.real(), 1]
-                self.water_rendering.scale = [1, -self.get_depth().real(), 1]
-                self.water_rendering.position = [0, self.water_rendering.position[1] + (args['new'] - args['old']), 0]
+            self.water_rendering.position = [0, self.water_rendering.position[1] + (args['new'] - args['old']), 0]
 
         super().update(args)
 
@@ -37,7 +33,7 @@ class Tank(Model):
         self.holes = holes
         self.hole_callback = self.holes + create_holes(max_holes - len(self.holes), self.holes[0].d)
         self.canvas = c
-        self.q = FloatChangeable(q, _min=0.01, _max=1.0, desc="Water flow Q = ", unit="m³s⁻¹")
+        self.q = FloatChangeable(q, _min=0.01, _max=1.0, desc="Water flow Q = ", unit="m³s⁻¹", step=0.01)
         self.depth = FloatChangeable(max_depth, _min=0.5, _max=5.0, desc="Tank depth = ", unit="m")
         self.nHoles = IntChangeable(len(holes), _min=5, _max=max_holes, desc="Nr of Holes: ")
         self.dHoles = FloatChangeable(holes[0].d, unit="cm", base=-2, _min=0.5, _max=10, desc="Diameter d = ")
@@ -58,6 +54,8 @@ class Tank(Model):
             scale=[1, self.get_depth().real(), 1],
             position=[0, 0, 0]
         )
+
+        self.canvas.on_client_ready(self.draw)
 
     def add_hole(self, hole: Hole):
         self.holes.append(self.hole_callback[0])
@@ -170,6 +168,7 @@ class Tank(Model):
         self.canvas.line_to(x_1, y_0)
         self.canvas.stroke()
         self.canvas.line_width = 1.0
+        # self.canvas.flush()
 
 
 def create_holes(n: int, d: float):
