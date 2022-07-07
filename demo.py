@@ -8,6 +8,10 @@ key_light = DirectionalLight(color='white', position=[3, 5, 1], intensity=0.5)
 camera = PerspectiveCamera(position=[0, 0, 5], up=[0, 1, 0], children=[key_light], aspect=600 / 200)
 
 
+def hexcode(rgb):
+    return '#%02x%02x%02x' % rgb
+
+
 class Variable:
     """
     Class for handling a model's Variable with unit representation.

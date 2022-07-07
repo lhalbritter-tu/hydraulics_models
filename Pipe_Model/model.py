@@ -421,10 +421,6 @@ class AdvancedPipe3D(AdvancedPipe):
         pass
 
 
-def hexcode(rgb):
-    return '#%02x%02x%02x' % rgb
-
-
 def get_lines(selected, i, margin=0, end=False):
     px1 = py = px2 = 0
     if selected == "CIRC":
