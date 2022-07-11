@@ -29,7 +29,7 @@ class Tank(Model):
 
         super().update(args)
 
-    def __init__(self, holes, q: float, max_depth=1, max_holes=50, width=200, c=None):
+    def __init__(self, holes, q: float, max_depth=1, max_holes=50, width=200, c=None, height=150):
         self.holes = holes
         self.hole_callback = self.holes + create_holes(max_holes - len(self.holes), self.holes[0].d)
         self.canvas = c
@@ -42,6 +42,7 @@ class Tank(Model):
             ChangeableContainer([self.nHoles, self.dHoles])
         ]
         self.width = width
+        self.height = height
 
         self.tank_rendering = Mesh(
             BoxBufferGeometry(self.width / 100, 1, 1),
@@ -87,7 +88,7 @@ class Tank(Model):
         return Variable((1 / (2 * G)) * (((4 * self.q.real()) / (n_holes * pymath.pi * (d_holes ** 2))) ** 2), unit="m")
 
     def get_dimensions(self, x, y):
-        return [x, y, self.width, self.depth.real() * M_TO_PIXELS]
+        return [x, y, self.width, self.height]
 
     def draw_holes(self, sx, x, y, ly):
         m = self.nHoles.real() // sx
@@ -122,7 +123,7 @@ class Tank(Model):
         x_1 = x_0 + rect[2]
         y_1 = y_0 + rect[3]
 
-        self.canvas.height = y_1 + 50
+        # self.canvas.height = y_1 + 50
 
         if self.get_depth().real() > self.depth.real():
             wy_0 = y_0 - 5
@@ -130,7 +131,8 @@ class Tank(Model):
             self.canvas.stroke_text("OVERFLOW!", x_1 + 15, y_0 - 5)
             self.canvas.stroke_style = 'black'
         else:
-            wy_0 = y_1 - self.get_depth().real() * 100
+            partial = self.get_depth().real() / self.depth.real()
+            wy_0 = self.height * (1 - partial) + 50
         gradient = self.canvas.create_linear_gradient(
             x_0, wy_0, x_1, y_1,
             # List of color stops

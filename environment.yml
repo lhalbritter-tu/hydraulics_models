@@ -1,4 +1,4 @@
-name: ipycanvas
+name: hydraulics
 channels:
   - conda-forge
 dependencies:

@@ -284,7 +284,7 @@ class AdvancedPipe(Model):
         """
         if self.i1 is None or self.i2 is None:
             return 0
-        return self.u1 ** 2 - self.u2() ** 2 + self.i1.y - self.i2.y
+        return self.u1 ** 2 - self.u2() ** 2 + self.i1yParam.real() - self.i2yParam.real()
 
     def calculate(self):
         if self.i1 is None or self.i2 is None:
@@ -297,7 +297,7 @@ class AdvancedPipe(Model):
         dp = self.dp()
         return f'$\large Calculations \\\\ Q1 = Q2 = {self.i1.area():.2f} \cdot {self.u1} = {q1:.2f} \\\\ ' \
                f'U2 = \\frac{{{self.i1.area():.2f}}}{{{self.i2.area():.2f}}} \cdot {self.u1} = {u2:.2f} \\\\ ' \
-               f'Change ~~ in ~~ pressure ~~ \Delta p = {self.u1:.2f}^2 - {self.u2():.2f}^2 + {self.i1.y} - {self.i2.y} = {dp:.2f}$'
+               f'Change ~~ in ~~ pressure ~~ \Delta p = {self.u1:.2f}^2 - {self.u2():.2f}^2 + {self.i1yParam.real()} - {self.i2yParam.real()} = {dp:.2f}$'
 
     def lines(self):
         margin = 450
