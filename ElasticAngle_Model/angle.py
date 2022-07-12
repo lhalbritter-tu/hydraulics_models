@@ -80,7 +80,7 @@ class AngleCanvas(threading.Thread):
         self.angle = angle
         self.canvas = Canvas(width=width, height=height)
         self.canvas2 = Canvas(width=L * 2, height=50)
-        self.canvas_box = widgets.VBox(self.canvas, self.canvas2)
+        self.canvas_box = widgets.VBox([self.canvas, self.canvas2])
         self.t = 0
         self.L = L
         # self.angle.observe(self.draw)

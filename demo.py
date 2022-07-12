@@ -308,4 +308,4 @@ class Demo:
 
         self.output.clear_output(wait=True)
         with self.output:
-            display(Latex(self.model.calculate()))
+            display(widgets.HTMLMath(self.model.calculate()))

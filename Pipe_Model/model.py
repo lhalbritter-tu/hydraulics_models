@@ -292,12 +292,12 @@ class AdvancedPipe(Model):
         return self.get_latex()
 
     def get_latex(self):
-        q1 = self.q1()
-        u2 = self.u2()
-        dp = self.dp()
-        return f'$\large Calculations \\\\ Q1 = Q2 = {self.i1.area():.2f} \cdot {self.u1} = {q1:.2f} \\\\ ' \
-               f'U2 = \\frac{{{self.i1.area():.2f}}}{{{self.i2.area():.2f}}} \cdot {self.u1} = {u2:.2f} \\\\ ' \
-               f'Change ~~ in ~~ pressure ~~ \Delta p = {self.u1:.2f}^2 - {self.u2():.2f}^2 + {self.i1yParam.real()} - {self.i2yParam.real()} = {dp:.2f}$'
+        q1 = Variable(self.q1(), unit='m^3s^{-1}')
+        u2 = Variable(self.u2(), unit='m/s')
+        dp = Variable(self.dp(), unit='Pa')
+        return f'$\large Calculations \\\\ Q1 = Q2 = {self.i1.area():.2f} \cdot {self.u1} = {q1} \\\\ ' \
+               f'U2 = \\frac{{{self.i1.area():.2f}}}{{{self.i2.area():.2f}}} \cdot {self.u1} = {u2} \\\\ ' \
+               f'Change ~~ in ~~ pressure ~~ \Delta p = {self.u1:.2f}^2 - {self.u2():.2f}^2 + {self.i1yParam.real()} - {self.i2yParam.real()} = {dp}$'
 
     def lines(self):
         margin = 450
@@ -382,10 +382,13 @@ class AdvancedPipe(Model):
     def draw_details(self):
         hi1 = self.i1.y + (self.i1.ry / 8 if self.i1.type == "Circle" else self.i1.ry / 2)
         hi2 = self.i2.y + (self.i2.ry / 8 if self.i2.type == "Circle" else self.i2.ry / 2)
-        self.draw_heights(hi1, hi2)
+        if self.i1.y != self.i2.y:
+            self.draw_heights(hi1, hi2)
         x1 = self.i1.x + (self.i1.rx / 4)
         x2 = x1 + 50
-        self.draw_arrow_hor(x1, x2, hi1 - self.i1.ry / 4, 5, 10, (50, 50, 130), "U1")
+        self.draw_arrow_hor(x1, x2, hi1 - self.i1.ry / 4, 5, 10, (50, 50, 130), "")
+        self.canvas.stroke_style = hexcode((50, 50, 130))
+        self.canvas.stroke_text("U1", self.i1.x + self.i1.rx / 4 - 15 * 3, hi1 - self.i1.ry / 4 - 5)
 
     def draw_heights(self, hi1, hi2):
         halfLine1 = (0.0, hi1, self.canvas.width, hi1)
