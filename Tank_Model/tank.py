@@ -101,7 +101,7 @@ class Tank(Model):
     def alt_draw_holes(self, x_off, x_0, y, ly):
         container = self.nHoles.real()
         fx = self.width / 2 + x_0
-        rects = [[fx, y, self.dHoles.value, ly]]
+        rects = [[fx - self.dHoles.value / 2, y, self.dHoles.value, ly]]
         container -= 1
 
         for i in range(1, len(self.holes)):
@@ -109,9 +109,9 @@ class Tank(Model):
                 return rects
             if (fx - x_off * i) < 0 or (fx + x_off * i) >= self.width + x_0:
                 return rects
-            rects.append([fx - x_off * i, y, self.dHoles.value, ly])
+            rects.append([fx - x_off * i - self.dHoles.value / 2, y, self.dHoles.value, ly])
             container -= 1
-            rects.append([fx + x_off * i, y, self.dHoles.value, ly])
+            rects.append([fx + x_off * i - self.dHoles.value / 2, y, self.dHoles.value, ly])
             container -= 1
         return rects
 

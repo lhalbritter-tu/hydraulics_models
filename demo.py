@@ -300,12 +300,12 @@ class Demo:
 
         :return: None
         """
-        self.widget_output.clear_output()
+        self.widget_output.clear_output(wait=True)
         for container in self.params:
             container.update()
         with self.widget_output:
             display(widgets.HBox([param.display for param in self.params]))
 
-        self.output.clear_output()
+        self.output.clear_output(wait=True)
         with self.output:
             display(Latex(self.model.calculate()))

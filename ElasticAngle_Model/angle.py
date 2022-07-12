@@ -37,7 +37,7 @@ class Angle(Model):
         ]
 
     def circular_frequency(self):
-        return Variable(pymath.sqrt((2 * self.feather.real()) / ((5 / 3) * self.mass.real())), unit='rad/s')
+        return Variable(pymath.sqrt((2 * self.feather.real()) / ((5. / 3.) * self.mass.real())), unit='rad/s')
 
     def evaluate(self, t):
         if t == 0:
@@ -79,6 +79,8 @@ class AngleCanvas(threading.Thread):
         super().__init__()
         self.angle = angle
         self.canvas = Canvas(width=width, height=height)
+        self.canvas2 = Canvas(width=L * 2, height=50)
+        self.canvas_box = widgets.VBox(self.canvas, self.canvas2)
         self.t = 0
         self.L = L
         # self.angle.observe(self.draw)
@@ -97,6 +99,7 @@ class AngleCanvas(threading.Thread):
 
     def draw(self, args):
         self.canvas.clear()
+        self.canvas.rotate(0)
         x = self.canvas.width / 4
         y = 15
         self.canvas.fill_style = hexcode((230, 230, 230))
@@ -104,6 +107,14 @@ class AngleCanvas(threading.Thread):
         self.canvas.stroke_text('m', x - 4.5, y + 2)
         self.canvas.stroke_circle(x, y, 9)
         self.canvas.stroke_line(x, self.angle.mass.real() + y, x, self.angle.mass.real() / 2 + y + self.L)
+
+        self.canvas.fill_style = hexcode((0, 0, 0))
+        self.canvas.fill_polygon([(x, self.angle.mass.real() / 2 + self.L + y - 5),
+                                  (x - 5, self.angle.mass.real() / 2 + self.L + y),
+                                  (x + 5, self.angle.mass.real() / 2 + self.L + y),
+                                  ])
+
+        self.canvas.fill_style = hexcode((230, 230, 230))
         self.canvas.fill_rect(x - self.L, self.angle.mass.real() / 2 + y + self.L, self.L * 2, 5)
         self.canvas.stroke_rect(x - self.L, self.angle.mass.real() / 2 + y + self.L, self.L * 2, 5)
 
@@ -124,13 +135,10 @@ class AngleCanvas(threading.Thread):
         self.canvas.fill_arc(x - self.L, self.angle.mass.real() / 2 + y + self.L + 2.5, 2.5, pymath.pi / 2, 3 * pymath.pi / 2)
         self.canvas.stroke_arc(x - self.L, self.angle.mass.real() / 2 + y + self.L + 2.5, 2.5, pymath.pi / 2, 3 * pymath.pi / 2)
 
-        self.fancy_line(x - 10, x + 10, self.angle.mass.real() / 2 + y + self.L + 15, x_offset=3)
+        #if args is not None:
+        #    self.canvas.rotate(args['angle'])
 
-        self.canvas.fill_style = hexcode((0, 0, 0))
-        self.canvas.fill_polygon([(x, self.angle.mass.real() / 2 + self.L + y - 5),
-                                  (x - 5, self.angle.mass.real() / 2 + self.L + y),
-                                  (x + 5, self.angle.mass.real() / 2 + self.L + y),
-                                  ])
+        self.fancy_line(x - 10, x + 10, self.angle.mass.real() / 2 + y + self.L + 15, x_offset=3)
 
     def zigzag(self, x, y, steps=7, x_offset=10, y_offset=5):
         self.canvas.stroke_line(x, y, x, y + y_offset)
@@ -155,9 +163,10 @@ class AngleCanvas(threading.Thread):
 
 
 def setup_angle(m, k, w):
-    return Angle(Variable(m, unit='kg'), Variable(k, base=3, unit='kN/m'), Variable(w, unit='rad'))
+    return Angle(m, k, w)
 
 
 if __name__ == '__main__':
     angle = setup_angle(9, 3, 0.2)
-    print(angle)
+    for i in range(0, 30):
+        print(angle.evaluate(i))
