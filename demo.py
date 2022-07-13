@@ -60,6 +60,9 @@ class Variable:
         """
         return self.__repr__()
 
+    def __eq__(self, other):
+        return self.value == other.value and self.real() == other.real() and self.unit == other.unit
+
 
 class Changeable(Variable):
     """

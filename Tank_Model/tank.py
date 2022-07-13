@@ -1,4 +1,8 @@
 import math as pymath
+import threading
+
+from ipycanvas import hold_canvas
+
 from demo import *
 
 G = 9.81
@@ -19,7 +23,8 @@ class Tank(Model):
 
     def update(self, args):
         if self.canvas is not None:
-            self.draw() #self.canvas.on_client_ready(self.draw)
+            t = threading.Thread(target=self.lerp_water, args=[0.01])  # self.canvas.on_client_ready(self.draw)
+            t.start()
 
         self.tank_rendering.scale = [1, self.depth.real(), 1]
         self.water_rendering.scale = [1, -self.get_depth().real(), 1]
@@ -35,6 +40,7 @@ class Tank(Model):
         self.canvas = c
         self.q = FloatChangeable(q, _min=0.01, _max=1.0, desc="Water flow Q = ", unit="m³s⁻¹", step=0.01)
         self.depth = FloatChangeable(max_depth, _min=0.5, _max=5.0, desc="Tank depth = ", unit="m")
+        self.depth.observe(self.draw)
         self.nHoles = IntChangeable(len(holes), _min=5, _max=max_holes, desc="Nr of Holes: ")
         self.dHoles = FloatChangeable(holes[0].d, unit="cm", base=-2, _min=0.5, _max=10, desc="Diameter d = ")
         self.params = [
@@ -56,7 +62,9 @@ class Tank(Model):
             position=[0, 0, 0]
         )
 
-        self.canvas.on_client_ready(self.draw)
+        self.current_water_depth = self.get_depth()
+
+        self.canvas.on_client_ready(self.do_draw)
 
     def add_hole(self, hole: Hole):
         self.holes.append(self.hole_callback[0])
@@ -115,7 +123,10 @@ class Tank(Model):
             container -= 1
         return rects
 
-    def draw(self):
+    def do_draw(self):
+        self.draw(None)
+
+    def draw(self, args):
         self.canvas.clear()
         rect = self.get_dimensions(50, 50)
         x_0 = rect[0]
@@ -171,6 +182,66 @@ class Tank(Model):
         self.canvas.stroke()
         self.canvas.line_width = 1.0
         # self.canvas.flush()
+
+    def lerp_water(self, vstep):
+        goal = self.get_depth()
+        step = 0
+        #print("Lerp Water, goal: " + str(goal) + ", cur: " + str(self.current_water_depth))
+        with hold_canvas(self.canvas):
+            while goal != self.current_water_depth:
+                #print("Lerp!")
+                self.current_water_depth = self.lerp(self.current_water_depth, goal, step, 'm')
+                #print("Lerp Water, goal: " + str(goal) + ", cur: " + str(self.current_water_depth))
+                self.canvas.clear()
+                rect = self.get_dimensions(50, 50)
+                x_0 = rect[0]
+                y_0 = rect[1]
+                x_1 = x_0 + rect[2]
+                y_1 = y_0 + rect[3]
+                partial = self.current_water_depth.real() / self.depth.real()
+                if partial > 1:
+                    wy_0 = y_0 - 5
+                    self.canvas.stroke_style = 'red'
+                    self.canvas.stroke_text("OVERFLOW!", x_1 + 15, y_0 - 5)
+                    self.canvas.stroke_style = 'black'
+                else:
+                    wy_0 = self.height * (1 - partial) + 50
+                gradient = self.canvas.create_linear_gradient(
+                    x_0, wy_0, x_1, y_1,
+                    # List of color stops
+                    [
+                        (0, '#CAFAD4'),
+                        (1, '#90D3D6'),
+                    ],
+                )
+                self.canvas.fill_style = gradient
+                self.canvas.global_alpha = 0.75
+                self.canvas.fill_rect(x_0 + 1, wy_0, rect[2] - 1.5, y_1 - wy_0 - 1)
+
+                self.global_alpha = 1
+
+                line = [x_0 - 10, wy_0, x_0 - 10, y_1]
+                self.canvas.stroke_line(*line)
+                self.canvas.stroke_text("h", x_0 - 30, (wy_0 + y_1) // 2)
+
+                holes = self.alt_draw_holes(15, x_0, y_1, 20)
+                for hole in holes:
+                    self.canvas.fill_rect(*hole)
+
+                self.canvas.line_width = 3.0
+                self.canvas.begin_path()
+                self.canvas.move_to(x_0, y_0)
+                self.canvas.line_to(x_0, y_1)
+                self.canvas.line_to(x_1, y_1)
+                self.canvas.line_to(x_1, y_0)
+                self.canvas.stroke()
+                self.canvas.line_width = 1.0
+                step += vstep
+                self.canvas.sleep(20)
+        #self.draw()
+
+    def lerp(self, v0, v1, t, unit=''):
+        return Variable((1 - t) * v0.real() + t * v1.real(), unit=unit)
 
 
 def create_holes(n: int, d: float):

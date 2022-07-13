@@ -9,7 +9,7 @@
 # Tank
 - [ ] **LAB ONLY** User Warning, same as Pipe. Probably pythreejs' fault
 - [ ] Maybe add arrow ends to h line.
-- [ ] Maybe add some kind of animation, when water falls or rises
+- [x] Maybe add some kind of animation, when water falls or rises
 - [ ] (Nice-To-Have) 3D
 
 # Angle

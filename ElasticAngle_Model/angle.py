@@ -85,7 +85,7 @@ class AngleCanvas(threading.Thread):
         self.L = L
         # self.angle.observe(self.draw)
         self.draw(None)
-        self.canvas.on_client_ready(self.draw)
+        self.canvas.on_client_ready(self.do_draw)
 
     def run(self):
         while True:
@@ -96,6 +96,9 @@ class AngleCanvas(threading.Thread):
                 self.canvas.fill_rect(50 + phi, 50, 20, 20)
             self.t = (self.t + 1) % 20
             time.sleep(0.02)
+
+    def do_draw(self):
+        self.draw(None)
 
     def draw(self, args):
         self.canvas.clear()
@@ -130,13 +133,14 @@ class AngleCanvas(threading.Thread):
         self.canvas.fill_arc(x, self.angle.mass.real() / 2 + y + self.L + 5, 5, 0, pymath.pi)
         self.canvas.stroke_arc(x, self.angle.mass.real() / 2 + y + self.L + 5, 5, 0, pymath.pi)
 
+
+        if args is not None:
+            self.canvas.rotate(args['angle'])
+
         self.canvas.fill_arc(x + self.L, self.angle.mass.real() / 2 + y + self.L + 2.5, 2.5, pymath.pi / 2, 3 * pymath.pi / 2, True)
         self.canvas.stroke_arc(x + self.L, self.angle.mass.real() / 2 + y + self.L + 2.5, 2.5, pymath.pi / 2, 3 * pymath.pi / 2, True)
         self.canvas.fill_arc(x - self.L, self.angle.mass.real() / 2 + y + self.L + 2.5, 2.5, pymath.pi / 2, 3 * pymath.pi / 2)
         self.canvas.stroke_arc(x - self.L, self.angle.mass.real() / 2 + y + self.L + 2.5, 2.5, pymath.pi / 2, 3 * pymath.pi / 2)
-
-        #if args is not None:
-        #    self.canvas.rotate(args['angle'])
 
         self.fancy_line(x - 10, x + 10, self.angle.mass.real() / 2 + y + self.L + 15, x_offset=3)
 
