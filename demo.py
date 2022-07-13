@@ -140,7 +140,7 @@ class IntChangeable(Changeable):
 
 
 class FloatChangeable(Changeable):
-    def __init__(self, value, base=0, unit=" ", _min=.0, _max=10.0, desc="", step=0.1):
+    def __init__(self, value, base=0, unit=" ", _min=.0, _max=10.0, desc="", step=0.1, continuous_update = False):
         """
         Initializes the internal Variable and Changeable with an ipywidgets.FloatSlider with the following attributes:
 
@@ -158,7 +158,7 @@ class FloatChangeable(Changeable):
             max=_max,
             description=desc,
             step=step,
-            continuous_update=False
+            continuous_update=continuous_update
         ), base, unit)
         self.unitLabel = widgets.Label(f"[{unit}]")
         self.display = widgets.HBox([self.widget, self.unitLabel])
