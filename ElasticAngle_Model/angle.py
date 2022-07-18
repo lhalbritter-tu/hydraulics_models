@@ -105,11 +105,11 @@ class AngleCanvas():
         self.draw_time(self.angle.t.real())
 
     def oscilate(self):
-        #print("Running")
+        # print("Running")
         max_t = self.angle.duration().real()
         self.oscilating = True
         vals = np.linspace(1, max_t, 120)
-        #print(vals)
+        # print(vals)
         for t in vals:
             with hold_canvas(self.canvas):
                 phi = self.angle.evaluate(t)
@@ -160,16 +160,22 @@ class AngleCanvas():
         self.fancy_line(ezz1[0] - 10, ezz1[0] + 10, ezz1[1], x_offset=3)
         self.fancy_line(ezz2[0] - 10, ezz2[0] + 10, ezz2[1], x_offset=3)
 
-        self.canvas.stroke_line(x, self.angle.mass.real() / 2 + self.L + y + 5, x - 5, self.angle.mass.real() / 2 + self.L + y + 15)
-        self.canvas.stroke_line(x, self.angle.mass.real() / 2 + self.L + y + 5, x + 5, self.angle.mass.real() / 2 + self.L + y + 15)
+        self.canvas.stroke_line(x, self.angle.mass.real() / 2 + self.L + y + 5, x - 5,
+                                self.angle.mass.real() / 2 + self.L + y + 15)
+        self.canvas.stroke_line(x, self.angle.mass.real() / 2 + self.L + y + 5, x + 5,
+                                self.angle.mass.real() / 2 + self.L + y + 15)
         self.canvas.fill_style = hexcode((255, 255, 255))
         self.canvas.fill_arc(x, self.angle.mass.real() / 2 + y + self.L + 5, 5, 0, pymath.pi)
         self.canvas.stroke_arc(x, self.angle.mass.real() / 2 + y + self.L + 5, 5, 0, pymath.pi)
 
-        self.canvas.fill_arc(x + self.L, self.angle.mass.real() / 2 + y + self.L + 2.5, 2.5, pymath.pi / 2, 3 * pymath.pi / 2, True)
-        self.canvas.stroke_arc(x + self.L, self.angle.mass.real() / 2 + y + self.L + 2.5, 2.5, pymath.pi / 2, 3 * pymath.pi / 2, True)
-        self.canvas.fill_arc(x - self.L, self.angle.mass.real() / 2 + y + self.L + 2.5, 2.5, pymath.pi / 2, 3 * pymath.pi / 2)
-        self.canvas.stroke_arc(x - self.L, self.angle.mass.real() / 2 + y + self.L + 2.5, 2.5, pymath.pi / 2, 3 * pymath.pi / 2)
+        self.canvas.fill_arc(x + self.L, self.angle.mass.real() / 2 + y + self.L + 2.5, 2.5, pymath.pi / 2,
+                             3 * pymath.pi / 2, True)
+        self.canvas.stroke_arc(x + self.L, self.angle.mass.real() / 2 + y + self.L + 2.5, 2.5, pymath.pi / 2,
+                               3 * pymath.pi / 2, True)
+        self.canvas.fill_arc(x - self.L, self.angle.mass.real() / 2 + y + self.L + 2.5, 2.5, pymath.pi / 2,
+                             3 * pymath.pi / 2)
+        self.canvas.stroke_arc(x - self.L, self.angle.mass.real() / 2 + y + self.L + 2.5, 2.5, pymath.pi / 2,
+                               3 * pymath.pi / 2)
 
         self.fancy_line(x - 10, x + 10, self.angle.mass.real() / 2 + y + self.L + 15, x_offset=3)
 
@@ -179,12 +185,12 @@ class AngleCanvas():
         self.canvas.stroke_line(x, y, x, y + y_offset)
         self.canvas.stroke_line(x, y + y_offset, x - x_offset, y + y_offset * 2)
         for i in range(2, steps):
-            x_0 = x + x_offset * (-1)**(i-1)
+            x_0 = x + x_offset * (-1) ** (i - 1)
             y_0 = y + y_offset * i
-            x_1 = x + x_offset * (-1)**i
+            x_1 = x + x_offset * (-1) ** i
             y_1 = y + y_offset * (i + 1)
             self.canvas.stroke_line(x_0, y_0, x_1, y_1)
-        self.canvas.stroke_line(x + x_offset * (-1)**(steps - 1), y + y_offset * steps,
+        self.canvas.stroke_line(x + x_offset * (-1) ** (steps - 1), y + y_offset * steps,
                                 x, y + y_offset * (steps + 1))
         self.canvas.stroke_line(x, y + y_offset * (steps + 1), x, y + y_offset * (steps + 2))
         return (x, y + y_offset * (steps + 2))
@@ -209,7 +215,6 @@ class AngleCanvas():
             self.oscilating = False
             self.play_btn.disabled = False
             self.osc = None
-
 
 
 def setup_angle(m, k, w):
