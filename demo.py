@@ -5,7 +5,7 @@ from pythreejs import *
 
 
 key_light = DirectionalLight(color='white', position=[3, 5, 1], intensity=0.5)
-camera = PerspectiveCamera(position=[0, 0, 5], up=[0, 1, 0], children=[key_light], aspect=600 / 200)
+camera = PerspectiveCamera(position=[-11.513368241405459, 0.37901174954234434, -2.4328637318200217], up=[0, 1, 0], quaternion=[-0.013643870824328065, -0.4953975449260421, -0.0077823265199599805, 0.8685243535239044], children=[key_light], aspect=600 / 200)
 
 
 def hexcode(rgb):

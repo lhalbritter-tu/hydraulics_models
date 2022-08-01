@@ -30,8 +30,8 @@ class Angle(Model):
     def __init__(self, mass, feather, start_angle, c=None):
         self.mass = FloatChangeable(mass, unit="kg", _min=1.0, desc="Mass m = ")
         self.feather = FloatChangeable(feather, unit="kN/m", base=3, _min=1.0, desc="Feather stiffness k = ")
-        self.start_angle = FloatChangeable(start_angle, unit="rad", _min=0.1, desc="Initial angular velocity Phi(0) = ")
-        self.t = FloatChangeable(0, unit="s", _min=0, _max=30, desc="Time t = ", continuous_update=True, step=0.0001)
+        self.start_angle = FloatChangeable(start_angle, unit="rad", _min=0.1, _max=pymath.pi / 2, step=0.001, desc="Initial angular velocity Phi(0) = ")
+        self.t = FloatChangeable(0, unit="s", _min=1, _max=30, desc="Time t = ", continuous_update=True, step=0.0001)
         self.canvas = c
 
         self.params = [
@@ -102,7 +102,7 @@ class AngleCanvas():
         self.oscilating = False
 
     def on_angle_changed(self, args):
-        self.draw_time(self.angle.t.real())
+        self.start_oscilate(args)
 
     def oscilate(self):
         # print("Running")
@@ -116,7 +116,7 @@ class AngleCanvas():
                 # canvas.canvas.rotate(phi.real())
                 self.draw({'angle': phi.real()})
             self.canvas.sleep(20)
-        print("I am outta here!")
+        #print("I am outta here!")
         self.canvas.reset_transform()
         self.draw(None)
         self.stop_oscilate(None)
@@ -134,23 +134,27 @@ class AngleCanvas():
         self.canvas.rotate(0)
         x = self.canvas.width / 4
         y = 15
-        self.canvas.fill_style = hexcode((230, 230, 230))
-        self.canvas.fill_circle(x, y, 9)
-        self.canvas.stroke_text('m', x - 4.5, y + 2)
-        self.canvas.stroke_circle(x, y, 9)
 
         if args is not None:
+            yr = self.angle.mass.real() / 2 + self.L + y - 5
+            xp = x * pymath.cos(args['angle']) - yr * pymath.sin(args['angle'])
+            yp = x * pymath.sin(args['angle']) + yr * pymath.cos(args['angle'])
+            self.canvas.stroke_line(x, y, xp, yp)
             self.canvas.rotate(args['angle'])
-
-        self.canvas.stroke_line(x, self.angle.mass.real() + y, x, self.angle.mass.real() / 2 + y + self.L)
+        else:
+            self.canvas.stroke_line(x, self.angle.mass.real() + y, x,
+                                    self.angle.mass.real() / 2 + y + self.L)
 
         self.canvas.fill_style = hexcode((0, 0, 0))
+
+
         self.canvas.fill_polygon([(x, self.angle.mass.real() / 2 + self.L + y - 5),
                                   (x - 5, self.angle.mass.real() / 2 + self.L + y),
                                   (x + 5, self.angle.mass.real() / 2 + self.L + y),
                                   ])
 
         self.canvas.fill_style = hexcode((230, 230, 230))
+
         self.canvas.fill_rect(x - self.L, self.angle.mass.real() / 2 + y + self.L, self.L * 2, 5)
         self.canvas.stroke_rect(x - self.L, self.angle.mass.real() / 2 + y + self.L, self.L * 2, 5)
 
@@ -181,6 +185,11 @@ class AngleCanvas():
 
         self.canvas.reset_transform()
 
+        self.canvas.fill_style = hexcode((230, 230, 230))
+        self.canvas.fill_circle(x, y, 9)
+        self.canvas.stroke_text('m', x - 4.5, y + 2)
+        self.canvas.stroke_circle(x, y, 9)
+
     def zigzag(self, x, y, steps=7, x_offset=10, y_offset=5):
         self.canvas.stroke_line(x, y, x, y + y_offset)
         self.canvas.stroke_line(x, y + y_offset, x - x_offset, y + y_offset * 2)
@@ -203,14 +212,14 @@ class AngleCanvas():
             x += x_offset
 
     def start_oscilate(self, btn):
-        print("Start oscilate")
+        #print("Start oscilate")
         if self.osc is None:
             self.osc = threading.Thread(target=self.oscilate)
             self.osc.start()
             self.play_btn.disabled = True
 
     def stop_oscilate(self, btn):
-        print("STOP!")
+        #print("STOP!")
         if self.osc is not None:
             self.oscilating = False
             self.play_btn.disabled = False

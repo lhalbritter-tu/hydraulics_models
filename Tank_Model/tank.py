@@ -29,6 +29,8 @@ class Tank(Model):
         self.tank_rendering.scale = [1, self.depth.real(), 1]
         self.water_rendering.scale = [1, -self.get_depth().real(), 1]
 
+        self.water_rendering.position = [self.water_rendering.position[0], self.water_rendering.position[1] - self.water_rendering.scale[1] / 3, self.water_rendering.position[2]]
+
         if args is not None:
             self.water_rendering.position = [0, self.water_rendering.position[1] + (args['new'] - args['old']), 0]
 
