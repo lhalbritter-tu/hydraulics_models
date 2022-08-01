@@ -5,7 +5,7 @@ from pythreejs import *
 
 
 key_light = DirectionalLight(color='white', position=[3, 5, 1], intensity=0.5)
-camera = PerspectiveCamera(position=[-11.513368241405459, 0.37901174954234434, -2.4328637318200217], up=[0, 1, 0], quaternion=[-0.013643870824328065, -0.4953975449260421, -0.0077823265199599805, 0.8685243535239044], children=[key_light], aspect=600 / 200)
+camera = PerspectiveCamera(aspect=3.0, children=(DirectionalLight(color='white', intensity=0.5, matrixWorldNeedsUpdate=True, position=(3.0, 5.0, 1.0), quaternion=(0.0, 0.0, 0.0, 1.0), rotation=(0.0, 0.0, 0.0, 'XYZ'), scale=(1.0, 1.0, 1.0), shadow=DirectionalLightShadow(camera=OrthographicCamera(bottom=-5.0, far=500.0, left=-5.0, near=0.5, position=(0.0, 0.0, 0.0), projectionMatrix=(0.2, 0.0, 0.0, 0.0, 0.0, 0.2, 0.0, 0.0, 0.0, 0.0, -0.004004004004004004, 0.0, 0.0, 0.0, -1.002002002002002, 1.0), quaternion=(0.0, 0.0, 0.0, 1.0), right=5.0, rotation=(0.0, 0.0, 0.0, 'XYZ'), scale=(1.0, 1.0, 1.0), top=5.0, up=(0.0, 1.0, 0.0)), mapSize=(512.0, 512.0)), target=Object3D(position=(0.0, 0.0, 0.0), quaternion=(0.0, 0.0, 0.0, 1.0), rotation=(0.0, 0.0, 0.0, 'XYZ'), scale=(1.0, 1.0, 1.0), up=(0.0, 1.0, 0.0)), up=(0.0, 1.0, 0.0)),), position=(-2.0089665978191187, -0.20001157433694694, -2.7971067062774404), projectionMatrix=(0.7148356401698529, 0.0, 0.0, 0.0, 0.0, 2.1445069205095586, 0.0, 0.0, 0.0, 0.0, -1.00010000500025, -1.0, 0.0, 0.0, -0.200010000500025, 0.0), quaternion=(-0.0222177451136849, 0.9557239447492953, -0.07484158994219964, -0.28371966736522314), rotation=(-0.06165791344523469, -1.0358918024734445, -0.053062834466495463, 'XYZ'), scale=(1.0, 1.0, 1.0), up=(0.0, 1.0, 0.0))
 
 
 def hexcode(rgb):
@@ -45,6 +45,12 @@ class Variable:
         :return: string of cut value + unit
         """
         return f'{self.value: .{cut}f} [{self.unit}]'
+
+    def latex(self):
+        return str(self.value) + " ~~ " + self.unit
+
+    def rounded_latex(self, cut=2):
+        return f'{self.value: .{cut}f} ~~ {self.unit}'
 
     def __repr__(self):
         """

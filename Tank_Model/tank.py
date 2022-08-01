@@ -26,13 +26,9 @@ class Tank(Model):
             t = threading.Thread(target=self.lerp_water, args=[0.01])  # self.canvas.on_client_ready(self.draw)
             t.start()
 
-        self.tank_rendering.scale = [1, self.depth.real(), 1]
-        self.water_rendering.scale = [1, -self.get_depth().real(), 1]
+        self.tank_pivot.scale = [1, self.depth.real(), 1]
+        #self.water_pivot.scale = [1, self.get_depth().real(), 1]
 
-        self.water_rendering.position = [self.water_rendering.position[0], self.water_rendering.position[1] - self.water_rendering.scale[1] / 3, self.water_rendering.position[2]]
-
-        if args is not None:
-            self.water_rendering.position = [0, self.water_rendering.position[1] + (args['new'] - args['old']), 0]
 
         super().update(args)
 
@@ -55,14 +51,26 @@ class Tank(Model):
         self.tank_rendering = Mesh(
             BoxBufferGeometry(self.width / 100, 1, 1),
             MeshPhongMaterial(transparent=True, opacity=0.4, color='black'),
-            scale=[1, self.depth.real(), 1]
+            scale=[1, 1, 1],
+            position=[0, -0.5, 0]
         )
+        self.tank_pivot = Object3D()
+        self.tank_pivot.add(self.tank_rendering)
+        self.tank_pivot.scale = [1, self.depth.real(), 1]
+        self.tank_pivot.position = [0, -1, 0]
+        self.tank_pivot.rotation = [pymath.pi, 0, 0, 'XYZ']
+
         self.water_rendering = Mesh(
             BoxBufferGeometry(self.width / 100, 1, 1),
-            MeshPhongMaterial(color='blue'),
-            scale=[1, self.get_depth().real(), 1],
-            position=[0, 0, 0]
+            MeshPhongMaterial(color='lightblue'),
+            scale=[0.99, 1, 0.99],
+            position=[0, -0.5, 0]
         )
+        self.water_pivot = Object3D()
+        self.water_pivot.add(self.water_rendering)
+        self.water_pivot.position = [0, -1, 0]
+        self.water_pivot.scale = [1, self.get_depth().real(), 1]
+        self.water_pivot.rotation = [pymath.pi, 0, 0, 'XYZ']
 
         self.current_water_depth = self.get_depth()
 
@@ -171,9 +179,10 @@ class Tank(Model):
         self.canvas.stroke_line(*line)
         self.canvas.stroke_text("h", x_0 - 30, (wy_0 + y_1) // 2)
 
-        holes = self.alt_draw_holes(15, x_0, y_1, 20)
-        for hole in holes:
-            self.canvas.fill_rect(*hole)
+        if self.current_water_depth.real() > 0.03:
+            holes = self.alt_draw_holes(15, x_0, y_1, 20)
+            for hole in holes:
+                self.canvas.fill_rect(*hole)
 
         self.canvas.line_width = 3.0
         self.canvas.begin_path()
@@ -193,6 +202,9 @@ class Tank(Model):
             while goal != self.current_water_depth:
                 #print("Lerp!")
                 self.current_water_depth = self.lerp(self.current_water_depth, goal, step, 'm')
+
+                self.water_pivot.scale = [1, self.current_water_depth.real(), 1]
+
                 #print("Lerp Water, goal: " + str(goal) + ", cur: " + str(self.current_water_depth))
                 self.canvas.clear()
                 rect = self.get_dimensions(50, 50)
@@ -226,9 +238,10 @@ class Tank(Model):
                 self.canvas.stroke_line(*line)
                 self.canvas.stroke_text("h", x_0 - 30, (wy_0 + y_1) // 2)
 
-                holes = self.alt_draw_holes(15, x_0, y_1, 20)
-                for hole in holes:
-                    self.canvas.fill_rect(*hole)
+                if self.current_water_depth.real() > 0.03:
+                    holes = self.alt_draw_holes(15, x_0, y_1, 20)
+                    for hole in holes:
+                        self.canvas.fill_rect(*hole)
 
                 self.canvas.line_width = 3.0
                 self.canvas.begin_path()

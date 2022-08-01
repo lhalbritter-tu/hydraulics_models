@@ -296,14 +296,14 @@ class AdvancedPipe(Model):
         q1 = Variable(self.q1(), unit='m^3s^{-1}')
         u2 = Variable(self.u2(), unit='m/s')
         dp = Variable(self.dp(), unit='Pa')
-        return f'$\large Calculations \\\\ Q1 = Q2 = {self.i1.area():.2f} \cdot {self.u1} = {q1.rounded()} \\\\ ' \
-               f'U2 = \\frac{{{self.i1.area():.2f}}}{{{self.i2.area():.2f}}} \cdot {self.u1} = {u2.rounded()} \\\\ ' \
-               f'Change ~~ in ~~ pressure ~~ \Delta p = {self.u1:.2f}^2 - {self.u2():.2f}^2 + {self.i1yParam.real()} - {self.i2yParam.real()} = {dp.rounded()}$'
+        return f'$\large Calculations \\\\ Q1 = Q2 = {self.i1.area():.2f} \cdot {self.u1} = {q1.rounded_latex()} \\\\ ' \
+               f'U2 = \\frac{{{self.i1.area():.2f}}}{{{self.i2.area():.2f}}} \cdot {self.u1} = {u2.rounded_latex()} \\\\ ' \
+               f'Change ~~ in ~~ pressure ~~ \Delta p = {self.u1:.2f}^2 - {self.u2():.2f}^2 + {self.i1yParam.real()} - {self.i2yParam.real()} = {dp.rounded_latex()}$'
 
     def lines(self):
         margin = 450
-        i1Lines = get_lines("CIRC" if self.i1.type == "Circle" else "RECT", self.i1, margin)
-        i2Lines = get_lines("CIRC" if self.i2.type == "Circle" else "RECT", self.i2, margin, True)
+        i1Lines = get_lines("CIRC" if self.i1.type == "Circle" else "RECT", self.i1, 50)
+        i2Lines = get_lines("CIRC" if self.i2.type == "Circle" else "RECT", self.i2, margin, end=True)
 
         l1 = i1Lines
         l2 = i2Lines
@@ -321,7 +321,7 @@ class AdvancedPipe(Model):
         return [l1c1, l1c1c2, l1c2r, l2c2, l2c1c2, l2c1r]
         # return [l1c1, l2c1, l1c2, l2c2, l1c1c2, l2c1c2]
 
-    def draw(self):
+    def draw(self, scale=10):
         argsi1 = self.i1.display(50)
         argsi2 = self.i2.display(450)
         self.canvas.clear()
@@ -431,22 +431,22 @@ class AdvancedPipe3D(AdvancedPipe):
         pass
 
 
-def get_lines(selected, i, margin=0, end=False):
+def get_lines(selected, i, margin=0, offset=10, end=False):
     px1 = py = px2 = 0
     if selected == "CIRC":
         py = i.r + i.y
         px1 = i.r / 8 + i.x  # (margin if end else 0)
         if end:
-            px2 = margin - i.r
+            px2 = margin - i.rx - offset
         else:
-            px2 = margin / 4 + i.r
+            px2 = margin + i.rx + offset
     else:
         py = i.ry + i.y
         px1 = i.rx / 2 + i.x  # (margin if end else 0)
         if end:
-            px2 = margin - i.rx
+            px2 = margin - i.rx - offset
         else:
-            px2 = margin / 4 + i.rx
+            px2 = margin + i.rx + offset
 
     return [(px1, py, px2, py),
             (px1, py - (i.r * 2 if selected == "CIRC" else i.ry), px2, py - (i.r * 2 if selected == "CIRC" else i.ry))]
