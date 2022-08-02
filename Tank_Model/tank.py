@@ -9,6 +9,31 @@ G = 9.81
 M_TO_PIXELS = 100
 
 
+class Grid:
+    def __init__(self, width, height, cell_width, cell_height):
+        self.cell_width = cell_width
+        self.cell_height = cell_height
+        self.size = (width // cell_width, height // cell_height)
+        self.grid = [[None] * (width // cell_width)] * (height // cell_height)
+
+    def print2D(self):
+        for line in self.grid:
+            print('|', end=' ')
+            for cell in line:
+                print(cell, end=" | ")
+            print()
+            print('-' * self.size[0] * self.cell_width)
+
+    def place(self, x, y, obj):
+        if not self.inside(x, y):
+            return False
+        self.grid[x][y] = obj
+        return True
+
+    def inside(self, x, y):
+        return 0 <= x < self.size[0] and 0 <= y < self.size[1]
+
+
 class Hole:
     def __init__(self, diameter):
         self.d: float = diameter
@@ -132,6 +157,24 @@ class Tank(Model):
             rects.append([fx + x_off * i - self.dHoles.value / 2, y, self.dHoles.value, ly])
             container -= 1
         return rects
+
+    def draw_holes_3d(self):
+        container = self.nHoles.real()
+
+    def draw_hole_on_grid(self, grid, x, y, container):
+        if container <= 0:
+            return grid
+        if not grid.place(x, y, self.holes[0]):
+            return
+        self.draw_hole_on_grid(grid, x + 1, y, container - 1)
+        self.draw_hole_on_grid(grid, x - 1, y, container - 1)
+        self.draw_hole_on_grid(grid, x, y + 1, container - 1)
+        self.draw_hole_on_grid(grid, x, y - 1, container - 1)
+        self.draw_hole_on_grid(grid, x + 1, y + 1, container - 1)
+        self.draw_hole_on_grid(grid, x - 1, y + 1, container - 1)
+        self.draw_hole_on_grid(grid, x + 1, y + 1, container - 1)
+        self.draw_hole_on_grid(grid, x + 1, y - 1, container - 1)
+        self.draw_hole_on_grid(grid, x - 1, y - 1, container - 1)
 
     def do_draw(self):
         self.draw(None)
@@ -269,11 +312,17 @@ class Tank(Model):
         self.canvas.fill_rect(60, 10, 5, y)
         pass
 
+    def draw_holes3D(self, height):
+        diameter = self.dHoles.real()
+
+        pass
+
 
 def create_holes(n: int, d: float):
     return [Hole(d) for i in range(n)]
 
 
 if __name__ == '__main__':
-    t = Tank(create_holes(25, 2), 0.06)
-    print(t.check_holes())
+    grid = Grid(16, 16, 2, 2)
+    grid.place(0, 3, Variable(18, 0, 'cm'))
+    grid.print2D()
