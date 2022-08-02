@@ -3,9 +3,29 @@ import ipywidgets as widgets
 from IPython.display import display, Latex
 from pythreejs import *
 
-
 key_light = DirectionalLight(color='white', position=[3, 5, 1], intensity=0.5)
-camera = PerspectiveCamera(aspect=3.0, children=(DirectionalLight(color='white', intensity=0.5, matrixWorldNeedsUpdate=True, position=(3.0, 5.0, 1.0), quaternion=(0.0, 0.0, 0.0, 1.0), rotation=(0.0, 0.0, 0.0, 'XYZ'), scale=(1.0, 1.0, 1.0), shadow=DirectionalLightShadow(camera=OrthographicCamera(bottom=-5.0, far=500.0, left=-5.0, near=0.5, position=(0.0, 0.0, 0.0), projectionMatrix=(0.2, 0.0, 0.0, 0.0, 0.0, 0.2, 0.0, 0.0, 0.0, 0.0, -0.004004004004004004, 0.0, 0.0, 0.0, -1.002002002002002, 1.0), quaternion=(0.0, 0.0, 0.0, 1.0), right=5.0, rotation=(0.0, 0.0, 0.0, 'XYZ'), scale=(1.0, 1.0, 1.0), top=5.0, up=(0.0, 1.0, 0.0)), mapSize=(512.0, 512.0)), target=Object3D(position=(0.0, 0.0, 0.0), quaternion=(0.0, 0.0, 0.0, 1.0), rotation=(0.0, 0.0, 0.0, 'XYZ'), scale=(1.0, 1.0, 1.0), up=(0.0, 1.0, 0.0)), up=(0.0, 1.0, 0.0)),), position=(-2.0089665978191187, -0.20001157433694694, -2.7971067062774404), projectionMatrix=(0.7148356401698529, 0.0, 0.0, 0.0, 0.0, 2.1445069205095586, 0.0, 0.0, 0.0, 0.0, -1.00010000500025, -1.0, 0.0, 0.0, -0.200010000500025, 0.0), quaternion=(-0.0222177451136849, 0.9557239447492953, -0.07484158994219964, -0.28371966736522314), rotation=(-0.06165791344523469, -1.0358918024734445, -0.053062834466495463, 'XYZ'), scale=(1.0, 1.0, 1.0), up=(0.0, 1.0, 0.0))
+camera = PerspectiveCamera(aspect=3.0, children=(
+    DirectionalLight(color='white', intensity=0.5, matrixWorldNeedsUpdate=True, position=(3.0, 5.0, 1.0),
+                     quaternion=(0.0, 0.0, 0.0, 1.0), rotation=(0.0, 0.0, 0.0, 'XYZ'), scale=(1.0, 1.0, 1.0),
+                     shadow=DirectionalLightShadow(
+                         camera=OrthographicCamera(bottom=-5.0, far=500.0, left=-5.0, near=0.5,
+                                                   position=(0.0, 0.0, 0.0),
+                                                   projectionMatrix=(
+                                                       0.2, 0.0, 0.0, 0.0, 0.0, 0.2, 0.0, 0.0, 0.0, 0.0,
+                                                       -0.004004004004004004,
+                                                       0.0, 0.0, 0.0, -1.002002002002002, 1.0),
+                                                   quaternion=(0.0, 0.0, 0.0, 1.0),
+                                                   right=5.0, rotation=(0.0, 0.0, 0.0, 'XYZ'), scale=(1.0, 1.0, 1.0),
+                                                   top=5.0, up=(0.0, 1.0, 0.0)), mapSize=(512.0, 512.0)),
+                     target=Object3D(position=(0.0, 0.0, 0.0), quaternion=(0.0, 0.0, 0.0, 1.0),
+                                     rotation=(0.0, 0.0, 0.0, 'XYZ'), scale=(1.0, 1.0, 1.0), up=(0.0, 1.0, 0.0)),
+                     up=(0.0, 1.0, 0.0)),), position=(-2.0089665978191187, -0.20001157433694694, -2.7971067062774404),
+                           projectionMatrix=(
+                               0.7148356401698529, 0.0, 0.0, 0.0, 0.0, 2.1445069205095586, 0.0, 0.0, 0.0, 0.0,
+                               -1.00010000500025, -1.0, 0.0, 0.0, -0.200010000500025, 0.0), quaternion=(
+        -0.0222177451136849, 0.9557239447492953, -0.07484158994219964, -0.28371966736522314),
+                           rotation=(-0.06165791344523469, -1.0358918024734445, -0.053062834466495463, 'XYZ'),
+                           scale=(1.0, 1.0, 1.0), up=(0.0, 1.0, 0.0))
 
 
 def hexcode(rgb):
@@ -69,11 +89,18 @@ class Variable:
     def __eq__(self, other):
         return self.value == other.value and self.real() == other.real() and self.unit == other.unit
 
+    def __gt__(self, other):
+        return self.value > other.value and self.real() > other.value
+
+    def __ge__(self, other):
+        return self.value >= other.value and self.real() >= other.real()
+
 
 class Changeable(Variable):
     """
     Implementation of Variable which implements a UI widget to interactively change the variable's value
     """
+
     def __init__(self, widget, base=0, unit=" "):
         """
         Initializes this Changeable Object with the UI widget widget, the base for the Variable and unit for the Variable
@@ -121,6 +148,7 @@ class IntChangeable(Changeable):
     """
     Concrete Implementation of Changeable which implements an IntSlider as UI Widget
     """
+
     def __init__(self, value, base=0, unit=" ", _min=0, _max=10, desc="", step=1):
         """
         Initializes the internal Variable and Changeable with an ipywidgets.IntSlider with the following attributes:
@@ -146,7 +174,7 @@ class IntChangeable(Changeable):
 
 
 class FloatChangeable(Changeable):
-    def __init__(self, value, base=0, unit=" ", _min=.0, _max=10.0, desc="", step=0.1, continuous_update = False):
+    def __init__(self, value, base=0, unit=" ", _min=.0, _max=10.0, desc="", step=0.1, continuous_update=False):
         """
         Initializes the internal Variable and Changeable with an ipywidgets.FloatSlider with the following attributes:
 
@@ -174,6 +202,7 @@ class ToggleGroup(Changeable):
     """
     Implementation of Changeable which implements a ToggleButtonGroup
     """
+
     def __init__(self, options, tooltips):
         """
         Initializes a ipywidgets.ToggleButtons Object with options=options and tooltips=tooltips
@@ -242,6 +271,7 @@ class ChangeableContainer:
     Container class for Changeable Objects. It saves a list of Changeables and provides a (orientation) Layout Box
     containing all the Changeables.
     """
+
     def __init__(self, changeables: [Changeable], orientation='vertical'):
         """
         Initializes this container with changeable list and orientation
@@ -318,3 +348,22 @@ class Demo:
         self.output.clear_output(wait=True)
         with self.output:
             display(widgets.HTMLMath(self.model.calculate()))
+
+
+import matplotlib.pyplot as plt
+
+
+class Plot:
+    def __init__(self, x, y, width=5, height=3.5):
+        self.x = x
+        self.y = y
+        self.fig, self.ax = plt.subplots(figsize=(width, height))
+        self.ax.plot(x, y)
+        self.widget = self.fig.canvas
+        self.mark(0, 0)
+
+    def mark(self, x, y, symbol='X'):
+        for line in self.ax.lines:
+            line.set_marker(None)
+        self.marker_pos = (x, y)
+        plt.plot([x], [y], marker=symbol)

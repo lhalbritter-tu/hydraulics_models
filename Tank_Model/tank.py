@@ -50,7 +50,7 @@ class Tank(Model):
 
         self.tank_rendering = Mesh(
             BoxBufferGeometry(self.width / 100, 1, 1),
-            MeshPhongMaterial(transparent=True, opacity=0.4, color='black'),
+            MeshPhongMaterial(transparent=True, opacity=0.4, color='gray'),
             scale=[1, 1, 1],
             position=[0, -0.5, 0]
         )
@@ -138,6 +138,8 @@ class Tank(Model):
 
     def draw(self, args):
         self.canvas.clear()
+        self.canvas.fill_style = 'black'
+        self.canvas.fill_rect(0, 0, 60, 20)
         rect = self.get_dimensions(50, 50)
         x_0 = rect[0]
         y_0 = rect[1]
@@ -201,12 +203,15 @@ class Tank(Model):
         with hold_canvas(self.canvas):
             while goal != self.current_water_depth:
                 #print("Lerp!")
+                bf = self.current_water_depth
                 self.current_water_depth = self.lerp(self.current_water_depth, goal, step, 'm')
 
                 self.water_pivot.scale = [1, self.current_water_depth.real(), 1]
 
                 #print("Lerp Water, goal: " + str(goal) + ", cur: " + str(self.current_water_depth))
                 self.canvas.clear()
+                self.canvas.fill_style = 'black'
+                self.canvas.fill_rect(0, 0, 60, 20)
                 rect = self.get_dimensions(50, 50)
                 x_0 = rect[0]
                 y_0 = rect[1]
@@ -230,6 +235,8 @@ class Tank(Model):
                 )
                 self.canvas.fill_style = gradient
                 self.canvas.global_alpha = 0.75
+                if self.current_water_depth > bf:
+                    self.draw_stream(wy_0)
                 self.canvas.fill_rect(x_0 + 1, wy_0, rect[2] - 1.5, y_1 - wy_0 - 1)
 
                 self.global_alpha = 1
@@ -253,10 +260,14 @@ class Tank(Model):
                 self.canvas.line_width = 1.0
                 step += vstep
                 self.canvas.sleep(20)
-        #self.draw()
+        self.draw(None)
 
     def lerp(self, v0, v1, t, unit=''):
         return Variable((1 - t) * v0.real() + t * v1.real(), unit=unit)
+
+    def draw_stream(self, y):
+        self.canvas.fill_rect(60, 10, 5, y)
+        pass
 
 
 def create_holes(n: int, d: float):

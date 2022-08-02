@@ -83,9 +83,10 @@ class Angle(Model):
 
 
 class AngleCanvas():
-    def __init__(self, angle: Angle, width=600, height=200, L=5):
+    def __init__(self, angle: Angle, plot: Plot, width=600, height=200, L=5):
         super().__init__()
         self.angle = angle
+        self.plot = plot
         self.canvas = Canvas(width=width, height=height)
         self.canvas2 = Canvas(width=L * 2, height=50)
         self.play_btn = widgets.Button(
@@ -115,9 +116,8 @@ class AngleCanvas():
         vals = np.linspace(0, 30, 100)
         # print(vals)
         for t in vals:
+            phi = self.angle.evaluate(t)
             with hold_canvas(self.canvas):
-                phi = self.angle.evaluate(t)
-                self.angle.t.widget.value = t
                 # canvas.canvas.rotate(phi.real())
                 self.draw({'angle': phi.real()})
             self.canvas.sleep(20)
@@ -125,6 +125,13 @@ class AngleCanvas():
         self.canvas.reset_transform()
         self.draw(None)
         self.stop_oscilate(None)
+
+    def pl_thr(self):
+        vals = np.linspace(0, 30, 100)
+        for t in vals:
+            phi = self.angle.evaluate(t)
+            self.plot.mark(t, phi.real())
+            time.sleep(0.2)
 
     def do_draw(self):
         self.draw(None)
@@ -223,7 +230,9 @@ class AngleCanvas():
         #print("Start oscilate")
         if self.osc is None:
             self.osc = threading.Thread(target=self.oscilate)
+            self.pl = threading.Thread(target=self.pl_thr)
             self.osc.start()
+            self.pl.start()
             self.play_btn.disabled = True
 
     def stop_oscilate(self, btn):
@@ -232,6 +241,7 @@ class AngleCanvas():
             self.oscilating = False
             self.play_btn.disabled = False
             self.osc = None
+            self.pl = None
 
 
 def setup_angle(m, k, w):
