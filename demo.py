@@ -389,6 +389,14 @@ class Plot:
         self.marker = None
         self.mark(0, 0)
 
+    def update_plot(self, x=None, y=None):
+        if x is not None:
+            self.x = x
+        if y is not None:
+            self.y = y
+        self.ax.clear()
+        self.ax.plot(self.x, self.y)
+
     def mark(self, x, y, symbol='o'):
         self.marker_pos = (x, y)
 
