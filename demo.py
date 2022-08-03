@@ -386,10 +386,15 @@ class Plot:
         self.fig, self.ax = plt.subplots(figsize=(width, height))
         self.ax.plot(x, y)
         self.widget = self.fig.canvas
+        self.marker = None
         self.mark(0, 0)
 
-    def mark(self, x, y, symbol='X'):
-        for line in self.ax.lines:
-            line.set_marker(None)
+    def mark(self, x, y, symbol='o'):
         self.marker_pos = (x, y)
-        plt.plot([x], [y], marker=symbol)
+
+        if self.marker is None:
+            self.marker = plt.plot([x], [y], marker=symbol)[0]
+        self.marker.set_data([x], [y])
+        self.widget.draw()
+        self.widget.flush_events()
+

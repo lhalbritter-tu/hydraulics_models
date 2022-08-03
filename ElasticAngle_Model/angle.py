@@ -103,7 +103,6 @@ class AngleCanvas():
         self.osc = None
         #self.angle.observe(self.on_angle_changed)
         # self.draw(None)
-        self.canvas.layout.width = "100%"
         self.canvas.on_client_ready(self.do_draw)
         self.oscilating = False
 
@@ -132,7 +131,7 @@ class AngleCanvas():
         for t in vals:
             phi = self.angle.evaluate(t)
             self.plot.mark(t, phi.real())
-            time.sleep(0.2)
+            time.sleep(0.002)
 
     def do_draw(self):
         self.draw(None)
