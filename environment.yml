@@ -8,3 +8,5 @@ dependencies:
   - branca
   - ipywidgets>=7.6
   - pythreejs
+  - ipympl
+  - matplotlib

@@ -144,6 +144,15 @@ class Changeable(Variable):
         self.value = self.widget.value
 
 
+class PseudoChangeable(Changeable):
+    def __init__(self, widget, base=0, unit=" "):
+        self.value = 0
+        self.base = base
+        self.unit = unit
+        self.widget = widget
+        self.isActive = True
+
+
 class IntChangeable(Changeable):
     """
     Concrete Implementation of Changeable which implements an IntSlider as UI Widget
@@ -217,6 +226,19 @@ class ToggleGroup(Changeable):
         self.display = self.widget
 
 
+class ClickButton(PseudoChangeable):
+    def __init__(self, description="Button", disabled=False, button_style='', tooltip=''):
+        super().__init__(widgets.Button(
+            description=description,
+            disabled=disabled,
+            button_style=button_style,
+            tooltip=tooltip
+        ))
+        self.display = self.widget
+
+    def observe(self, func):
+        self.widget.on_click(func)
+
 class Model(abc.ABC):
     """
     Interface for pipe models
@@ -282,6 +304,10 @@ class ChangeableContainer:
         """
         self.params = changeables
         self.update(orientation)
+
+    def add(self, changeable: Changeable):
+        self.params.append(changeable)
+        self.update()
 
     def update(self, orientation='vertical'):
         """

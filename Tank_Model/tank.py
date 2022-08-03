@@ -316,7 +316,10 @@ class Tank(Model):
 
     def draw_holes3D(self, height):
         diameter = self.dHoles.real()
+        ref_hole = CylinderBufferGeometry(diameter, diameter, 3, 8, 4)
+        hole = BufferGeometry.from_geometry(ref_hole)
 
+        holes = InstancedBufferGeometry(attributes=hole.attributes)
         pass
 
 

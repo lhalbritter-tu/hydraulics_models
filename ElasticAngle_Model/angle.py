@@ -89,20 +89,21 @@ class AngleCanvas():
         self.plot = plot
         self.canvas = Canvas(width=width, height=height)
         self.canvas2 = Canvas(width=L * 2, height=50)
-        self.play_btn = widgets.Button(
+        self.play_btn = ClickButton(
             description="Oscilate",
             disabled=False,
             button_style='',
             tooltip='Starts an animation of the model.',
         )
-        self.play_btn.on_click(self.start_oscilate)
+        self.play_btn.observe(self.start_oscilate)
 
-        self.canvas_box = widgets.VBox([self.canvas, widgets.HBox([self.play_btn])])
+        self.canvas_box = widgets.VBox([self.canvas])
         self.t = 0
         self.L = L
         self.osc = None
         #self.angle.observe(self.on_angle_changed)
         # self.draw(None)
+        self.canvas.layout.width = "100%"
         self.canvas.on_client_ready(self.do_draw)
         self.oscilating = False
 
@@ -147,23 +148,34 @@ class AngleCanvas():
         x = self.canvas.width / 4
         y = 15
 
-        if args is not None:
+        self.canvas.fill_style = hexcode((230, 230, 230))
+        if args is not None and 'angle' in args:
+            cx = x
+            cy = self.angle.mass.real() / 2 + self.L + y - 5
+
+            s = np.sin(args['angle'])
+            c = np.cos(args['angle'])
+
+            px = x - cx
+            py = y - cy
+
             # yr = self.angle.mass.real() / 2 + self.L + y - 5
-            xp = x * pymath.cos(args['angle']) - y * pymath.sin(args['angle'])
-            yp = x * pymath.sin(args['angle']) + y * pymath.cos(args['angle'])
+            xp = px * c - py * s
+            yp = px * s + py * c
+
+            self.canvas.stroke_line(xp + cx, self.angle.mass.real() + yp + cy, x,
+                                    self.angle.mass.real() / 2 + y + self.L)
             #self.canvas.stroke_line(x, y, xp, yp)self.canvas.fill_style = hexcode((230, 230, 230))
-            self.canvas.fill_circle(yp, xp, 9)
-            self.canvas.stroke_text('m', yp - 4.5, xp + 2)
-            self.canvas.stroke_circle(yp, xp, 9)
+            self.canvas.fill_circle(xp + cx, yp + cy, 9)
+            self.canvas.stroke_text('m', xp - 4.5 + cx, yp + 2 + cy)
+            self.canvas.stroke_circle(xp + cx, yp + cy, 9)
             #self.canvas.rotate(args['angle'])
         else:
-            self.canvas.fill_style = hexcode((230, 230, 230))
+            self.canvas.stroke_line(x, self.angle.mass.real() + y, x,
+                                        self.angle.mass.real() / 2 + y + self.L)
             self.canvas.fill_circle(x, y, 9)
             self.canvas.stroke_text('m', x - 4.5, y + 2)
             self.canvas.stroke_circle(x, y, 9)
-
-        self.canvas.stroke_line(x, self.angle.mass.real() + y, x,
-                                    self.angle.mass.real() / 2 + y + self.L)
 
         self.canvas.fill_style = hexcode((0, 0, 0))
 
