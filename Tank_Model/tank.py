@@ -314,13 +314,37 @@ class Tank(Model):
         self.canvas.fill_rect(60, 10, 5, y)
         pass
 
-    def draw_holes3D(self, height):
+    def draw_holes3D(self, scene):
         diameter = self.dHoles.real()
         ref_hole = CylinderBufferGeometry(diameter, diameter, 3, 8, 4)
-        hole = BufferGeometry.from_geometry(ref_hole)
+        hole = Mesh(ref_hole, material=MeshPhongMaterial(color='lightblue'),
+                    position=[0, -2.5, 0], rotation=[pymath.pi, 0, 0, 'XYZ'])
+        scene.add(hole)
+        for i in range(1, self.nHoles.value // 4):
+            hole = Mesh(ref_hole, material=MeshPhongMaterial(color='lightblue'), position=[diameter * 4 * i * (-1), -2.5, 0], rotation=[pymath.pi, 0, 0, 'XYZ'])
+            scene.add(hole)
+            hole = Mesh(ref_hole, material=MeshPhongMaterial(color='lightblue'), position=[0, -2.5, diameter * 4 * i * (-1)], rotation=[pymath.pi, 0, 0, 'XYZ'])
+            scene.add(hole)
+            hole = Mesh(ref_hole, material=MeshPhongMaterial(color='lightblue'), position=[diameter * 4 * i * (1), -2.5, 0], rotation=[pymath.pi, 0, 0, 'XYZ'])
+            scene.add(hole)
+            hole = Mesh(ref_hole, material=MeshPhongMaterial(color='lightblue'), position=[0, -2.5, diameter * 4 * i * (1)], rotation=[pymath.pi, 0, 0, 'XYZ'])
+            scene.add(hole)
 
-        holes = InstancedBufferGeometry(attributes=hole.attributes)
-        pass
+        hole = Mesh(ref_hole, material=MeshPhongMaterial(color='lightblue'),
+                    position=[diameter * self.nHoles.value * (-1), -2.5, diameter * self.nHoles.value * -1], rotation=[pymath.pi, 0, 0, 'XYZ'])
+        scene.add(hole)
+        hole = Mesh(ref_hole, material=MeshPhongMaterial(color='lightblue'),
+                    position=[diameter * self.nHoles.value, -2.5, diameter * self.nHoles.value * (-1)], rotation=[pymath.pi, 0, 0, 'XYZ'])
+        scene.add(hole)
+        hole = Mesh(ref_hole, material=MeshPhongMaterial(color='lightblue'), position=[diameter * self.nHoles.value * (1), -2.5, diameter * self.nHoles.value],
+                    rotation=[pymath.pi, 0, 0, 'XYZ'])
+        scene.add(hole)
+        hole = Mesh(ref_hole, material=MeshPhongMaterial(color='lightblue'), position=[diameter * self.nHoles.value * (-1), -2.5, diameter * self.nHoles.value * (1)],
+                    rotation=[pymath.pi, 0, 0, 'XYZ'])
+        scene.add(hole)
+
+        # holes = InstancedBufferGeometry(attributes=hole.attributes, instanceCount=self.nHoles.real())
+        # return Mesh(ref_hole, material=MeshPhongMaterial(color='lightblue'), position=[0, -2.5, 0], rotation=[pymath.pi, 0, 0, 'XYZ'])
 
 
 def create_holes(n: int, d: float):
