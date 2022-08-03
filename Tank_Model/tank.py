@@ -1,5 +1,6 @@
 import math as pymath
 import threading
+import time
 
 from ipycanvas import hold_canvas
 
@@ -224,10 +225,10 @@ class Tank(Model):
         self.canvas.stroke_line(*line)
         self.canvas.stroke_text("h", x_0 - 30, (wy_0 + y_1) // 2)
 
-        if self.current_water_depth.real() > 0.03:
-            holes = self.alt_draw_holes(15, x_0, y_1, 20)
-            for hole in holes:
-                self.canvas.fill_rect(*hole)
+        #if self.current_water_depth.real() > 0.03:
+        #    holes = self.alt_draw_holes(15, x_0, y_1, 20)
+        #    for hole in holes:
+        #        self.canvas.fill_rect(*hole)
 
         self.canvas.line_width = 3.0
         self.canvas.begin_path()
@@ -241,15 +242,14 @@ class Tank(Model):
 
     def lerp_water(self, vstep):
         goal = self.get_depth()
+        start_time = time.time()
         step = 0
         #print("Lerp Water, goal: " + str(goal) + ", cur: " + str(self.current_water_depth))
         with hold_canvas(self.canvas):
-            while goal != self.current_water_depth:
-                #print("Lerp!")
+            while goal.real() - 0.001 > self.current_water_depth.real() or self.current_water_depth.real() > goal.real() + 0.001:
+                ts = time.time()
                 bf = self.current_water_depth
-                self.current_water_depth = self.lerp(self.current_water_depth, goal, step, 'm')
-
-                self.water_pivot.scale = [1, self.current_water_depth.real(), 1]
+                self.current_water_depth = self.lerp(self.current_water_depth, goal, ts - start_time, 'm')
 
                 #print("Lerp Water, goal: " + str(goal) + ", cur: " + str(self.current_water_depth))
                 self.canvas.clear()
@@ -288,7 +288,7 @@ class Tank(Model):
                 self.canvas.stroke_line(*line)
                 self.canvas.stroke_text("h", x_0 - 30, (wy_0 + y_1) // 2)
 
-                if self.current_water_depth.real() > 0.03:
+                if self.current_water_depth < bf:
                     holes = self.alt_draw_holes(15, x_0, y_1, 20)
                     for hole in holes:
                         self.canvas.fill_rect(*hole)
@@ -301,6 +301,8 @@ class Tank(Model):
                 self.canvas.line_to(x_1, y_0)
                 self.canvas.stroke()
                 self.canvas.line_width = 1.0
+
+                self.water_pivot.scale = [1, self.current_water_depth.real(), 1]
                 step += vstep
                 self.canvas.sleep(20)
         self.draw(None)

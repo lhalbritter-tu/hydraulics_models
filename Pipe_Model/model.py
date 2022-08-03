@@ -186,7 +186,7 @@ class AdvancedPipe(Model):
         if self.canvas is not None:
             self.draw()
 
-        self.rendering.geometry = CylinderBufferGeometry(self.i1.d / 2, self.i2.d / 2, 5, 16, 1)
+       # self.rendering.geometry = CylinderBufferGeometry(self.i1.d / 2, self.i2.d / 2, 5, 16, 1)
 
     def __init__(self, i1: IntersectionForm, i2: IntersectionForm, u1, canvas=None):
         self.u1 = u1
@@ -247,6 +247,7 @@ class AdvancedPipe(Model):
         self.i1.y = self.i1yParam.widget.max - self.i1yParam.real() + 75
         self.i2.y = self.i2yParam.widget.max - self.i2yParam.real() + 75
         if self.canvas is not None:
+            self.canvas.layout.width = "100%"
             self.canvas.on_client_ready(self.draw)
 
     def q1(self):
@@ -424,6 +425,13 @@ class AdvancedPipe(Model):
         for param in self.params:
             for p in param.params:
                 p.observe(func)
+
+    def get_drawing(self):
+        data = self.canvas.get_image_data()
+        dat_tex = DataTexture(data=data)
+        plane = PlaneGeometry()
+        planeMesh = Mesh(geometry=plane, material=MeshStandardMaterial(map=dat_tex), rotation=[pymath.pi, 0, 0, "XYZ"], position=[0, 0, -2])
+        return dat_tex
 
 
 class AdvancedPipe3D(AdvancedPipe):
