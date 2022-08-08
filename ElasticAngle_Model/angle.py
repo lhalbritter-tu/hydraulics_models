@@ -133,7 +133,7 @@ class AngleCanvas():
         for t in vals:
             phi = self.angle.evaluate(t)
             self.plot.mark(t, phi.real())
-            time.sleep(0.002)
+            time.sleep(0.02)
 
     def do_draw(self):
         self.draw(None)

@@ -41,13 +41,26 @@ class Hole:
 
 
 class Tank(Model):
+    """
+    Concrete Implementation of demo::Model for simulating a tank with holes
+    """
     def lines(self):
         pass
 
     def calculate(self):
+        """
+        Returns the current water depth in the tank as string
+
+        :return: the string representation of this model
+        """
         return "Depth h = " + str(self.get_depth().rounded(cut=3))
 
     def update(self, args):
+        """
+        Starts adding or draining water, by starting the lerp_water() thread
+        :param args: not used
+        :return: None
+        """
         if self.canvas is not None:
             t = threading.Thread(target=self.lerp_water, args=[0.01])  # self.canvas.on_client_ready(self.draw)
             t.start()
@@ -102,28 +115,63 @@ class Tank(Model):
 
         self.canvas.on_client_ready(self.do_draw)
 
-    def add_hole(self, hole: Hole):
+    def add_hole(self):
+        """
+        Adds a hole to the tank, increases number of holes in tank
+
+        :return: None
+        """
         self.holes.append(self.hole_callback[0])
 
     def pop_hole(self):
+        """
+        Pops the first Hole in the tank
+        :return: None
+        """
         self.holes.pop()
 
     def rem_hole(self, i: int):
+        """
+        Removes Hole at index i
+
+        :param i: index
+        :return: None
+        """
         self.holes.remove(i)
 
     def rem_hole_elem(self, hole: Hole):
+        """
+        Removes a specific Hole from the tank
+        :param hole: Hole Object to remove
+        :return: None
+        """
         self.holes.remove(self.holes.__index__(hole))
 
     def check_holes(self):
+        """
+        Checks if all the Holes are valid (= have equal diameter)
+        :return: True, if diameter is equal for all holes, else False
+        """
         d = self.holes[0].d
         ch = [h for h in self.holes if h.d != d]
         return len(ch) == 0
 
     def set_diameter(self, d):
+        """
+        Sets the diameter for all holes
+
+        :param d: new diameter
+        :return: None
+        """
         for hole in self.holes:
             hole.d = d
 
     def get_depth(self):
+        """
+        Calculates current water depth and returns it
+
+        :return: Variable Object with value=calculated water depth, unit='m'
+        """
         if not self.check_holes():
             return -1
         d_holes = self.dHoles.real()
@@ -132,17 +180,25 @@ class Tank(Model):
         return Variable((1 / (2 * G)) * (((4 * self.q.real()) / (n_holes * pymath.pi * (d_holes ** 2))) ** 2), unit="m")
 
     def get_dimensions(self, x, y):
+        """
+        Returns the dimensions of this tank for visualization with x-offset x and y-offset y
+
+        :param x: the x-offset
+        :param y: the y-offset
+        :return: params for drawing a rect with x=x, y=y, width=self.width, height=self.height
+        """
         return [x, y, self.width, self.height]
 
-    def draw_holes(self, sx, x, y, ly):
-        m = self.nHoles.real() // sx
-        offs = self.width // m
-        rects = []
-        for i in range(0, m):
-            rects.append([(offs + self.holes[i].d) * i + x, y, self.holes[i].d, ly])
-        return rects
+    def draw_holes(self, x_off, x_0, y, ly):
+        """
+        Returns a list of params for drawing holes in 2D, starting from the middle of the tank
 
-    def alt_draw_holes(self, x_off, x_0, y, ly):
+        :param x_off: the distance between each hole
+        :param x_0: the x-offset of the tank itself
+        :param y: the y-position of the holes (bottom of tank)
+        :param ly: the length of the holes in y-direction
+        :return: list of params for hole rects
+        """
         container = self.nHoles.real()
         fx = self.width / 2 + x_0
         rects = [[fx - self.dHoles.value / 2, y, self.dHoles.value, ly]]
@@ -159,28 +215,21 @@ class Tank(Model):
             container -= 1
         return rects
 
-    def draw_holes_3d(self):
-        container = self.nHoles.real()
-
-    def draw_hole_on_grid(self, grid, x, y, container):
-        if container <= 0:
-            return grid
-        if not grid.place(x, y, self.holes[0]):
-            return
-        self.draw_hole_on_grid(grid, x + 1, y, container - 1)
-        self.draw_hole_on_grid(grid, x - 1, y, container - 1)
-        self.draw_hole_on_grid(grid, x, y + 1, container - 1)
-        self.draw_hole_on_grid(grid, x, y - 1, container - 1)
-        self.draw_hole_on_grid(grid, x + 1, y + 1, container - 1)
-        self.draw_hole_on_grid(grid, x - 1, y + 1, container - 1)
-        self.draw_hole_on_grid(grid, x + 1, y + 1, container - 1)
-        self.draw_hole_on_grid(grid, x + 1, y - 1, container - 1)
-        self.draw_hole_on_grid(grid, x - 1, y - 1, container - 1)
-
     def do_draw(self):
+        """
+        Helper method to call the draw() method without arguments
+
+        :return: None
+        """
         self.draw(None)
 
     def draw(self, args):
+        """
+        Draws the 2D-Visualization of the tank
+
+        :param args: catcher variable for ipywidgets observe method
+        :return: None
+        """
         self.canvas.clear()
         self.canvas.fill_style = 'black'
         self.canvas.fill_rect(0, 0, 60, 20)
@@ -241,6 +290,13 @@ class Tank(Model):
         # self.canvas.flush()
 
     def lerp_water(self, vstep):
+        """
+        Animates the 2D-Visualization by lerping the water depth from previous to current depth.
+        Draws holes only when depth decreases, draws stream only when depth increases
+
+        :param vstep: increase velocity of step variable for lerp method
+        :return: None
+        """
         goal = self.get_depth()
         start_time = time.time()
         step = 0
@@ -289,7 +345,7 @@ class Tank(Model):
                 self.canvas.stroke_text("h", x_0 - 30, (wy_0 + y_1) // 2)
 
                 if self.current_water_depth < bf:
-                    holes = self.alt_draw_holes(15, x_0, y_1, 20)
+                    holes = self.draw_holes(15, x_0, y_1, 20)
                     for hole in holes:
                         self.canvas.fill_rect(*hole)
 
@@ -308,13 +364,33 @@ class Tank(Model):
         self.draw(None)
 
     def lerp(self, v0, v1, t, unit=''):
+        """
+        Returns a linear interpolation between values v0 and v1 at t
+
+        :param v0: start value
+        :param v1: goal value
+        :param t: step of the lerp
+        :param unit: Unit of the Variable to return, default: ''
+        :return: A variable of the lerped value
+        """
         return Variable((1 - t) * v0.real() + t * v1.real(), unit=unit)
 
     def draw_stream(self, y):
+        """
+        Draws the water in-flow with y length
+
+        :param y: length of the stream
+        :return: None
+        """
         self.canvas.fill_rect(60, 10, 5, y)
-        pass
 
     def draw_holes3D(self, scene):
+        """
+        Draws the Holes of the tank in 3D-Visualization
+
+        :param scene: The 3D-Scene
+        :return: None
+        """
         diameter = self.dHoles.real()
         ref_hole = CylinderBufferGeometry(diameter, diameter, 3, 8, 4)
         hole = Mesh(ref_hole, material=MeshPhongMaterial(color='lightblue'),
@@ -342,9 +418,6 @@ class Tank(Model):
         hole = Mesh(ref_hole, material=MeshPhongMaterial(color='lightblue'), position=[diameter * self.nHoles.value * (-1), -2.5, diameter * self.nHoles.value * (1)],
                     rotation=[pymath.pi, 0, 0, 'XYZ'])
         scene.add(hole)
-
-        # holes = InstancedBufferGeometry(attributes=hole.attributes, instanceCount=self.nHoles.real())
-        # return Mesh(ref_hole, material=MeshPhongMaterial(color='lightblue'), position=[0, -2.5, 0], rotation=[pymath.pi, 0, 0, 'XYZ'])
 
 
 def create_holes(n: int, d: float):

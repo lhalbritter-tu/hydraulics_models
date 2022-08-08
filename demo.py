@@ -380,6 +380,9 @@ import matplotlib.pyplot as plt
 
 
 class Plot:
+    """
+    Helper Class for including a matplotlib Plot with a moveable marker
+    """
     def __init__(self, x, y, width=5, height=3.5):
         self.x = x
         self.y = y
@@ -390,6 +393,13 @@ class Plot:
         self.mark(0, 0)
 
     def update_plot(self, x=None, y=None):
+        """
+        Updates the plot with the new y function and/or new values for x
+
+        :param x: new values for x, Default: None
+        :param y: new function for y, Default: None
+        :return: None
+        """
         if x is not None:
             self.x = x
         if y is not None:
@@ -398,11 +408,19 @@ class Plot:
         self.ax.plot(self.x, self.y)
 
     def mark(self, x, y, symbol='o'):
+        """
+        Moves the marker to position (x, y) on the plot
+
+        :param x: the x position for the marker
+        :param y: the y position for the marker
+        :param symbol: if there isn't a marker yet, you can specify a symbol (see matplotlib documentation for available symbols), default: 'o'
+        :return: None
+        """
         self.marker_pos = (x, y)
 
         if self.marker is None:
             self.marker = plt.plot([x], [y], marker=symbol)[0]
         self.marker.set_data([x], [y])
-        #self.widget.draw()
+        self.widget.draw()
         self.widget.flush_events()
 
