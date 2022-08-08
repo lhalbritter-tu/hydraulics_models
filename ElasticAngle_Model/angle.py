@@ -101,6 +101,8 @@ class AngleCanvas():
         self.t = 0
         self.L = L
         self.osc = None
+        self.canvas.layout.width = "75%"
+        self.canvas.layout.height = "75%"
         #self.angle.observe(self.on_angle_changed)
         # self.draw(None)
         self.canvas.on_client_ready(self.do_draw)
