@@ -259,6 +259,8 @@ class Tank(Model):
         )
         self.canvas.fill_style = gradient
         self.canvas.global_alpha = 0.75
+
+        self.draw_stream(wy_0)
         self.canvas.fill_rect(x_0 + 1, wy_0, rect[2] - 1.5, y_1 - wy_0 - 1)
 
         """if 15 <= len(self.tank.holes) < 40:
@@ -278,6 +280,9 @@ class Tank(Model):
         #    holes = self.alt_draw_holes(15, x_0, y_1, 20)
         #    for hole in holes:
         #        self.canvas.fill_rect(*hole)
+        holes = self.draw_holes(15, x_0, y_1, 20)
+        for hole in holes:
+            self.canvas.fill_rect(*hole)
 
         self.canvas.line_width = 3.0
         self.canvas.begin_path()
@@ -334,8 +339,8 @@ class Tank(Model):
                 )
                 self.canvas.fill_style = gradient
                 self.canvas.global_alpha = 0.75
-                if self.current_water_depth > bf:
-                    self.draw_stream(wy_0)
+                #if self.current_water_depth > bf:
+                self.draw_stream(wy_0)
                 self.canvas.fill_rect(x_0 + 1, wy_0, rect[2] - 1.5, y_1 - wy_0 - 1)
 
                 self.global_alpha = 1
@@ -344,10 +349,10 @@ class Tank(Model):
                 self.canvas.stroke_line(*line)
                 self.canvas.stroke_text("h", x_0 - 30, (wy_0 + y_1) // 2)
 
-                if self.current_water_depth < bf:
-                    holes = self.draw_holes(15, x_0, y_1, 20)
-                    for hole in holes:
-                        self.canvas.fill_rect(*hole)
+                #if self.current_water_depth < bf:
+                holes = self.draw_holes(15, x_0, y_1, 20)
+                for hole in holes:
+                    self.canvas.fill_rect(*hole)
 
                 self.canvas.line_width = 3.0
                 self.canvas.begin_path()

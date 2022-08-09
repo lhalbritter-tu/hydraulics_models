@@ -421,6 +421,6 @@ class Plot:
         if self.marker is None:
             self.marker = plt.plot([x], [y], marker=symbol)[0]
         self.marker.set_data([x], [y])
-        self.widget.draw()
-        self.widget.flush_events()
+        #self.widget.draw()
+        #self.widget.flush_events()
 
