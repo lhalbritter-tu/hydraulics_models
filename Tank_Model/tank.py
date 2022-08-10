@@ -65,11 +65,16 @@ class Tank(Model):
             t = threading.Thread(target=self.lerp_water, args=[0.01])  # self.canvas.on_client_ready(self.draw)
             t.start()
 
-        self.tank_pivot.scale = [1, self.depth.real(), 1]
+        # self.tank_pivot.scale = [1, self.depth.real(), 1]
+        if self.threejs_scene is not None:
+            self.draw_holes3D(self.threejs_scene)
         #self.water_pivot.scale = [1, self.get_depth().real(), 1]
 
 
         super().update(args)
+
+    def set_threejs_scene(self, scene):
+        self.threejs_scene = scene
 
     def __init__(self, holes, q: float, max_depth=1, max_holes=50, width=200, c=None, height=150):
         self.holes = holes
@@ -77,7 +82,7 @@ class Tank(Model):
         self.canvas = c
         self.q = FloatChangeable(q, _min=0.01, _max=1.0, desc="Water flow Q = ", unit="m³s⁻¹", step=0.01)
         self.depth = FloatChangeable(max_depth, _min=0.5, _max=5.0, desc="Tank depth = ", unit="m")
-        self.depth.observe(self.draw)
+        #self.depth.observe(self.draw)
         self.nHoles = IntChangeable(len(holes), _min=5, _max=max_holes, desc="Nr of Holes: ")
         self.dHoles = FloatChangeable(holes[0].d, unit="cm", base=-2, _min=0.5, _max=10, desc="Diameter d = ")
         self.params = [
@@ -108,10 +113,12 @@ class Tank(Model):
         self.water_pivot = Object3D()
         self.water_pivot.add(self.water_rendering)
         self.water_pivot.position = [0, -1, 0]
-        self.water_pivot.scale = [1, self.get_depth().real(), 1]
+        self.water_pivot.scale = [1, min(1.05, self.get_depth().real()), 1]
         self.water_pivot.rotation = [pymath.pi, 0, 0, 'XYZ']
 
         self.current_water_depth = self.get_depth()
+
+        self.hole_meshes = []
 
         self.canvas.on_client_ready(self.do_draw)
 
@@ -241,13 +248,13 @@ class Tank(Model):
 
         # self.canvas.height = y_1 + 50
 
+        partial = self.get_depth().real() / self.depth.real()
         if self.get_depth().real() > self.depth.real():
             wy_0 = y_0 - 5
             self.canvas.stroke_style = 'red'
             self.canvas.stroke_text("OVERFLOW!", x_1 + 15, y_0 - 5)
             self.canvas.stroke_style = 'black'
         else:
-            partial = self.get_depth().real() / self.depth.real()
             wy_0 = self.height * (1 - partial) + 50
         gradient = self.canvas.create_linear_gradient(
             x_0, wy_0, x_1, y_1,
@@ -292,6 +299,8 @@ class Tank(Model):
         self.canvas.line_to(x_1, y_0)
         self.canvas.stroke()
         self.canvas.line_width = 1.0
+
+        self.water_pivot.scale = [1, min(partial, 1.05), 1]
         # self.canvas.flush()
 
     def lerp_water(self, vstep):
@@ -363,7 +372,7 @@ class Tank(Model):
                 self.canvas.stroke()
                 self.canvas.line_width = 1.0
 
-                self.water_pivot.scale = [1, self.current_water_depth.real(), 1]
+                self.water_pivot.scale = [1, min(partial, 1.05), 1]
                 step += vstep
                 self.canvas.sleep(20)
         self.draw(None)
@@ -387,7 +396,7 @@ class Tank(Model):
         :param y: length of the stream
         :return: None
         """
-        self.canvas.fill_rect(60, 10, 5, y)
+        self.canvas.fill_rect(60, 10, 5 + self.q.real() * 2, y)
 
     def draw_holes3D(self, scene):
         """
@@ -396,33 +405,51 @@ class Tank(Model):
         :param scene: The 3D-Scene
         :return: None
         """
+        for hole_mesh in self.hole_meshes:
+            scene.remove(hole_mesh)
+            hole_mesh.geometry.exec_three_obj_method("dispose")
+        self.hole_meshes.clear()
+
         diameter = self.dHoles.real()
-        ref_hole = CylinderBufferGeometry(diameter, diameter, 3, 8, 4)
-        hole = Mesh(ref_hole, material=MeshPhongMaterial(color='lightblue'),
-                    position=[0, -2.5, 0], rotation=[pymath.pi, 0, 0, 'XYZ'])
-        scene.add(hole)
-        for i in range(1, self.nHoles.value // 4):
-            hole = Mesh(ref_hole, material=MeshPhongMaterial(color='lightblue'), position=[diameter * 4 * i * (-1), -2.5, 0], rotation=[pymath.pi, 0, 0, 'XYZ'])
-            scene.add(hole)
-            hole = Mesh(ref_hole, material=MeshPhongMaterial(color='lightblue'), position=[0, -2.5, diameter * 4 * i * (-1)], rotation=[pymath.pi, 0, 0, 'XYZ'])
-            scene.add(hole)
-            hole = Mesh(ref_hole, material=MeshPhongMaterial(color='lightblue'), position=[diameter * 4 * i * (1), -2.5, 0], rotation=[pymath.pi, 0, 0, 'XYZ'])
-            scene.add(hole)
-            hole = Mesh(ref_hole, material=MeshPhongMaterial(color='lightblue'), position=[0, -2.5, diameter * 4 * i * (1)], rotation=[pymath.pi, 0, 0, 'XYZ'])
-            scene.add(hole)
+        tw = self.width / 100
+        ref_hole = CylinderBufferGeometry(diameter, diameter, 1, 8, 4)
+        y = -1.5
+
+        offset = 7 - self.dHoles.value / tw
+
+        #print(offset, diameter, tw)
 
         hole = Mesh(ref_hole, material=MeshPhongMaterial(color='lightblue'),
-                    position=[diameter * self.nHoles.value * (-1), -2.5, diameter * self.nHoles.value * -1], rotation=[pymath.pi, 0, 0, 'XYZ'])
+                    position=[0, y, 0], rotation=[pymath.pi, 0, 0, 'XYZ'])
         scene.add(hole)
-        hole = Mesh(ref_hole, material=MeshPhongMaterial(color='lightblue'),
-                    position=[diameter * self.nHoles.value, -2.5, diameter * self.nHoles.value * (-1)], rotation=[pymath.pi, 0, 0, 'XYZ'])
-        scene.add(hole)
-        hole = Mesh(ref_hole, material=MeshPhongMaterial(color='lightblue'), position=[diameter * self.nHoles.value * (1), -2.5, diameter * self.nHoles.value],
-                    rotation=[pymath.pi, 0, 0, 'XYZ'])
-        scene.add(hole)
-        hole = Mesh(ref_hole, material=MeshPhongMaterial(color='lightblue'), position=[diameter * self.nHoles.value * (-1), -2.5, diameter * self.nHoles.value * (1)],
-                    rotation=[pymath.pi, 0, 0, 'XYZ'])
-        scene.add(hole)
+        self.hole_meshes.append(hole)
+        for i in range(1, self.nHoles.value // 8):
+            if diameter * offset * i >= self.tank_rendering.position[0] + tw / 2 or diameter * offset * i >= self.tank_rendering.position[2] + self.tank_rendering.geometry.depth / 2:
+                return
+            hole = Mesh(ref_hole, material=MeshPhongMaterial(color='lightblue'), position=[diameter * offset * i * (-1), y, 0], rotation=[pymath.pi, 0, 0, 'XYZ'])
+            scene.add(hole)
+            self.hole_meshes.append(hole)
+            hole = Mesh(ref_hole, material=MeshPhongMaterial(color='lightblue'), position=[0, y, diameter * offset * i * (-1)], rotation=[pymath.pi, 0, 0, 'XYZ'])
+            scene.add(hole)
+            self.hole_meshes.append(hole)
+            hole = Mesh(ref_hole, material=MeshPhongMaterial(color='lightblue'), position=[diameter * offset * i * (1), y, 0], rotation=[pymath.pi, 0, 0, 'XYZ'])
+            scene.add(hole)
+            self.hole_meshes.append(hole)
+            hole = Mesh(ref_hole, material=MeshPhongMaterial(color='lightblue'), position=[0, y, diameter * offset * i * (1)], rotation=[pymath.pi, 0, 0, 'XYZ'])
+            scene.add(hole)
+            self.hole_meshes.append(hole)
+            hole = Mesh(ref_hole, material=MeshPhongMaterial(color='lightblue'), position=[diameter * offset * i, y, diameter * offset * i], rotation=[pymath.pi, 0, 0, 'XYZ'])
+            scene.add(hole)
+            self.hole_meshes.append(hole)
+            hole = Mesh(ref_hole, material=MeshPhongMaterial(color='lightblue'), position=[-diameter * offset * i, y, diameter * offset * i], rotation=[pymath.pi, 0, 0, 'XYZ'])
+            scene.add(hole)
+            self.hole_meshes.append(hole)
+            hole = Mesh(ref_hole, material=MeshPhongMaterial(color='lightblue'), position=[diameter * offset * i, y, -diameter * offset * i], rotation=[pymath.pi, 0, 0, 'XYZ'])
+            scene.add(hole)
+            self.hole_meshes.append(hole)
+            hole = Mesh(ref_hole, material=MeshPhongMaterial(color='lightblue'), position=[-diameter * offset * i, y, -diameter * offset * i], rotation=[pymath.pi, 0, 0, 'XYZ'])
+            scene.add(hole)
+            self.hole_meshes.append(hole)
 
 
 def create_holes(n: int, d: float):
