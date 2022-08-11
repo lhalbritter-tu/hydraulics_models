@@ -1,5 +1,6 @@
 import abc
 import ipywidgets as widgets
+import numpy as np
 from IPython.display import display, Latex
 from pythreejs import *
 
@@ -239,6 +240,7 @@ class ClickButton(PseudoChangeable):
     def observe(self, func):
         self.widget.on_click(func)
 
+
 class Model(abc.ABC):
     """
     Interface for pipe models
@@ -383,6 +385,7 @@ class Plot:
     """
     Helper Class for including a matplotlib Plot with a moveable marker
     """
+
     def __init__(self, x, y, width=5, height=3.5):
         self.x = x
         self.y = y
@@ -423,4 +426,125 @@ class Plot:
         self.marker.set_data([x], [y])
         self.widget.draw()
         self.widget.flush_events()
+
+
+def from_geometry(geom):
+    return BufferGeometry.from_geometry(geom)
+
+
+def get_attribute(geom, name):
+    if name not in geom.attributes:
+        return -1
+    return geom.attributes[name]
+
+
+class Cylinder:
+    def __init__(self, radiusTop, radiusBottom, height, segments, h_segments):
+        self.vertices = []
+        self.indices = []
+        self.uv = []
+        self.normals = []
+        self.segments = segments
+        self.height = height
+
+        step = 2. * np.pi / segments
+
+        # ---------------------- Vertices ------------------ #
+        for i in range(segments):
+            angle = i * step
+            self.vertices.append([radiusTop * np.cos(angle), height / 2, radiusTop * np.sin(angle)])
+
+        for i in range(segments):
+            angle = i * step
+            self.vertices.append([radiusBottom * np.cos(angle), -height / 2, radiusBottom * np.sin(angle)])
+        self.vertices.append([0, height / 2, 0])
+        self.vertices.append([0, -height / 2, 0])
+        self.center_top_i = len(self.vertices) - 2
+        self.center_bot_i = len(self.vertices) - 1
+
+        # ---------------------- Indices --------------------- #
+        for i in range(segments):
+            self.indices.append([(i + 1) % segments])
+            self.indices.append([i])
+            self.indices.append([self.center_top_i])
+
+            self.indices.append([i + segments])
+            self.indices.append([(i + 1) % segments + segments])
+            self.indices.append([self.center_bot_i])
+
+        for i in range(segments):
+            self.indices.append([i])
+            self.indices.append([(i + 1) % segments])
+            self.indices.append([i + segments])
+
+            self.indices.append([(i + 1) % segments + segments])
+            self.indices.append([i + segments])
+            self.indices.append([(i + 1) % segments])
+
+        # ----------------------- Normals -------------------------- #
+        for i in range(segments * 2):
+            vert = self.vertices[i].copy()
+            vert[1] = 0.
+            self.normals.append(normalize(vert))
+
+        for i in range(segments):
+            self.normals.append([0., 1., 0.])
+
+        for i in range(segments):
+            self.normals.append([0., -1., 0.])
+
+        self.normals.append([0., 1., 0.])
+        self.normals.append([0., -1., 0.])
+
+        # -------------------------- UVs ----------------------------- #
+        max_angle = step * (segments - 1)
+        for i in range(segments):
+            u = i * step
+            self.uv.append([u, 0.])
+
+        for i in range(segments):
+            u = i * step
+            self.uv.append([u, 1.])
+
+        for i in range(segments):
+            angle = i * step
+            u = radiusTop * np.cos(angle) / max_angle
+            v = radiusTop * np.sin(angle) / max_angle
+
+            self.uv.append([u, v])
+
+        for i in range(segments):
+            angle = i * step
+            u = radiusBottom * np.cos(angle) / max_angle
+            v = radiusBottom * np.sin(angle) / max_angle
+
+            self.uv.append([u, v])
+
+        self.uv.append([0., 0.])
+        self.uv.append([0., 0.])
+
+    def my_cyl(self):
+        return BufferGeometry(index=BufferAttribute(array=np.array(self.indices, dtype=np.uint16)), attributes={
+            'position': BufferAttribute(array=np.array(self.vertices, dtype=np.float32), normalized=True),
+            'normal': BufferAttribute(array=np.array(self.normals, dtype=np.float32), normalized=True),
+            'uv': BufferAttribute(array=np.array(self.uv, dtype=np.float32), normalized=True),
+        })
+
+    def set_radiusTop(self, radiusTop):
+        step = 2. * np.pi / self.segments
+        for i in range(self.segments):
+            angle = i * step
+            self.vertices[i] = [radiusTop * np.cos(angle), self.height / 2, radiusTop * np.sin(angle)]
+
+    def set_radiusBottom(self, radiusBottom):
+        step = 2. * np.pi / self.segments
+        for i in range(self.segments, self.segments * 2):
+            angle = i * step
+            self.vertices[i] = [radiusBottom * np.cos(angle), -self.height / 2, radiusBottom * np.sin(angle)]
+
+
+def normalize(vec: list):
+    x, y, z = vec[0], vec[1], vec[2]
+    l = np.sqrt(x**2 + y**2 + z**2)
+    return [x / l, y / l, z / l]
 
