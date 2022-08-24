@@ -445,83 +445,90 @@ class Cylinder:
         self.uv = []
         self.normals = []
         self.segments = segments
+        self.h_segments = h_segments
         self.height = height
+
+        min_height = -self.height / 2
+        offset = self.height / (self.h_segments - 1)
+
+        print(min_height, offset)
 
         step = 2. * np.pi / segments
 
-        # ---------------------- Vertices ------------------ #
-        for i in range(segments):
-            angle = i * step
-            self.vertices.append([radiusTop * np.cos(angle), height / 2, radiusTop * np.sin(angle)])
+        for h in range(self.h_segments):
+            # ---------------------- Vertices ------------------ #
+            for i in range(segments):
+                angle = i * step
+                self.vertices.append([radiusTop * np.cos(angle),  min_height + offset * h, radiusTop * np.sin(angle)])
 
-        for i in range(segments):
-            angle = i * step
-            self.vertices.append([radiusBottom * np.cos(angle), -height / 2, radiusBottom * np.sin(angle)])
-        self.vertices.append([0, height / 2, 0])
-        self.vertices.append([0, -height / 2, 0])
-        self.center_top_i = len(self.vertices) - 2
-        self.center_bot_i = len(self.vertices) - 1
+            for i in range(segments):
+                angle = i * step
+                self.vertices.append([radiusBottom * np.cos(angle), min_height + offset * (h - 1), radiusBottom * np.sin(angle)])
+            self.vertices.append([0, min_height + offset * h, 0])
+            self.vertices.append([0, min_height + offset * (h - 1), 0])
+            center_top_i = len(self.vertices) - 2
+            center_bot_i = len(self.vertices) - 1
 
-        # ---------------------- Indices --------------------- #
-        for i in range(segments):
-            self.indices.append([(i + 1) % segments])
-            self.indices.append([i])
-            self.indices.append([self.center_top_i])
+            # ---------------------- Indices --------------------- #
+            for i in range(segments):
+                self.indices.append([((i + 1) % segments) + offset * (h - 1)])
+                self.indices.append([i + offset * (h - 1)])
+                self.indices.append([center_top_i])
 
-            self.indices.append([i + segments])
-            self.indices.append([(i + 1) % segments + segments])
-            self.indices.append([self.center_bot_i])
+                self.indices.append([i + segments + offset * (h - 1)])
+                self.indices.append([((i + 1) % segments + segments) + offset * (h - 1)])
+                self.indices.append([center_bot_i])
 
-        for i in range(segments):
-            self.indices.append([i])
-            self.indices.append([(i + 1) % segments])
-            self.indices.append([i + segments])
+            for i in range(segments):
+                self.indices.append([i + offset * (h - 1)])
+                self.indices.append([((i + 1) % segments) + offset * (h - 1)])
+                self.indices.append([i + segments + offset * (h - 1)])
 
-            self.indices.append([(i + 1) % segments + segments])
-            self.indices.append([i + segments])
-            self.indices.append([(i + 1) % segments])
+                self.indices.append([((i + 1) % segments + segments) + offset * (h - 1)])
+                self.indices.append([i + segments + offset * (h - 1)])
+                self.indices.append([((i + 1) % segments) + offset * (h - 1)])
 
-        # ----------------------- Normals -------------------------- #
-        for i in range(segments * 2):
-            vert = self.vertices[i].copy()
-            vert[1] = 0.
-            self.normals.append(normalize(vert))
+            # ----------------------- Normals -------------------------- #
+            for i in range(segments * 2):
+                vert = self.vertices[i].copy()
+                vert[1] = 0.
+                self.normals.append(normalize(vert))
 
-        for i in range(segments):
+            for i in range(segments):
+                self.normals.append([0., 1., 0.])
+
+            for i in range(segments):
+                self.normals.append([0., -1., 0.])
+
             self.normals.append([0., 1., 0.])
-
-        for i in range(segments):
             self.normals.append([0., -1., 0.])
 
-        self.normals.append([0., 1., 0.])
-        self.normals.append([0., -1., 0.])
+            # -------------------------- UVs ----------------------------- #
+            max_angle = step * (segments - 1)
+            for i in range(segments):
+                u = i * step
+                self.uv.append([u, 0.])
 
-        # -------------------------- UVs ----------------------------- #
-        max_angle = step * (segments - 1)
-        for i in range(segments):
-            u = i * step
-            self.uv.append([u, 0.])
+            for i in range(segments):
+                u = i * step
+                self.uv.append([u, 1.])
 
-        for i in range(segments):
-            u = i * step
-            self.uv.append([u, 1.])
+            for i in range(segments):
+                angle = i * step
+                u = radiusTop * np.cos(angle) / max_angle
+                v = radiusTop * np.sin(angle) / max_angle
 
-        for i in range(segments):
-            angle = i * step
-            u = radiusTop * np.cos(angle) / max_angle
-            v = radiusTop * np.sin(angle) / max_angle
+                self.uv.append([u, v])
 
-            self.uv.append([u, v])
+            for i in range(segments):
+                angle = i * step
+                u = radiusBottom * np.cos(angle) / max_angle
+                v = radiusBottom * np.sin(angle) / max_angle
 
-        for i in range(segments):
-            angle = i * step
-            u = radiusBottom * np.cos(angle) / max_angle
-            v = radiusBottom * np.sin(angle) / max_angle
+                self.uv.append([u, v])
 
-            self.uv.append([u, v])
-
-        self.uv.append([0., 0.])
-        self.uv.append([0., 0.])
+            self.uv.append([0., 0.])
+            self.uv.append([0., 0.])
 
     def my_cyl(self):
         return BufferGeometry(index=BufferAttribute(array=np.array(self.indices, dtype=np.uint16)), attributes={
