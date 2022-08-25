@@ -451,10 +451,12 @@ class Cylinder:
         self.radiusTop = radiusTop
         self.radiusBottom = radiusBottom
 
+        slope = (radiusBottom - radiusTop) / height
+
         min_height = -self.height / 2
         offset = self.height / max(1, self.h_segments)
 
-        print(min_height, offset)
+        #print(min_height, offset)
 
         step = 2. * np.pi / segments
 
@@ -465,11 +467,24 @@ class Cylinder:
             for i in range(segments):
                 angle = i * step
                 self.vertices.append([rt * np.cos(angle), min_height + offset * h, rt * np.sin(angle)])
+                vert = self.vertices[-1].copy()
+                vert[1] = slope if 1 < h < self.h_segments else 0
+                vert[0] *= -1 if h == self.h_segments - 1 else 1
+                vert[2] *= -1 if h == self.h_segments - 1 else 1
+
+                #if h == self.h_segments:
+                    #vert[2] *= -1
+                    #vert[0] *= -4
+
+                self.normals.append(normalize(vert))
 
             for i in range(segments):
                 angle = i * step
                 self.vertices.append(
                     [rb * np.cos(angle), min_height + offset * (h - 1), rb * np.sin(angle)])
+                vert = self.vertices[-1].copy()
+                vert[1] = slope
+                self.normals.append(vert)
             self.vertices.append([0, min_height + offset * h, 0])
             self.vertices.append([0, min_height + offset * (h - 1), 0])
             center_top_i = len(self.vertices) - 2
@@ -498,10 +513,10 @@ class Cylinder:
                 self.indices.append([((i + 1) % segments) + (2 * segments * (h - 1)) + (h - 1) * 2])
 
             # ----------------------- Normals -------------------------- #
-            for i in range(segments * 2):
+            """for i in range(segments * 2):
                 vert = self.vertices[i + (2 * segments * (h - 1)) + (h - 1) * 2].copy()
-                vert[1] = 0.
-                self.normals.append(normalize(vert))
+                vert[1] = slope
+                self.normals.append(vert)"""
 
             if h == self.h_segments:
                 for i in range(segments):
@@ -511,10 +526,10 @@ class Cylinder:
                 for i in range(segments):
                     self.normals.append([0., -1., 0.])
 
-            if h == self.h_segments:
-                self.normals.append([0., 1., 0.])
-            if h == 1:
-                self.normals.append([0., -1., 0.])
+            #if h == self.h_segments:
+            self.normals.append([0., 1., 0.])
+            #if h == 1:
+            self.normals.append([0., -1., 0.])
 
             # -------------------------- UVs ----------------------------- #
             max_angle = step * (segments - 1)
