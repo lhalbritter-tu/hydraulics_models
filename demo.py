@@ -448,60 +448,73 @@ class Cylinder:
         self.h_segments = h_segments
         self.height = height
 
+        self.radiusTop = radiusTop
+        self.radiusBottom = radiusBottom
+
         min_height = -self.height / 2
-        offset = self.height / (self.h_segments - 1)
+        offset = self.height / max(1, self.h_segments)
 
         print(min_height, offset)
 
         step = 2. * np.pi / segments
 
-        for h in range(self.h_segments):
+        for h in range(1, self.h_segments + 1):
+            rt = lerp(radiusBottom, radiusTop, h / self.h_segments)
+            rb = lerp(radiusBottom, radiusTop, (h - 1) / self.h_segments)
             # ---------------------- Vertices ------------------ #
             for i in range(segments):
                 angle = i * step
-                self.vertices.append([radiusTop * np.cos(angle),  min_height + offset * h, radiusTop * np.sin(angle)])
+                self.vertices.append([rt * np.cos(angle), min_height + offset * h, rt * np.sin(angle)])
 
             for i in range(segments):
                 angle = i * step
-                self.vertices.append([radiusBottom * np.cos(angle), min_height + offset * (h - 1), radiusBottom * np.sin(angle)])
+                self.vertices.append(
+                    [rb * np.cos(angle), min_height + offset * (h - 1), rb * np.sin(angle)])
             self.vertices.append([0, min_height + offset * h, 0])
             self.vertices.append([0, min_height + offset * (h - 1), 0])
             center_top_i = len(self.vertices) - 2
             center_bot_i = len(self.vertices) - 1
 
             # ---------------------- Indices --------------------- #
+            if h == 1:
+                for i in range(segments):
+                    self.indices.append([i + segments + (2 * segments * (h - 1)) + (h - 1) * 2])
+                    self.indices.append([((i + 1) % segments + segments) + (2 * segments * (h - 1)) + (h - 1) * 2])
+                    self.indices.append([center_bot_i])
+
+            if h == self.h_segments:
+                for i in range(segments):
+                    self.indices.append([((i + 1) % segments) + (2 * segments * (h - 1)) + (h - 1) * 2])
+                    self.indices.append([i + (2 * segments * (h - 1)) + (h - 1) * 2])
+                    self.indices.append([center_top_i])
+
             for i in range(segments):
-                self.indices.append([((i + 1) % segments) + offset * (h - 1)])
-                self.indices.append([i + offset * (h - 1)])
-                self.indices.append([center_top_i])
+                self.indices.append([i + (2 * segments * (h - 1)) + (h - 1) * 2])
+                self.indices.append([((i + 1) % segments) + (2 * segments * (h - 1)) + (h - 1) * 2])
+                self.indices.append([i + segments + (2 * segments * (h - 1)) + (h - 1) * 2])
 
-                self.indices.append([i + segments + offset * (h - 1)])
-                self.indices.append([((i + 1) % segments + segments) + offset * (h - 1)])
-                self.indices.append([center_bot_i])
-
-            for i in range(segments):
-                self.indices.append([i + offset * (h - 1)])
-                self.indices.append([((i + 1) % segments) + offset * (h - 1)])
-                self.indices.append([i + segments + offset * (h - 1)])
-
-                self.indices.append([((i + 1) % segments + segments) + offset * (h - 1)])
-                self.indices.append([i + segments + offset * (h - 1)])
-                self.indices.append([((i + 1) % segments) + offset * (h - 1)])
+                self.indices.append([((i + 1) % segments + segments) + (2 * segments * (h - 1)) + (h - 1) * 2])
+                self.indices.append([i + segments + (2 * segments * (h - 1)) + (h - 1) * 2])
+                self.indices.append([((i + 1) % segments) + (2 * segments * (h - 1)) + (h - 1) * 2])
 
             # ----------------------- Normals -------------------------- #
             for i in range(segments * 2):
-                vert = self.vertices[i].copy()
+                vert = self.vertices[i + (2 * segments * (h - 1)) + (h - 1) * 2].copy()
                 vert[1] = 0.
                 self.normals.append(normalize(vert))
 
-            for i in range(segments):
+            if h == self.h_segments:
+                for i in range(segments):
+                    self.normals.append([0., 1., 0.])
+
+            if h == 1:
+                for i in range(segments):
+                    self.normals.append([0., -1., 0.])
+
+            if h == self.h_segments:
                 self.normals.append([0., 1., 0.])
-
-            for i in range(segments):
+            if h == 1:
                 self.normals.append([0., -1., 0.])
-
-            self.normals.append([0., 1., 0.])
-            self.normals.append([0., -1., 0.])
 
             # -------------------------- UVs ----------------------------- #
             max_angle = step * (segments - 1)
@@ -538,20 +551,31 @@ class Cylinder:
         })
 
     def set_radiusTop(self, radiusTop):
+        self.radiusTop = radiusTop
         step = 2. * np.pi / self.segments
-        for i in range(self.segments):
-            angle = i * step
-            self.vertices[i] = [radiusTop * np.cos(angle), self.height / 2, radiusTop * np.sin(angle)]
+        for h in range(1, self.h_segments + 1):
+            rt = lerp(self.radiusBottom, radiusTop, h / self.h_segments)
+            rb = lerp(self.radiusBottom, radiusTop, (h - 1) / self.h_segments)
+            for i in range(self.segments):
+                angle = i * step
+                self.vertices[i + (2 * self.segments * (h - 1)) + (h - 1) * 2] = [rt * np.cos(angle), self.height / 2, rt * np.sin(angle)]
 
     def set_radiusBottom(self, radiusBottom):
+        self.radiusBottom = radiusBottom
         step = 2. * np.pi / self.segments
-        for i in range(self.segments, self.segments * 2):
-            angle = i * step
-            self.vertices[i] = [radiusBottom * np.cos(angle), -self.height / 2, radiusBottom * np.sin(angle)]
+        for h in range(1, self.h_segments + 1):
+            rt = lerp(radiusBottom, self.radiusTop, h / self.h_segments)
+            rb = lerp(radiusBottom, self.radiusTop, (h - 1) / self.h_segments)
+            for i in range(self.segments, self.segments * 2):
+                angle = i * step
+                self.vertices[i + (2 * self.segments * (h - 1)) + (h - 1) * 2] = [rb * np.cos(angle), -self.height / 2, rb * np.sin(angle)]
 
 
 def normalize(vec: list):
     x, y, z = vec[0], vec[1], vec[2]
-    l = np.sqrt(x**2 + y**2 + z**2)
+    l = np.sqrt(x ** 2 + y ** 2 + z ** 2)
     return [x / l, y / l, z / l]
 
+
+def lerp(v0, v1, t):
+    return (1 - t) * v0 + t * v1
