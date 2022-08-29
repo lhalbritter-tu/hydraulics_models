@@ -247,7 +247,7 @@ class AdvancedPipe(Model):
         self.i1.y = self.i1yParam.widget.max - self.i1yParam.real() + 75
         self.i2.y = self.i2yParam.widget.max - self.i2yParam.real() + 75
         if self.canvas is not None:
-            self.canvas.layout.width = "100%"
+            #self.canvas.layout.width = "100%"
             self.canvas.on_client_ready(self.draw)
 
     def q1(self):

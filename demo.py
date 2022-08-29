@@ -483,7 +483,10 @@ class Cylinder:
                 self.vertices.append(
                     [rb * np.cos(angle), min_height + offset * (h - 1), rb * np.sin(angle)])
                 vert = self.vertices[-1].copy()
-                vert[1] = slope
+                vert[1] = slope if 1 < h < self.h_segments else 0
+                #vert[0] *= -1 if h == self.h_segments - 1 else 1
+                #vert[2] *= -1 if h == self.h_segments - 1 else 1
+
                 self.normals.append(vert)
             self.vertices.append([0, min_height + offset * h, 0])
             self.vertices.append([0, min_height + offset * (h - 1), 0])
