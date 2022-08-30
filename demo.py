@@ -599,3 +599,53 @@ def normalize(vec: list):
 
 def lerp(v0, v1, t):
     return (1 - t) * v0 + t * v1
+
+
+class MultiPlot:
+    def __init__(self):
+        self.fig, self.ax = plt.subplots(figsize=(5, 5))
+        self.widget = self.fig.canvas
+        self.axes = [self.ax]
+
+    def add_ax(self, x, y, color='blue'):
+        self.axes[-1].plot(x, y, color=color)
+        self.axes.append(self.axes[-1].twinx())
+        return len(self.axes) - 2
+
+    def set_visible(self, i):
+        for j in range(len(self.axes)):
+            self.axes[j].set_visible(i == j)
+
+    def set_data(self, i, x, y):
+        if i < 0 or i >= len(self.axes):
+            return False
+        self.axes[i].set_data(x, y)
+        return True
+
+    def canvas(self):
+        return self.fig.canvas
+
+    def show(self):
+        self.fig.show()
+
+if __name__ == '__main__':
+    mp = MultiPlot()
+    #mp.add_ax([0, 1, 2, 3, 4], [2, 4, 6, 8, 10], color='orange')
+    #mp.add_ax([0, 1, 2, 3, 4], [3, 6, 9, 25, 15], color='green')
+    #mp.add_ax([5, 6, 7, 8], [0, -2, -5, 10], color='red')
+    #mp.add_ax([0, 1, 2, 3, 4], [30, 10, 30, 10, 30], color='yellow')
+    #mp.add_ax([0, 1, 2, 3, 4], [5, 0, -5, 0, 5], color='purple')
+    mp.add_ax([0, 0.01, 2, 3], [10, 0, 0, 0])
+    mp.add_ax([4, 4.01], [10, 0], color='red')
+    mp.add_ax([4.01, 5, 6], [10, 10, 10], color='red')
+    mp.add_ax([4.01, 5.5], [5, 5], color='red')
+    mp.add_ax([4.01, 5, 6], [0, 0, 0], color='red')
+    mp.add_ax([7, 10], [10, 10], color='green')
+    mp.add_ax([7, 7.01], [9, 1], color='green')
+    mp.add_ax([7, 10], [0, 0], color='green')
+    mp.add_ax([10, 10.01], [9, 1], color='green')
+    mp.show()
+    while True:
+        n = input("Enter Plot to show [0-1]: ")
+        mp.set_visible(int(n))
+        mp.show()

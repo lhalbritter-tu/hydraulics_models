@@ -120,6 +120,15 @@ class Tank(Model):
 
         self.hole_meshes = []
 
+        self.plot = MultiPlot()
+        self.q_vars = np.linspace(0, 1, 100)
+        self.d_vars = np.linspace(0.5, 10, 100)
+        self.n_vars = np.linspace(5, 50, 100)
+
+        self.in_flow_plot = self.plot.add_ax(self.q_vars, (1 / (2 * G)) * ((4 * self.q_vars) / (len(holes) * pymath.pi * holes[0].d ** 2)) ** 2)
+        self.d_plot = self.plot.add_ax(self.d_vars, (1 / (2 * G)) * ((4 * q) / (len(holes) * pymath.pi * self.d_vars ** 2)) ** 2, color='green')
+        self.n_plot = self.plot.add_ax(self.n_vars, (1 / (2 * G)) * ((4 * q) / (self.n_vars * pymath.pi * holes[0].d ** 2)) ** 2, color='orange')
+        #self.plot.set_visible(self.in_flow_plot)
         self.canvas.on_client_ready(self.do_draw)
 
     def add_hole(self):

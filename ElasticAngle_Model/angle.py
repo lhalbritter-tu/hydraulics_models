@@ -206,8 +206,25 @@ class AngleCanvas():
             xpr3, ypr3 = self.rotate_point(pivot, (xr3, yr3), s, c)
             xpr4, ypr4 = self.rotate_point(pivot, (xr4, yr4), s, c)
 
+            xa1 = xr2
+            ya1 = yr1 + 2.5
+            xa2 = xr1
+            ya2 = ya1
+
+            xpa1, ypa1 = self.rotate_point(pivot, (xa1, ya1), s, c)
+            xpa2, ypa2 = self.rotate_point(pivot, (xa2, ya2), s, c)
+
             self.canvas.fill_polygon([(xpr1 + cx, ypr1 + cy), (xpr2 + cx, ypr2 + cy), (xpr3 + cx, ypr3 + cy), (xpr4 + cx, ypr4 + cy)])
             self.canvas.stroke_polygon([(xpr1 + cx, ypr1 + cy), (xpr2 + cx, ypr2 + cy), (xpr3 + cx, ypr3 + cy), (xpr4 + cx, ypr4 + cy)])
+
+            self.canvas.fill_arc(xpa1 + cx, ypa1 + cy, 2.5, pymath.pi / 2,
+                                 3 * pymath.pi / 2, True)
+            self.canvas.stroke_arc(xpa1 + cx, ypa1 + cy, 2.5, pymath.pi / 2,
+                                   3 * pymath.pi / 2, True)
+            self.canvas.fill_arc(xpa2 + cx, ypa2 + cy, 2.5, pymath.pi / 2,
+                                 3 * pymath.pi / 2)
+            self.canvas.stroke_arc(xpa2 + cx, ypa2 + cy, 2.5, pymath.pi / 2,
+                                   3 * pymath.pi / 2)
 
             ezz1 = self.zigzag_stretch(xpr4 + cx, ypr4 + cy, xpr4 + cx, self.angle.mass.real() / 2 + y + self.L + 5 + 15, x_offset=5)
             ezz2 = self.zigzag_stretch(xpr3 + cx, ypr3 + cy, xpr3 + cx, self.angle.mass.real() / 2 + y + self.L + 5 + 15, x_offset=5)
@@ -222,15 +239,6 @@ class AngleCanvas():
             self.canvas.fill_style = hexcode((255, 255, 255))
             self.canvas.fill_arc(x, self.angle.mass.real() / 2 + y + self.L + 5, 5, 0, pymath.pi)
             self.canvas.stroke_arc(x, self.angle.mass.real() / 2 + y + self.L + 5, 5, 0, pymath.pi)
-
-            self.canvas.fill_arc(x + self.L, self.angle.mass.real() / 2 + y + self.L + 2.5, 2.5, pymath.pi / 2,
-                                 3 * pymath.pi / 2, True)
-            self.canvas.stroke_arc(x + self.L, self.angle.mass.real() / 2 + y + self.L + 2.5, 2.5, pymath.pi / 2,
-                                   3 * pymath.pi / 2, True)
-            self.canvas.fill_arc(x - self.L, self.angle.mass.real() / 2 + y + self.L + 2.5, 2.5, pymath.pi / 2,
-                                 3 * pymath.pi / 2)
-            self.canvas.stroke_arc(x - self.L, self.angle.mass.real() / 2 + y + self.L + 2.5, 2.5, pymath.pi / 2,
-                                   3 * pymath.pi / 2)
 
             self.fancy_line(x - 10, x + 10, self.angle.mass.real() / 2 + y + self.L + 15, x_offset=3)
 
@@ -322,9 +330,9 @@ class AngleCanvas():
         #print("Start oscilate")
         if self.osc is None:
             self.osc = threading.Thread(target=self.oscilate)
-            self.pl = threading.Thread(target=self.pl_thr)
+            #self.pl = threading.Thread(target=self.pl_thr)
             self.osc.start()
-            self.pl.start()
+            #self.pl.start()
             self.play_btn.disabled = True
 
     def stop_oscilate(self, btn):
