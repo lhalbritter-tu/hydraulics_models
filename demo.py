@@ -409,6 +409,7 @@ class Plot:
             self.y = y
         self.ax.clear()
         self.ax.plot(self.x, self.y)
+        self.mark(0, 0)
 
     def mark(self, x, y, symbol='o'):
         """
@@ -419,10 +420,11 @@ class Plot:
         :param symbol: if there isn't a marker yet, you can specify a symbol (see matplotlib documentation for available symbols), default: 'o'
         :return: None
         """
+
         self.marker_pos = (x, y)
 
         if self.marker is None:
-            self.marker = plt.plot([x], [y], marker=symbol)[0]
+           self.marker = plt.plot([x], [y], marker=symbol)[0]
         self.marker.set_data([x], [y])
         self.widget.draw()
         self.widget.flush_events()

@@ -133,7 +133,7 @@ class AngleCanvas():
         for t in vals:
             phi = self.angle.evaluate(t)
             self.plot.mark(t, phi.real())
-            time.sleep(0.02)
+            time.sleep(0.002)
 
     def do_draw(self):
         self.draw(None)
@@ -153,6 +153,7 @@ class AngleCanvas():
         if args is not None and 'angle' in args:
             cx = x
             cy = self.angle.mass.real() / 2 + self.L + y - 5
+            pivot = (cx, cy)
 
             s = np.sin(args['angle'])
             c = np.cos(args['angle'])
@@ -164,12 +165,75 @@ class AngleCanvas():
             xp = px * c - py * s
             yp = px * s + py * c
 
-            self.canvas.stroke_line(xp + cx, self.angle.mass.real() + yp + cy, x,
+            x1 = x
+            y1 = self.angle.mass.real() / 2 + self.L + y - 5
+            x2 = x - 5
+            y2 = self.angle.mass.real() / 2 + self.L + y
+            x3 = x + 5
+            y3 = self.angle.mass.real() / 2 + self.L + y
+
+            xp1, yp1 = self.rotate_point(pivot, (x1, y1), s, c)
+            xp2, yp2 = self.rotate_point(pivot, (x2, y2), s, c)
+            xp3, yp3 = self.rotate_point(pivot, (x3, y3), s, c)
+
+            self.canvas.stroke_line(xp + cx, self.angle.mass.real() + yp + cy, xp1 + cx,
                                     self.angle.mass.real() / 2 + y + self.L)
             #self.canvas.stroke_line(x, y, xp, yp)self.canvas.fill_style = hexcode((230, 230, 230))
             self.canvas.fill_circle(xp + cx, yp + cy, 9)
             self.canvas.stroke_text('m', xp - 4.5 + cx, yp + 2 + cy)
             self.canvas.stroke_circle(xp + cx, yp + cy, 9)
+
+            self.canvas.fill_style = hexcode((0, 0, 0))
+
+            self.canvas.fill_polygon([(xp1 + cx, yp1 + cy),
+                                      (xp2 + cx, yp2 + cy),
+                                      (xp3 + cx, yp3 + cy),
+                                      ])
+
+            self.canvas.fill_style = hexcode((230, 230, 230))
+
+            xr1 = x - self.L
+            yr1 = self.angle.mass.real() / 2 + y + self.L
+            xr2 = xr1 + self.L * 2
+            yr2 = yr1
+            xr3 = xr1 + self.L * 2
+            yr3 = yr1 + 5
+            xr4 = xr1
+            yr4 = yr3
+
+            xpr1, ypr1 = self.rotate_point(pivot, (xr1, yr1), s, c)
+            xpr2, ypr2 = self.rotate_point(pivot, (xr2, yr2), s, c)
+            xpr3, ypr3 = self.rotate_point(pivot, (xr3, yr3), s, c)
+            xpr4, ypr4 = self.rotate_point(pivot, (xr4, yr4), s, c)
+
+            self.canvas.fill_polygon([(xpr1 + cx, ypr1 + cy), (xpr2 + cx, ypr2 + cy), (xpr3 + cx, ypr3 + cy), (xpr4 + cx, ypr4 + cy)])
+            self.canvas.stroke_polygon([(xpr1 + cx, ypr1 + cy), (xpr2 + cx, ypr2 + cy), (xpr3 + cx, ypr3 + cy), (xpr4 + cx, ypr4 + cy)])
+
+            ezz1 = self.zigzag_stretch(xpr4 + cx, ypr4 + cy, xpr4 + cx, self.angle.mass.real() / 2 + y + self.L + 5 + 15, x_offset=5)
+            ezz2 = self.zigzag_stretch(xpr3 + cx, ypr3 + cy, xpr3 + cx, self.angle.mass.real() / 2 + y + self.L + 5 + 15, x_offset=5)
+
+            self.fancy_line(ezz1[0] - 10, ezz1[0] + 10, ezz1[1], x_offset=3)
+            self.fancy_line(ezz2[0] - 10, ezz2[0] + 10, ezz2[1], x_offset=3)
+
+            self.canvas.stroke_line(x, self.angle.mass.real() / 2 + self.L + y + 5, x - 5,
+                                    self.angle.mass.real() / 2 + self.L + y + 15)
+            self.canvas.stroke_line(x, self.angle.mass.real() / 2 + self.L + y + 5, x + 5,
+                                    self.angle.mass.real() / 2 + self.L + y + 15)
+            self.canvas.fill_style = hexcode((255, 255, 255))
+            self.canvas.fill_arc(x, self.angle.mass.real() / 2 + y + self.L + 5, 5, 0, pymath.pi)
+            self.canvas.stroke_arc(x, self.angle.mass.real() / 2 + y + self.L + 5, 5, 0, pymath.pi)
+
+            self.canvas.fill_arc(x + self.L, self.angle.mass.real() / 2 + y + self.L + 2.5, 2.5, pymath.pi / 2,
+                                 3 * pymath.pi / 2, True)
+            self.canvas.stroke_arc(x + self.L, self.angle.mass.real() / 2 + y + self.L + 2.5, 2.5, pymath.pi / 2,
+                                   3 * pymath.pi / 2, True)
+            self.canvas.fill_arc(x - self.L, self.angle.mass.real() / 2 + y + self.L + 2.5, 2.5, pymath.pi / 2,
+                                 3 * pymath.pi / 2)
+            self.canvas.stroke_arc(x - self.L, self.angle.mass.real() / 2 + y + self.L + 2.5, 2.5, pymath.pi / 2,
+                                   3 * pymath.pi / 2)
+
+            self.fancy_line(x - 10, x + 10, self.angle.mass.real() / 2 + y + self.L + 15, x_offset=3)
+
             #self.canvas.rotate(args['angle'])
         else:
             self.canvas.stroke_line(x, self.angle.mass.real() + y, x,
@@ -178,45 +242,56 @@ class AngleCanvas():
             self.canvas.stroke_text('m', x - 4.5, y + 2)
             self.canvas.stroke_circle(x, y, 9)
 
-        self.canvas.fill_style = hexcode((0, 0, 0))
+            self.canvas.fill_style = hexcode((0, 0, 0))
 
 
-        self.canvas.reset_transform()
+            self.canvas.reset_transform()
 
-        self.canvas.fill_polygon([(x, self.angle.mass.real() / 2 + self.L + y - 5),
-                                  (x - 5, self.angle.mass.real() / 2 + self.L + y),
-                                  (x + 5, self.angle.mass.real() / 2 + self.L + y),
-                                  ])
+            self.canvas.fill_polygon([(x, self.angle.mass.real() / 2 + self.L + y - 5),
+                                      (x - 5, self.angle.mass.real() / 2 + self.L + y),
+                                      (x + 5, self.angle.mass.real() / 2 + self.L + y),
+                                      ])
 
-        self.canvas.fill_style = hexcode((230, 230, 230))
+            self.canvas.fill_style = hexcode((230, 230, 230))
 
-        self.canvas.fill_rect(x - self.L, self.angle.mass.real() / 2 + y + self.L, self.L * 2, 5)
-        self.canvas.stroke_rect(x - self.L, self.angle.mass.real() / 2 + y + self.L, self.L * 2, 5)
+            self.canvas.fill_rect(x - self.L, self.angle.mass.real() / 2 + y + self.L, self.L * 2, 5)
+            self.canvas.stroke_rect(x - self.L, self.angle.mass.real() / 2 + y + self.L, self.L * 2, 5)
 
-        ezz1 = self.zigzag(x - self.L, self.angle.mass.real() / 2 + y + self.L + 5, x_offset=5, y_offset=2.5)
-        ezz2 = self.zigzag(x + self.L, self.angle.mass.real() / 2 + y + self.L + 5, x_offset=5, y_offset=2.5)
+            ezz1 = self.zigzag(x - self.L, self.angle.mass.real() / 2 + y + self.L + 5, x_offset=5, y_offset=2.5)
+            ezz2 = self.zigzag(x + self.L, self.angle.mass.real() / 2 + y + self.L + 5, x_offset=5, y_offset=2.5)
 
-        self.fancy_line(ezz1[0] - 10, ezz1[0] + 10, ezz1[1], x_offset=3)
-        self.fancy_line(ezz2[0] - 10, ezz2[0] + 10, ezz2[1], x_offset=3)
+            self.fancy_line(ezz1[0] - 10, ezz1[0] + 10, ezz1[1], x_offset=3)
+            self.fancy_line(ezz2[0] - 10, ezz2[0] + 10, ezz2[1], x_offset=3)
 
-        self.canvas.stroke_line(x, self.angle.mass.real() / 2 + self.L + y + 5, x - 5,
-                                self.angle.mass.real() / 2 + self.L + y + 15)
-        self.canvas.stroke_line(x, self.angle.mass.real() / 2 + self.L + y + 5, x + 5,
-                                self.angle.mass.real() / 2 + self.L + y + 15)
-        self.canvas.fill_style = hexcode((255, 255, 255))
-        self.canvas.fill_arc(x, self.angle.mass.real() / 2 + y + self.L + 5, 5, 0, pymath.pi)
-        self.canvas.stroke_arc(x, self.angle.mass.real() / 2 + y + self.L + 5, 5, 0, pymath.pi)
+            self.canvas.stroke_line(x, self.angle.mass.real() / 2 + self.L + y + 5, x - 5,
+                                    self.angle.mass.real() / 2 + self.L + y + 15)
+            self.canvas.stroke_line(x, self.angle.mass.real() / 2 + self.L + y + 5, x + 5,
+                                    self.angle.mass.real() / 2 + self.L + y + 15)
+            self.canvas.fill_style = hexcode((255, 255, 255))
+            self.canvas.fill_arc(x, self.angle.mass.real() / 2 + y + self.L + 5, 5, 0, pymath.pi)
+            self.canvas.stroke_arc(x, self.angle.mass.real() / 2 + y + self.L + 5, 5, 0, pymath.pi)
 
-        self.canvas.fill_arc(x + self.L, self.angle.mass.real() / 2 + y + self.L + 2.5, 2.5, pymath.pi / 2,
-                             3 * pymath.pi / 2, True)
-        self.canvas.stroke_arc(x + self.L, self.angle.mass.real() / 2 + y + self.L + 2.5, 2.5, pymath.pi / 2,
-                               3 * pymath.pi / 2, True)
-        self.canvas.fill_arc(x - self.L, self.angle.mass.real() / 2 + y + self.L + 2.5, 2.5, pymath.pi / 2,
-                             3 * pymath.pi / 2)
-        self.canvas.stroke_arc(x - self.L, self.angle.mass.real() / 2 + y + self.L + 2.5, 2.5, pymath.pi / 2,
-                               3 * pymath.pi / 2)
+            self.canvas.fill_arc(x + self.L, self.angle.mass.real() / 2 + y + self.L + 2.5, 2.5, pymath.pi / 2,
+                                 3 * pymath.pi / 2, True)
+            self.canvas.stroke_arc(x + self.L, self.angle.mass.real() / 2 + y + self.L + 2.5, 2.5, pymath.pi / 2,
+                                   3 * pymath.pi / 2, True)
+            self.canvas.fill_arc(x - self.L, self.angle.mass.real() / 2 + y + self.L + 2.5, 2.5, pymath.pi / 2,
+                                 3 * pymath.pi / 2)
+            self.canvas.stroke_arc(x - self.L, self.angle.mass.real() / 2 + y + self.L + 2.5, 2.5, pymath.pi / 2,
+                                   3 * pymath.pi / 2)
 
-        self.fancy_line(x - 10, x + 10, self.angle.mass.real() / 2 + y + self.L + 15, x_offset=3)
+            self.fancy_line(x - 10, x + 10, self.angle.mass.real() / 2 + y + self.L + 15, x_offset=3)
+
+        # self.canvas.scale(10, 10)
+
+    def rotate_point(self, pivot, point, s, c):
+        cx, cy = pivot
+        x, y = point
+        px = x - cx
+        py = y - cy
+        xp = px * c - py * s
+        yp = px * s + py * c
+        return xp, yp
 
     def zigzag(self, x, y, steps=7, x_offset=10, y_offset=5):
         self.canvas.stroke_line(x, y, x, y + y_offset)
@@ -231,6 +306,10 @@ class AngleCanvas():
                                 x, y + y_offset * (steps + 1))
         self.canvas.stroke_line(x, y + y_offset * (steps + 1), x, y + y_offset * (steps + 2))
         return (x, y + y_offset * (steps + 2))
+
+    def zigzag_stretch(self, x0, y0, x1, y1, steps=7, x_offset=10):
+        y_offset = abs(y1 - y0) / steps
+        return self.zigzag(x0,y0, steps=steps, y_offset=y_offset, x_offset=x_offset)
 
     def fancy_line(self, x_0, x_1, y, x_offset=2.5, y_offset=5):
         self.canvas.stroke_line(x_0, y, x_1, y)
