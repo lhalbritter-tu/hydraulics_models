@@ -425,7 +425,7 @@ class Plot:
 
         if self.marker is None:
            self.marker = plt.plot([x], [y], marker=symbol)[0]
-        self.marker.set_data([x], [y])
+        # self.marker.set_data([x], [y])
         self.widget.draw()
         self.widget.flush_events()
 
@@ -622,11 +622,20 @@ class MultiPlot:
         self.axes[i].set_data(x, y)
         return True
 
+    def clear(self):
+        self.fig, self.ax = plt.subplots(figsize=(5, 5))
+        self.widget = self.fig.canvas
+        self.axes = [self.ax]
+
+    def __len__(self):
+        return len(self.axes) - 1
+
     def canvas(self):
         return self.fig.canvas
 
     def show(self):
         self.fig.show()
+
 
 if __name__ == '__main__':
     mp = MultiPlot()
@@ -646,6 +655,8 @@ if __name__ == '__main__':
     mp.add_ax([10, 10.01], [9, 1], color='green')
     mp.show()
     while True:
-        n = input("Enter Plot to show [0-1]: ")
+        n = input("Enter Plot to show [0-"+str(len(mp) - 1)+"]: ")
+        if int(n) > len(mp) - 1:
+            mp.clear()
         mp.set_visible(int(n))
         mp.show()

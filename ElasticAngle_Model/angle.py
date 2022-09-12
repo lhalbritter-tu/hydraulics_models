@@ -101,8 +101,9 @@ class AngleCanvas():
         self.t = 0
         self.L = L
         self.osc = None
-        self.canvas.layout.width = "75%"
-        self.canvas.layout.height = "75%"
+        self.scale = width / height
+        #self.canvas.layout.width = "75%"
+        #self.canvas.layout.height = "75%"
         #self.angle.observe(self.on_angle_changed)
         # self.draw(None)
         self.canvas.on_client_ready(self.do_draw)
@@ -229,8 +230,8 @@ class AngleCanvas():
             ezz1 = self.zigzag_stretch(xpr4 + cx, ypr4 + cy, xpr4 + cx, self.angle.mass.real() / 2 + y + self.L + 5 + 15, x_offset=5)
             ezz2 = self.zigzag_stretch(xpr3 + cx, ypr3 + cy, xpr3 + cx, self.angle.mass.real() / 2 + y + self.L + 5 + 15, x_offset=5)
 
-            self.fancy_line(ezz1[0] - 10, ezz1[0] + 10, ezz1[1], x_offset=3)
-            self.fancy_line(ezz2[0] - 10, ezz2[0] + 10, ezz2[1], x_offset=3)
+            self.fancy_line(ezz1[0] - 10, ezz1[0] + 10, self.angle.mass.real() / 2 + y + self.L + 5 + 20, x_offset=3)
+            self.fancy_line(ezz2[0] - 10, ezz2[0] + 10, self.angle.mass.real() / 2 + y + self.L + 5 + 20, x_offset=3)
 
             self.canvas.stroke_line(x, self.angle.mass.real() / 2 + self.L + y + 5, x - 5,
                                     self.angle.mass.real() / 2 + self.L + y + 15)
@@ -313,11 +314,14 @@ class AngleCanvas():
         self.canvas.stroke_line(x + x_offset * (-1) ** (steps - 1), y + y_offset * steps,
                                 x, y + y_offset * (steps + 1))
         self.canvas.stroke_line(x, y + y_offset * (steps + 1), x, y + y_offset * (steps + 2))
-        return (x, y + y_offset * (steps + 2))
+        return x, y + y_offset * (steps + 2)
 
     def zigzag_stretch(self, x0, y0, x1, y1, steps=7, x_offset=10):
         y_offset = abs(y1 - y0) / steps
-        return self.zigzag(x0,y0, steps=steps, y_offset=y_offset, x_offset=x_offset)
+        ezz = self.zigzag(x0,y0, steps=steps, y_offset=y_offset, x_offset=x_offset)
+        if ezz[1] != y1:
+            self.canvas.stroke_line(x0, ezz[1], x0, y1)
+        return x0, y1
 
     def fancy_line(self, x_0, x_1, y, x_offset=2.5, y_offset=5):
         self.canvas.stroke_line(x_0, y, x_1, y)
@@ -330,9 +334,9 @@ class AngleCanvas():
         #print("Start oscilate")
         if self.osc is None:
             self.osc = threading.Thread(target=self.oscilate)
-            #self.pl = threading.Thread(target=self.pl_thr)
+            self.pl = threading.Thread(target=self.pl_thr)
             self.osc.start()
-            #self.pl.start()
+            self.pl.start()
             self.play_btn.disabled = True
 
     def stop_oscilate(self, btn):
