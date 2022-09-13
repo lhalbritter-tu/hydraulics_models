@@ -102,7 +102,7 @@ class Changeable(Variable):
     Implementation of Variable which implements a UI widget to interactively change the variable's value
     """
 
-    def __init__(self, widget, base=0, unit=" "):
+    def __init__(self, widget, base=0, unit=" ", should_update=True):
         """
         Initializes this Changeable Object with the UI widget widget, the base for the Variable and unit for the Variable
         It is recommended to create an object of an implementation of this class, so you don't have to initialize the widget manually
@@ -115,6 +115,7 @@ class Changeable(Variable):
         self.widget = widget
         self.isActive = True
         self.observe(self.set_value)
+        self.should_update = should_update
 
     def set_active(self, active):
         """
@@ -184,7 +185,7 @@ class IntChangeable(Changeable):
 
 
 class FloatChangeable(Changeable):
-    def __init__(self, value, base=0, unit=" ", _min=.0, _max=10.0, desc="", step=0.1, continuous_update=False):
+    def __init__(self, value, base=0, unit=" ", _min=.0, _max=10.0, desc="", step=0.1, continuous_update=False, should_update=True):
         """
         Initializes the internal Variable and Changeable with an ipywidgets.FloatSlider with the following attributes:
 
@@ -203,7 +204,7 @@ class FloatChangeable(Changeable):
             description=desc,
             step=step,
             continuous_update=continuous_update
-        ), base, unit)
+        ), base, unit, should_update=should_update)
         self.unitLabel = widgets.Label(f"[{unit}]")
         self.display = widgets.HBox([self.widget, self.unitLabel])
 
@@ -236,6 +237,7 @@ class ClickButton(PseudoChangeable):
             tooltip=tooltip
         ))
         self.display = self.widget
+        self.should_update = False
 
     def observe(self, func):
         self.widget.on_click(func)
@@ -329,7 +331,7 @@ class Demo:
     Class for setting up a Jupyter interactive Demo of any given implementation of Model
     """
 
-    def __init__(self, params: [ChangeableContainer], model: Model, drawable=None):
+    def __init__(self, params: [ChangeableContainer], model: Model, drawable=None, extra_output=None):
         """
         Initializes the demo object with the interactable params of the model and optionally a drawable widget
 
@@ -343,9 +345,11 @@ class Demo:
         self.model.set_callback(self)
         self.widget_output = widgets.Output()
         self.output = widgets.Output()
+        self.extra_output = extra_output
         for container in params:
             for param in container.params:
-                param.observe(model.update)
+                if param.should_update:
+                    param.observe(model.update)
 
     def show(self):
         """
@@ -374,8 +378,11 @@ class Demo:
             display(widgets.HBox([param.display for param in self.params]))
 
         self.output.clear_output(wait=True)
+        op = widgets.HTMLMath(self.model.calculate())
+        if self.extra_output is not None:
+            op = widgets.HBox([widgets.HTMLMath(self.model.calculate()), self.extra_output])
         with self.output:
-            display(widgets.HTMLMath(self.model.calculate()))
+            display(op)
 
 
 import matplotlib.pyplot as plt
@@ -386,11 +393,18 @@ class Plot:
     Helper Class for including a matplotlib Plot with a moveable marker
     """
 
-    def __init__(self, x, y, width=5, height=3.5):
+    def __init__(self, x, y, width=5, height=3.5, title="Plot", xlabel="x", ylabel="y"):
         self.x = x
         self.y = y
+        self.title = title
+        self.xlabel = xlabel
+        self.ylabel = ylabel
         self.fig, self.ax = plt.subplots(figsize=(width, height))
+        self.ax.set_title(title)
         self.ax.plot(x, y)
+        self.ax.set_xlabel(self.xlabel)
+        self.ax.set_ylabel(self.ylabel)
+        self.ax.set_ylim([-0.25, 0.25])
         self.widget = self.fig.canvas
         self.marker = None
         self.mark(0, 0)
@@ -408,8 +422,14 @@ class Plot:
         if y is not None:
             self.y = y
         self.ax.clear()
+        self.ax.set_title(self.title)
         self.ax.plot(self.x, self.y)
-        self.mark(0, 0)
+        self.ax.set_xlabel(self.xlabel)
+        self.ax.set_ylabel(self.ylabel)
+        self.ax.set_ylim([-0.1, 0.1])
+        self.marker = None
+        self.widget.draw()
+        self.widget.flush_events()
 
     def mark(self, x, y, symbol='o'):
         """
@@ -425,7 +445,7 @@ class Plot:
 
         if self.marker is None:
            self.marker = plt.plot([x], [y], marker=symbol)[0]
-        # self.marker.set_data([x], [y])
+        self.marker.set_data([x], [y])
         self.widget.draw()
         self.widget.flush_events()
 
@@ -602,30 +622,52 @@ def lerp(v0, v1, t):
 
 
 class MultiPlot:
-    def __init__(self):
-        self.fig, self.ax = plt.subplots(figsize=(5, 5))
-        self.widget = self.fig.canvas
-        self.axes = [self.ax]
+    def __init__(self, width=3, height=3):
+        self.width = width
+        self.height = height
+        self.clear()
 
-    def add_ax(self, x, y, color='blue'):
+    def add_ax(self, x, y, color='blue', xlim=None, ylim=None, xlabel=None, ylabel=None, title=None):
         self.axes[-1].plot(x, y, color=color)
+        self.ax_data[self.axes[-1]] = {'xlim': xlim, 'ylim': ylim, 'xlabel': xlabel, 'ylabel': ylabel, 'title': title}
+        self.axes[-1].set_xlabel(xlabel)
+        self.axes[-1].set_ylabel(ylabel)
+        self.axes[-1].set_title(title)
         self.axes.append(self.axes[-1].twinx())
         return len(self.axes) - 2
 
     def set_visible(self, i):
         for j in range(len(self.axes)):
             self.axes[j].set_visible(i == j)
+        xlim = self.ax_data[self.axes[i]]['xlim']
+        ylim = self.ax_data[self.axes[i]]['ylim']
+        print(xlim, ylim)
+        self.axes[i].set_xlim(xlim)
+        self.axes[i].set_ylim(ylim)
+        self.widget.draw()
+        self.widget.flush_events()
 
     def set_data(self, i, x, y):
         if i < 0 or i >= len(self.axes):
             return False
-        self.axes[i].set_data(x, y)
+        ax = self.axes[i]
+        col = ax.get_lines()[0].get_color()
+        xlim, ylim, xlabel, ylabel, title = ax.get_xlim(), ax.get_ylim(), ax.get_xlabel(), ax.get_ylabel(), ax.get_title()
+        ax.clear()
+        ax.plot(x, y, color=col)
+        ax.set_xlim(xlim)
+        ax.set_ylim(ylim)
+        ax.set_xlabel(xlabel)
+        ax.set_ylabel(ylabel)
+        ax.set_title(title)
+        #self.axes[i].set_data(x, y)
         return True
 
     def clear(self):
-        self.fig, self.ax = plt.subplots(figsize=(5, 5))
+        self.fig, self.ax = plt.subplots(figsize=(self.width, self.height))
         self.widget = self.fig.canvas
         self.axes = [self.ax]
+        self.ax_data = {self.ax: {'x': [], 'y': []}}
 
     def __len__(self):
         return len(self.axes) - 1

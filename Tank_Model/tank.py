@@ -85,9 +85,19 @@ class Tank(Model):
         #self.depth.observe(self.draw)
         self.nHoles = IntChangeable(len(holes), _min=5, _max=max_holes, desc="Nr of Holes: ")
         self.dHoles = FloatChangeable(holes[0].d, unit="cm", base=-2, _min=0.5, _max=10, desc="Diameter d = ")
+
+        self.plot_selection = ToggleGroup(["Water Flow", "Number of Holes", "Diameter of Holes"], tooltips=["Shows the plot in dependence of Water Flow Q",
+                                                                                                            "Shows the plot in dependence of Number of Holes N",
+                                                                                                            "Shows the plot in dependence of Diameter of Holes D"])
+        self.plot_selection.observe(self.select_plot)
+        self.nHoles.observe(self.update_plots)
+        self.dHoles.observe(self.update_plots)
+        self.q.observe(self.update_plots)
+
         self.params = [
             ChangeableContainer([self.q, self.depth]),
-            ChangeableContainer([self.nHoles, self.dHoles])
+            ChangeableContainer([self.nHoles, self.dHoles]),
+            ChangeableContainer([self.plot_selection]),
         ]
         self.width = width
         self.height = height
@@ -122,14 +132,30 @@ class Tank(Model):
 
         self.plot = MultiPlot()
         self.q_vars = np.linspace(0, 1, 100)
-        self.d_vars = np.linspace(0.5, 10, 100)
+        self.d_vars = np.linspace(0.5 * 10 ** (-2), 10 * 10 ** (-2), 100)
         self.n_vars = np.linspace(5, 50, 100)
 
-        self.in_flow_plot = self.plot.add_ax(self.q_vars, (1 / (2 * G)) * ((4 * self.q_vars) / (len(holes) * pymath.pi * holes[0].d ** 2)) ** 2)
-        self.d_plot = self.plot.add_ax(self.d_vars, (1 / (2 * G)) * ((4 * q) / (len(holes) * pymath.pi * self.d_vars ** 2)) ** 2, color='green')
-        self.n_plot = self.plot.add_ax(self.n_vars, (1 / (2 * G)) * ((4 * q) / (self.n_vars * pymath.pi * holes[0].d ** 2)) ** 2, color='orange')
-        #self.plot.set_visible(self.in_flow_plot)
+        self.in_flow_plot = self.plot.add_ax(self.q_vars, (1 / (2 * G)) * ((4 * self.q_vars) / (self.nHoles.real() * pymath.pi * self.dHoles.real() ** 2)) ** 2,
+                                            xlim=[0, 1], xlabel="Q [m^3s^(-1)]", ylabel="h [m]", title="Water Flow Q")
+        self.d_plot = self.plot.add_ax(self.d_vars, (1 / (2 * G)) * ((4 * self.q.real()) / (self.nHoles.real() * pymath.pi * self.d_vars ** 2)) ** 2, color='green',
+                                       xlim=[0.5 * 10 ** (-2), 10 * 10 ** (-2)], xlabel="d [m]", ylabel="h [m]", title="Diameter d")
+        self.n_plot = self.plot.add_ax(self.n_vars, (1 / (2 * G)) * ((4 * self.q.real()) / (self.n_vars * pymath.pi * self.dHoles.real() ** 2)) ** 2, color='orange',
+                                       xlim=[5, 50], xlabel="n [#]", ylabel="h [m]", title="Number of Holes N")
+        self.plot.set_visible(self.in_flow_plot)
         self.canvas.on_client_ready(self.do_draw)
+
+    def select_plot(self, args):
+        if self.plot_selection.value == "Water Flow":
+            self.plot.set_visible(self.in_flow_plot)
+        elif self.plot_selection.value == "Number of Holes":
+            self.plot.set_visible(self.n_plot)
+        elif self.plot_selection.value == "Diameter of Holes":
+            self.plot.set_visible(self.d_plot)
+
+    def update_plots(self, args):
+        self.plot.set_data(self.in_flow_plot, self.q_vars, (1 / (2 * G)) * ((4 * self.q_vars) / (self.nHoles.real() * pymath.pi * self.dHoles.real() ** 2)) ** 2)
+        self.plot.set_data(self.d_plot, self.d_vars, (1 / (2 * G)) * ((4 * self.q.real()) / (self.nHoles.real() * pymath.pi * self.d_vars ** 2)) ** 2)
+        self.plot.set_data(self.n_plot, self.n_vars, (1 / (2 * G)) * ((4 * self.q.real()) / (self.n_vars * pymath.pi * self.dHoles.real() ** 2)) ** 2)
 
     def add_hole(self):
         """
