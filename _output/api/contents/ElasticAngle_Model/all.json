@@ -1,0 +1,37 @@
+{
+  "content": [
+    {
+      "content": null,
+      "created": "2022-08-10T10:49:18.521687Z",
+      "format": null,
+      "last_modified": "2022-08-10T10:49:00.341629Z",
+      "mimetype": null,
+      "name": "ElasticAngleDemo.ipynb",
+      "path": "ElasticAngle_Model/ElasticAngleDemo.ipynb",
+      "size": 83269,
+      "type": "notebook",
+      "writable": true
+    },
+    {
+      "content": null,
+      "created": "2022-08-10T10:49:18.525687Z",
+      "format": null,
+      "last_modified": "2022-08-10T10:49:00.341629Z",
+      "mimetype": "text/x-python",
+      "name": "angle.py",
+      "path": "ElasticAngle_Model/angle.py",
+      "size": 10297,
+      "type": "file",
+      "writable": true
+    }
+  ],
+  "created": "2022-08-10T10:49:18.525687Z",
+  "format": "json",
+  "last_modified": "2022-08-10T10:49:18.525687Z",
+  "mimetype": null,
+  "name": "ElasticAngle_Model",
+  "path": "ElasticAngle_Model",
+  "size": null,
+  "type": "directory",
+  "writable": true
+}

@@ -1,0 +1,61 @@
+{
+  "content": [
+    {
+      "content": null,
+      "created": "2022-08-10T10:49:18.529687Z",
+      "format": null,
+      "last_modified": "2022-08-10T10:49:00.345629Z",
+      "mimetype": null,
+      "name": "environment.yml",
+      "path": "files/environment.yml",
+      "size": 180,
+      "type": "file",
+      "writable": true
+    },
+    {
+      "content": null,
+      "created": "2022-08-10T10:49:18.529687Z",
+      "format": null,
+      "last_modified": "2022-08-10T10:49:00.345629Z",
+      "mimetype": "text/plain",
+      "name": "requirements.txt",
+      "path": "files/requirements.txt",
+      "size": 82,
+      "type": "file",
+      "writable": true
+    },
+    {
+      "content": null,
+      "created": "2022-08-10T10:49:18.529687Z",
+      "format": null,
+      "last_modified": "2022-08-10T10:49:00.345629Z",
+      "mimetype": "text/x-python",
+      "name": "demo.py",
+      "path": "files/demo.py",
+      "size": 14771,
+      "type": "file",
+      "writable": true
+    },
+    {
+      "content": null,
+      "created": "2022-08-10T10:49:18.529687Z",
+      "format": null,
+      "last_modified": "2022-08-10T10:49:00.345629Z",
+      "mimetype": "text/markdown",
+      "name": "bugs.md",
+      "path": "files/bugs.md",
+      "size": 879,
+      "type": "file",
+      "writable": true
+    }
+  ],
+  "created": "2022-08-10T10:49:18.529687Z",
+  "format": "json",
+  "last_modified": "2022-08-10T10:49:18.529687Z",
+  "mimetype": null,
+  "name": "files",
+  "path": "files",
+  "size": null,
+  "type": "directory",
+  "writable": true
+}
