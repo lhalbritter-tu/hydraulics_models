@@ -130,7 +130,7 @@ class Tank(Model):
 
         self.hole_meshes = []
 
-        self.plot = MultiPlot()
+        self.plot = MultiPlot(width=5, height=5)
         self.q_vars = np.linspace(0, 1, 100)
         self.d_vars = np.linspace(0.5 * 10 ** (-2), 10 * 10 ** (-2), 100)
         self.n_vars = np.linspace(5, 50, 100)
@@ -142,7 +142,12 @@ class Tank(Model):
         self.n_plot = self.plot.add_ax(self.n_vars, (1 / (2 * G)) * ((4 * self.q.real()) / (self.n_vars * pymath.pi * self.dHoles.real() ** 2)) ** 2, color='orange',
                                        xlim=[5, 50], xlabel="n [#]", ylabel="h [m]", title="Number of Holes N")
         self.plot.set_visible(self.in_flow_plot)
+
+        self.plot.grid(self.in_flow_plot, axis='y')
+        self.plot.grid(self.d_plot)
+        self.plot.grid(self.n_plot)
         self.canvas.on_client_ready(self.do_draw)
+        self.scale = self.canvas.width / self.canvas.height * 1.5
 
     def select_plot(self, args):
         if self.plot_selection.value == "Water Flow":
@@ -156,6 +161,9 @@ class Tank(Model):
         self.plot.set_data(self.in_flow_plot, self.q_vars, (1 / (2 * G)) * ((4 * self.q_vars) / (self.nHoles.real() * pymath.pi * self.dHoles.real() ** 2)) ** 2)
         self.plot.set_data(self.d_plot, self.d_vars, (1 / (2 * G)) * ((4 * self.q.real()) / (self.nHoles.real() * pymath.pi * self.d_vars ** 2)) ** 2)
         self.plot.set_data(self.n_plot, self.n_vars, (1 / (2 * G)) * ((4 * self.q.real()) / (self.n_vars * pymath.pi * self.dHoles.real() ** 2)) ** 2)
+        self.plot.grid(self.in_flow_plot, axis='y')
+        self.plot.grid(self.d_plot)
+        self.plot.grid(self.n_plot)
 
     def add_hole(self):
         """
@@ -273,6 +281,8 @@ class Tank(Model):
         :return: None
         """
         self.canvas.clear()
+        self.canvas.reset_transform()
+        self.canvas.scale(self.scale, self.scale)
         self.canvas.fill_style = 'black'
         self.canvas.fill_rect(0, 0, 60, 20)
         rect = self.get_dimensions(50, 50)

@@ -653,6 +653,11 @@ class MultiPlot:
         self.axes.append(self.axes[-1].twinx())
         return len(self.axes) - 2
 
+    def grid(self, i, axis='both', color='gray', linestyle='-', linewidth=0.2):
+        self.axes[i].grid(axis=axis, color=color, linestyle=linestyle, linewidth=linewidth)
+        self.widget.draw()
+        self.widget.flush_events()
+
     def set_visible(self, i):
         for j in range(len(self.axes)):
             self.axes[j].set_visible(i == j)
