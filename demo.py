@@ -426,7 +426,7 @@ class Plot:
         self.ax.plot(self.x, self.y)
         self.ax.set_xlabel(self.xlabel)
         self.ax.set_ylabel(self.ylabel)
-        self.ax.set_ylim([-0.1, 0.1])
+        self.ax.set_ylim([-0.5, 0.5])
         self.marker = None
         self.widget.draw()
         self.widget.flush_events()
@@ -449,6 +449,23 @@ class Plot:
         self.widget.draw()
         self.widget.flush_events()
 
+    def add_line(self, x, color='gray', label=None):
+        """
+        Adds a vertical line to the plot
+
+        :param x: the x position for the line
+        :return: None
+        """
+        self.ax.axvline(x=x, color=color)
+        if label is not None:
+            self.ax.text(x + 0.5, self.ax.get_ylim()[1] / 2, label)
+        self.widget.draw()
+        self.widget.flush_events()
+
+    def grid(self, axis='both', color='gray', linestyle='-', linewidth=0.2):
+        self.ax.grid(axis=axis, color=color, linestyle=linestyle, linewidth=linewidth)
+        self.widget.draw()
+        self.widget.flush_events()
 
 def from_geometry(geom):
     return BufferGeometry.from_geometry(geom)

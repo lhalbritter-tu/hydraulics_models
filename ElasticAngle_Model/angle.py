@@ -30,7 +30,7 @@ class Angle(Model):
         pass
 
     def __init__(self, mass, feather, start_angle, c=None):
-        self.mass = FloatChangeable(mass, unit="kg", _min=1.0, desc="Mass m = ")
+        self.mass = FloatChangeable(mass, unit="kg", base=0, _min=1.0, desc="Mass m = ")
         self.feather = FloatChangeable(feather, unit="kN/m", base=3, _min=1.0, desc="Feather stiffness k = ")
         self.start_angle = FloatChangeable(start_angle, unit="rad", _min=0.1, _max=pymath.pi / 2, step=0.001, desc="Initial angular velocity Phi(0) = ")
         self.t = FloatChangeable(0, unit="s", _min=0, _max=30, desc="Time t = ", continuous_update=True, step=30.303 / 100, should_update=False)
@@ -55,7 +55,7 @@ class Angle(Model):
         return Variable((self.start_angle.real() / self.w_0) * np.sin(self.w_0 * t), unit='rad')
 
     def frequency(self):
-        return Variable(self.circular_frequency().real() / (2 * pymath.pi), unit='Hz')
+        return Variable(self.w_0 / (2 * pymath.pi), unit='Hz')
 
     def duration(self):
         return Variable(1 / self.frequency().real(), unit='s')
@@ -85,12 +85,14 @@ class Angle(Model):
 
 
 class AngleCanvas():
-    def __init__(self, angle: Angle, plot: Plot, width=600, height=200, L=5):
+    def __init__(self, angle: Angle, plot: Plot, width=600, height=200, L=2):
         super().__init__()
         self.angle = angle
         self.plot = plot
+        self.plot.grid()
+        self.plot.add_line(self.angle.duration().real(), color='red', label='T')
         self.canvas = Canvas(width=width, height=height)
-        self.canvas2 = Canvas(width=L * 2, height=50)
+        #self.canvas2 = Canvas(width=L * 2, height=50)
         self.play_btn = ClickButton(
             description="Oscilate",
             disabled=False,
@@ -99,11 +101,11 @@ class AngleCanvas():
         )
         self.play_btn.observe(self.start_oscilate)
 
-        self.canvas_box = widgets.VBox([self.canvas])
+        #self.canvas_box = widgets.VBox([self.canvas])
         self.t = 0
         self.L = L
         self.osc = None
-        self.scale = width / height
+        self.scale = width / height * 2.5
         #self.canvas.layout.width = "75%"
         #self.canvas.layout.height = "75%"
         #self.angle.observe(self.on_angle_changed)
@@ -126,13 +128,13 @@ class AngleCanvas():
             phi = self.angle.evaluate(t)
             with hold_canvas(self.canvas):
                 # canvas.canvas.rotate(phi.real())
-                self.draw({'angle': phi.real()})
+                self.draw(phi.real())
                 self.plot.mark(t, phi.real())
             self.canvas.sleep(20)
         #print("I am outta here!")
         self.canvas.reset_transform()
         #self.plot.update_plot()
-        self.draw(None)
+        self.draw()
         self.stop_oscilate(None)
         plt.ion()
 
@@ -145,14 +147,12 @@ class AngleCanvas():
             time.sleep(0.002)
 
     def do_draw(self):
-        self.draw(None)
+        self.draw()
 
     def draw_time(self, t):
-        self.draw({
-            'angle': self.angle.evaluate(t).real()
-        })
+        self.draw(self.angle.evaluate(t).real())
 
-    def draw(self, args):
+    """def draw(self, args):
         self.canvas.clear()
         self.canvas.rotate(0)
         x = self.canvas.width / 4
@@ -299,7 +299,111 @@ class AngleCanvas():
 
             self.fancy_line(x - 10, x + 10, self.angle.mass.real() / 2 + y + self.L + 15, x_offset=3)
 
-        # self.canvas.scale(10, 10)
+        # self.canvas.scale(10, 10)"""
+
+    def draw(self, angle=0):
+        self.canvas.clear()
+        self.canvas.reset_transform()
+        self.canvas.scale(self.scale, self.scale)
+        x = self.canvas.width / self.scale / 2
+        y = 15
+        self.canvas.fill_style = hexcode((230, 230, 230))
+        cx = x
+        cy = self.angle.mass.value / 2 + self.L + y - 5
+        pivot = (cx, cy)
+
+        s = np.sin(angle)
+        c = np.cos(angle)
+
+        px = x - cx
+        py = y - cy
+
+        # yr = self.angle.mass.value / 2 + self.L + y - 5
+        xp = px * c - py * s
+        yp = px * s + py * c
+
+        x1 = x
+        y1 = self.angle.mass.value / 2 + self.L + y - 5
+        x2 = x - 5
+        y2 = self.angle.mass.value / 2 + self.L + y
+        x3 = x + 5
+        y3 = self.angle.mass.value / 2 + self.L + y
+
+        xp1, yp1 = self.rotate_point(pivot, (x1, y1), s, c)
+        xp2, yp2 = self.rotate_point(pivot, (x2, y2), s, c)
+        xp3, yp3 = self.rotate_point(pivot, (x3, y3), s, c)
+
+        self.canvas.stroke_line(xp + cx, self.angle.mass.value + yp + cy, xp1 + cx,
+                                self.angle.mass.value / 2 + y + self.L)
+        # self.canvas.stroke_line(x, y, xp, yp)self.canvas.fill_style = hexcode((230, 230, 230))
+        self.canvas.fill_circle(xp + cx, yp + cy, 9)
+        self.canvas.stroke_text('m', xp - 4.5 + cx, yp + 2 + cy)
+        self.canvas.stroke_circle(xp + cx, yp + cy, 9)
+
+        self.canvas.fill_style = hexcode((0, 0, 0))
+
+        self.canvas.fill_polygon([(xp1 + cx, yp1 + cy),
+                                  (xp2 + cx, yp2 + cy),
+                                  (xp3 + cx, yp3 + cy),
+                                  ])
+
+        self.canvas.stroke_line(x, self.angle.mass.value / 2 + self.L + y + 5, x - 5,
+                                self.angle.mass.value / 2 + self.L + y + 15)
+        self.canvas.stroke_line(x, self.angle.mass.value / 2 + self.L + y + 5, x + 5,
+                                self.angle.mass.value / 2 + self.L + y + 15)
+
+        self.fancy_line(x - 10, x + 10, self.angle.mass.value / 2 + y + self.L + 15, x_offset=3)
+
+        self.canvas.fill_style = hexcode((255, 255, 255))
+        self.canvas.fill_arc(x, self.angle.mass.value / 2 + y + self.L + 5, 5, 0, pymath.pi)
+        self.canvas.stroke_arc(x, self.angle.mass.value / 2 + y + self.L + 5, 5, 0, pymath.pi)
+
+        self.canvas.fill_style = hexcode((230, 230, 230))
+
+        xr1 = x - self.L
+        yr1 = self.angle.mass.value / 2 + y + self.L
+        xr2 = xr1 + self.L * 2
+        yr2 = yr1
+        xr3 = xr1 + self.L * 2
+        yr3 = yr1 + 5
+        xr4 = xr1
+        yr4 = yr3
+
+        xpr1, ypr1 = self.rotate_point(pivot, (xr1, yr1), s, c)
+        xpr2, ypr2 = self.rotate_point(pivot, (xr2, yr2), s, c)
+        xpr3, ypr3 = self.rotate_point(pivot, (xr3, yr3), s, c)
+        xpr4, ypr4 = self.rotate_point(pivot, (xr4, yr4), s, c)
+
+        xa1 = xr2
+        ya1 = yr1 + 2.5
+        xa2 = xr1
+        ya2 = ya1
+
+        xpa1, ypa1 = self.rotate_point(pivot, (xa1, ya1), s, c)
+        xpa2, ypa2 = self.rotate_point(pivot, (xa2, ya2), s, c)
+
+        self.canvas.fill_arc(xpa1 + cx, ypa1 + cy, 2.5, pymath.pi / 2,
+                             3 * pymath.pi / 2, True)
+        self.canvas.stroke_arc(xpa1 + cx, ypa1 + cy, 2.5, pymath.pi / 2,
+                               3 * pymath.pi / 2, True)
+        self.canvas.fill_arc(xpa2 + cx, ypa2 + cy, 2.5, pymath.pi / 2,
+                             3 * pymath.pi / 2)
+        self.canvas.stroke_arc(xpa2 + cx, ypa2 + cy, 2.5, pymath.pi / 2,
+                               3 * pymath.pi / 2)
+
+        self.canvas.fill_polygon(
+            [(xpr1 + cx, ypr1 + cy), (xpr2 + cx, ypr2 + cy), (xpr3 + cx, ypr3 + cy), (xpr4 + cx, ypr4 + cy)])
+        self.canvas.stroke_polygon(
+            [(xpr1 + cx, ypr1 + cy), (xpr2 + cx, ypr2 + cy), (xpr3 + cx, ypr3 + cy), (xpr4 + cx, ypr4 + cy)])
+
+        ezz1 = self.zigzag_stretch(xpr4 + cx, ypr4 + cy, xpr4 + cx, self.angle.mass.value / 2 + y + self.L + 5 + 20,
+                                   x_offset=5)
+        ezz2 = self.zigzag_stretch(xpr3 + cx, ypr3 + cy, xpr3 + cx, self.angle.mass.value / 2 + y + self.L + 5 + 20,
+                                   x_offset=5)
+
+        self.fancy_line(x - self.L - 10, x - self.L + 10, self.angle.mass.value / 2 + y + self.L + 5 + 20, x_offset=3)
+        self.fancy_line(x + self.L - 10, x + self.L + 10, self.angle.mass.value / 2 + y + self.L + 5 + 20, x_offset=3)
+
 
     def rotate_point(self, pivot, point, s, c):
         cx, cy = pivot
@@ -365,5 +469,6 @@ def setup_angle(m, k, w):
 
 if __name__ == '__main__':
     angle = setup_angle(9, 3, 0.2)
-    for i in range(0, 30):
-        print(angle.evaluate(i))
+    print(angle.circular_frequency(), Variable(2 * pymath.pi / angle.duration().real(), "s^-1"))
+    #for i in range(0, 30):
+    #   print(angle.evaluate(i))
