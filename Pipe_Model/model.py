@@ -211,8 +211,9 @@ class AdvancedPipe(Model):
             material=MeshLambertMaterial(color='red')
         )
 
-        self.u1Param = FloatChangeable(u1, _min=u1, _max=u1 * 5, desc="U1: ", unit="m/s")
-        self.i1ChoiceGroup = ToggleGroup(['Circle', 'Rectangle'], ['Choose a circular end', 'Choose a rectangular end'])
+        self.u1Param = FloatChangeable(u1, _min=u1, _max=u1 * 5, desc="$U_1$: ", unit="ms^{-1}")
+        self.i1ChoiceGroup = DropDownGroup(['Circle', 'Rectangle'], ['Choose a circular end', 'Choose a rectangular end'])
+        self.i1ChoiceWidget = BoxHorizontal([widgets.Label("Shape: "), self.i1ChoiceGroup.display])
         self.i1dParam = FloatChangeable(self.i1.d if self.i1.type == "Circle" else 1, _min=1, _max=5, desc="Diameter: ",
                                         unit="m")
         self.i1dParam.set_active(self.i1.type == "Circle")
@@ -223,9 +224,11 @@ class AdvancedPipe(Model):
                                         unit="m")
         self.i1wParam.set_active(self.i1.type == "Rectangle")
         self.i1hParam.set_active(self.i1.type == "Rectangle")
-        self.i1yParam = FloatChangeable(self.i1.y, _min=-25, _max=25, desc="Y Position: ")
+        self.i1yParam = FloatChangeable(self.i1.y, _min=-25, _max=25, desc="Z Position: ", unit="m")
 
-        self.i2ChoiceGroup = ToggleGroup(['Circle', 'Rectangle'], ['Choose a circular end', 'Choose a rectangular end'])
+        self.i2ChoiceGroup = DropDownGroup(['Circle', 'Rectangle'],
+                                           ['Choose a circular end', 'Choose a rectangular end'])
+        self.i2ChoiceWidget = BoxHorizontal([widgets.Label("Shape: "), self.i2ChoiceGroup.display])
         self.i2dParam = FloatChangeable(self.i2.d if self.i2.type == "Circle" else 1, _min=1, _max=5, desc="Diameter: ",
                                         unit="m")
         self.i2dParam.set_active(self.i2.type == "Circle")
@@ -236,12 +239,14 @@ class AdvancedPipe(Model):
                                         unit="m")
         self.i2wParam.set_active(self.i2.type == "Rectangle")
         self.i2hParam.set_active(self.i2.type == "Rectangle")
-        self.i2yParam = FloatChangeable(self.i2.y, _min=-25, _max=25, desc="Y Position: ")
+        self.i2yParam = FloatChangeable(self.i2.y, _min=-25, _max=25, desc="Z Position: ", unit="m")
 
         self.params = [
             ChangeableContainer(
-                [self.i1ChoiceGroup, self.i1dParam, self.i1wParam, self.i1hParam, self.i1yParam, self.u1Param]),
-            ChangeableContainer([self.i2ChoiceGroup, self.i2dParam, self.i2wParam, self.i2hParam, self.i2yParam])
+                [self.i1ChoiceWidget, self.i1dParam, self.i1wParam, self.i1hParam, self.i1yParam]),
+            ChangeableContainer([HorizontalSpace(count=15)]),
+            ChangeableContainer([self.i2ChoiceWidget, self.i2dParam, self.i2wParam, self.i2hParam, self.i2yParam]),
+            ChangeableContainer([self.u1Param])
         ]
 
         self.i1.y = self.i1yParam.widget.max - self.i1yParam.real() + 75
@@ -295,11 +300,14 @@ class AdvancedPipe(Model):
 
     def get_latex(self):
         q1 = Variable(self.q1(), unit='m^3s^{-1}')
-        u2 = Variable(self.u2(), unit='m/s')
+        #q2 = Variable(self.q2(), unit='m^3s^{-1}')
+        u2 = Variable(self.u2(), unit='ms^{-1}')
         dp = Variable(self.dp(), unit='Pa')
-        return f'$\large Calculations \\\\ Q1 = Q2 = {self.i1.area():.2f} \cdot {self.u1} = {q1.rounded_latex()} \\\\ ' \
-               f'U2 = \\frac{{{self.i1.area():.2f}}}{{{self.i2.area():.2f}}} \cdot {self.u1} = {u2.rounded_latex()} \\\\ ' \
-               f'Change ~~ in ~~ pressure ~~ \Delta p = {self.u1:.2f}^2 - {self.u2():.2f}^2 + {self.i1yParam.real()} - {self.i2yParam.real()} = {dp.rounded_latex()}$'
+        return f'<b>Calculations</b> $Q_1 = Q_2 = Q = {self.i1.area():.3f} \cdot {self.u1} = {q1.rounded_latex()} \\\\ ' \
+               f'U_1 = {self.u1Param.latex()} \\rightarrow U_2 = \\frac{{{self.i1.area():.3f}}}{{{self.i2.area():.3f}}} \cdot {self.u1} = {u2.rounded_latex()} \\\\ ' \
+               f'$<b>Difference in pressure</b> $\Delta E = \Delta h + \\frac{{\Delta p}}{{\\rho \cdot g}} + \\frac{{\Delta U^2}}{{2 \cdot g}} \\\\' \
+               f'$${{E_1 = E_2 = \Delta E = 0}}$, because the pipe is frictionless$\\\\' \
+               f'\Rightarrow \\frac{{\Delta p}}{{\\rho}} = \\frac{{{self.u1:.3f}^2 - {self.u2():.3f}^2}}{{2}} + {self.i1yParam.real()} - {self.i2yParam.real()} = {dp.rounded_latex()}$'
 
     def lines(self):
         margin = 450
@@ -392,6 +400,8 @@ class AdvancedPipe(Model):
         self.canvas.stroke_style = hexcode((50, 50, 130))
         self.canvas.stroke_text("U1", self.i1.x + self.i1.rx / 4 - 15 * 3, hi1 - self.i1.ry / 4 - 5)
         self.canvas.stroke_style = 'black'
+        self.draw_arrow_hor(50, 100, 55, 5, 10, (0, 0, 0), label="x", left=False)
+        self.draw_arrow_vert(50, 55, 5, 5, 10, (0, 0, 0), label="z", top=True)
 
     def draw_heights(self, hi1, hi2):
         halfLine1 = (0.0, hi1, self.canvas.width, hi1)
@@ -409,7 +419,7 @@ class AdvancedPipe(Model):
         self.canvas.stroke_line(xi, hi1, xi, hi2)
         self.canvas.stroke_text("Delta H", xi + 25, (hi1 + hi2) / 2)
 
-    def draw_arrow_hor(self, x1, x2, y, y_offs, x_offs, rgb, label=""):
+    def draw_arrow_hor(self, x1, x2, y, y_offs, x_offs, rgb, label="", left=True):
         self.canvas.stroke_style = hexcode(rgb)
         self.canvas.begin_path()
         self.canvas.move_to(x1, y)
@@ -418,7 +428,32 @@ class AdvancedPipe(Model):
         self.canvas.move_to(x2, y)
         self.canvas.line_to(x2 - x_offs, y - y_offs)
         self.canvas.stroke()
-        self.canvas.stroke_text(label, x1 - x_offs, y - y_offs)
+        if left:
+            self.canvas.stroke_text(label, x1 - x_offs, y - y_offs)
+        else:
+            self.canvas.stroke_text(label, x2 + x_offs, y - y_offs)
+        self.canvas.stroke_style = "black"
+
+    def draw_arrow_vert(self, x, y1, y2, x_offs, y_offs, rgb, label="", top=True):
+        self.canvas.stroke_style = hexcode(rgb)
+        y_top = min(y1, y2)
+        y_bot = max(y1, y2)
+        self.canvas.begin_path()
+        self.canvas.move_to(x, y1)
+        self.canvas.line_to(x, y2)
+        if y_top == y1:
+            self.canvas.line_to(x + x_offs, y2 - y_offs)
+            self.canvas.move_to(x, y2)
+            self.canvas.line_to(x - x_offs, y2 - y_offs)
+        else:
+            self.canvas.line_to(x + x_offs, y2 + y_offs)
+            self.canvas.move_to(x, y2)
+            self.canvas.line_to(x - x_offs, y2 + y_offs)
+        self.canvas.stroke()
+        if top:
+            self.canvas.stroke_text(label, x - x_offs * 2.5, y_top + y_offs)
+        else:
+            self.canvas.stroke_text(label, x - x_offs, y_bot - y_offs)
         self.canvas.stroke_style = "black"
 
     def observe(self, func):

@@ -68,10 +68,10 @@ class Variable:
         return f'{self.value: .{cut}f} [{self.unit}]'
 
     def latex(self):
-        return str(self.value) + " ~~ " + self.unit
+        return str(self.value) + " ~~ " + '[' + self.unit + ']'
 
     def rounded_latex(self, cut=2):
-        return f'{self.value: .{cut}f} ~~ {self.unit}'
+        return f'{self.value: .{cut}f} ~~ [{self.unit}]'
 
     def __repr__(self):
         """
@@ -185,7 +185,8 @@ class IntChangeable(Changeable):
 
 
 class FloatChangeable(Changeable):
-    def __init__(self, value, base=0, unit=" ", _min=.0, _max=10.0, desc="", step=0.1, continuous_update=False, should_update=True):
+    def __init__(self, value, base=0, unit=" ", _min=.0, _max=10.0, desc="", step=0.1, continuous_update=False,
+                 should_update=True):
         """
         Initializes the internal Variable and Changeable with an ipywidgets.FloatSlider with the following attributes:
 
@@ -205,7 +206,7 @@ class FloatChangeable(Changeable):
             step=step,
             continuous_update=continuous_update
         ), base, unit, should_update=should_update)
-        self.unitLabel = widgets.Label(f"[{unit}]")
+        self.unitLabel = widgets.Label(f"$[{unit}]$")
         self.display = widgets.HBox([self.widget, self.unitLabel])
 
 
@@ -228,6 +229,38 @@ class ToggleGroup(Changeable):
         self.display = self.widget
 
 
+class DropDownGroup(Changeable):
+    def __init__(self, options, tooltips):
+        super().__init__(widgets.Dropdown(
+            options=options,
+            tooltips=tooltips
+        ))
+        self.display = self.widget
+
+    def observe(self, func):
+        """
+        Registers func as callback to the ipywidgets.widget.observe method
+
+        :param func: the callback function for this widget
+        :return: None
+        """
+        if self.widget is not None:
+            self.widget.on_trait_change(func)
+
+class BoxHorizontal(PseudoChangeable):
+    def __init__(self, children):
+        super().__init__(widgets.HBox(
+            children=children
+        ))
+        self.display = self.widget
+        self.should_update = True
+        self.children = children
+
+    def observe(self, func):
+        for child in self.children:
+            child.observe(func)
+
+
 class ClickButton(PseudoChangeable):
     def __init__(self, description="Button", disabled=False, button_style='', tooltip=''):
         super().__init__(widgets.Button(
@@ -241,6 +274,24 @@ class ClickButton(PseudoChangeable):
 
     def observe(self, func):
         self.widget.on_click(func)
+
+class HorizontalDivider(PseudoChangeable):
+    def __init__(self):
+        super().__init__(widgets.HTML("<hr>"))
+        self.display = self.widget
+        self.should_update = False
+
+    def observe(self, func):
+        pass
+
+class HorizontalSpace(PseudoChangeable):
+    def __init__(self, count=3):
+        super().__init__(widgets.HTML("&nbsp;" * count))
+        self.display = self.widget
+        self.should_update = False
+
+    def observe(self, func):
+        pass
 
 
 class Model(abc.ABC):
@@ -358,10 +409,9 @@ class Demo:
         :return: None
         """
         display(self.widget_output)
-        if self.canvas is None:
-            display(self.output)
-        else:
-            display(widgets.VBox([self.canvas, self.output]))
+        if self.canvas is not None:
+            display(self.canvas)
+        display(self.output)
         self.update_output()
         # self.model.update(None)
 
@@ -378,9 +428,9 @@ class Demo:
             display(widgets.HBox([param.display for param in self.params]))
 
         self.output.clear_output(wait=True)
-        op = widgets.HTMLMath(self.model.calculate())
+        op = widgets.HTMLMath(self.model.calculate(), layout=widgets.Layout(width='100%'))
         if self.extra_output is not None:
-            op = widgets.HBox([widgets.HTMLMath(self.model.calculate()), self.extra_output])
+            op = widgets.HBox([widgets.HTMLMath(self.model.calculate(), layout=widgets.Layout(width='100%')), self.extra_output])
         with self.output:
             display(op)
 
@@ -444,7 +494,7 @@ class Plot:
         self.marker_pos = (x, y)
 
         if self.marker is None:
-           self.marker = plt.plot([x], [y], marker=symbol)[0]
+            self.marker = plt.plot([x], [y], marker=symbol)[0]
         self.marker.set_data([x], [y])
         self.widget.draw()
         self.widget.flush_events()
@@ -466,6 +516,7 @@ class Plot:
         self.ax.grid(axis=axis, color=color, linestyle=linestyle, linewidth=linewidth)
         self.widget.draw()
         self.widget.flush_events()
+
 
 def from_geometry(geom):
     return BufferGeometry.from_geometry(geom)
@@ -495,7 +546,7 @@ class Cylinder:
         min_height = -self.height / 2
         offset = self.height / max(1, self.h_segments)
 
-        #print(min_height, offset)
+        # print(min_height, offset)
 
         step = 2. * np.pi / segments
 
@@ -511,9 +562,9 @@ class Cylinder:
                 vert[0] *= -1 if h == self.h_segments - 1 else 1
                 vert[2] *= -1 if h == self.h_segments - 1 else 1
 
-                #if h == self.h_segments:
-                    #vert[2] *= -1
-                    #vert[0] *= -4
+                # if h == self.h_segments:
+                # vert[2] *= -1
+                # vert[0] *= -4
 
                 self.normals.append(normalize(vert))
 
@@ -523,8 +574,8 @@ class Cylinder:
                     [rb * np.cos(angle), min_height + offset * (h - 1), rb * np.sin(angle)])
                 vert = self.vertices[-1].copy()
                 vert[1] = slope if 1 < h < self.h_segments else 0
-                #vert[0] *= -1 if h == self.h_segments - 1 else 1
-                #vert[2] *= -1 if h == self.h_segments - 1 else 1
+                # vert[0] *= -1 if h == self.h_segments - 1 else 1
+                # vert[2] *= -1 if h == self.h_segments - 1 else 1
 
                 self.normals.append(vert)
             self.vertices.append([0, min_height + offset * h, 0])
@@ -568,9 +619,9 @@ class Cylinder:
                 for i in range(segments):
                     self.normals.append([0., -1., 0.])
 
-            #if h == self.h_segments:
+            # if h == self.h_segments:
             self.normals.append([0., 1., 0.])
-            #if h == 1:
+            # if h == 1:
             self.normals.append([0., -1., 0.])
 
             # -------------------------- UVs ----------------------------- #
@@ -615,7 +666,8 @@ class Cylinder:
             rb = lerp(self.radiusBottom, radiusTop, (h - 1) / self.h_segments)
             for i in range(self.segments):
                 angle = i * step
-                self.vertices[i + (2 * self.segments * (h - 1)) + (h - 1) * 2] = [rt * np.cos(angle), self.height / 2, rt * np.sin(angle)]
+                self.vertices[i + (2 * self.segments * (h - 1)) + (h - 1) * 2] = [rt * np.cos(angle), self.height / 2,
+                                                                                  rt * np.sin(angle)]
 
     def set_radiusBottom(self, radiusBottom):
         self.radiusBottom = radiusBottom
@@ -625,7 +677,8 @@ class Cylinder:
             rb = lerp(radiusBottom, self.radiusTop, (h - 1) / self.h_segments)
             for i in range(self.segments, self.segments * 2):
                 angle = i * step
-                self.vertices[i + (2 * self.segments * (h - 1)) + (h - 1) * 2] = [rb * np.cos(angle), -self.height / 2, rb * np.sin(angle)]
+                self.vertices[i + (2 * self.segments * (h - 1)) + (h - 1) * 2] = [rb * np.cos(angle), -self.height / 2,
+                                                                                  rb * np.sin(angle)]
 
 
 def normalize(vec: list):
@@ -682,7 +735,7 @@ class MultiPlot:
         ax.set_xlabel(xlabel)
         ax.set_ylabel(ylabel)
         ax.set_title(title)
-        #self.axes[i].set_data(x, y)
+        # self.axes[i].set_data(x, y)
         return True
 
     def clear(self):
@@ -703,11 +756,11 @@ class MultiPlot:
 
 if __name__ == '__main__':
     mp = MultiPlot()
-    #mp.add_ax([0, 1, 2, 3, 4], [2, 4, 6, 8, 10], color='orange')
-    #mp.add_ax([0, 1, 2, 3, 4], [3, 6, 9, 25, 15], color='green')
-    #mp.add_ax([5, 6, 7, 8], [0, -2, -5, 10], color='red')
-    #mp.add_ax([0, 1, 2, 3, 4], [30, 10, 30, 10, 30], color='yellow')
-    #mp.add_ax([0, 1, 2, 3, 4], [5, 0, -5, 0, 5], color='purple')
+    # mp.add_ax([0, 1, 2, 3, 4], [2, 4, 6, 8, 10], color='orange')
+    # mp.add_ax([0, 1, 2, 3, 4], [3, 6, 9, 25, 15], color='green')
+    # mp.add_ax([5, 6, 7, 8], [0, -2, -5, 10], color='red')
+    # mp.add_ax([0, 1, 2, 3, 4], [30, 10, 30, 10, 30], color='yellow')
+    # mp.add_ax([0, 1, 2, 3, 4], [5, 0, -5, 0, 5], color='purple')
     mp.add_ax([0, 0.01, 2, 3], [10, 0, 0, 0])
     mp.add_ax([4, 4.01], [10, 0], color='red')
     mp.add_ax([4.01, 5, 6], [10, 10, 10], color='red')
@@ -719,7 +772,7 @@ if __name__ == '__main__':
     mp.add_ax([10, 10.01], [9, 1], color='green')
     mp.show()
     while True:
-        n = input("Enter Plot to show [0-"+str(len(mp) - 1)+"]: ")
+        n = input("Enter Plot to show [0-" + str(len(mp) - 1) + "]: ")
         if int(n) > len(mp) - 1:
             mp.clear()
         mp.set_visible(int(n))

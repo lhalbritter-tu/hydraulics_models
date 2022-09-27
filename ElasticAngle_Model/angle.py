@@ -65,14 +65,14 @@ class Angle(Model):
         return f'{(self.start_angle.real() / w_0.real()):.2f} * sin({w_0.real():.2f}t)'
 
     def __repr__(self):
-        return f'$\large Elastisch ~~ gelagerter, ~~ starrer ~~ Winkel\\\\ ' \
-               f'Masse ~~ m = {self.mass.latex()}\\\\ ' \
-               f'Federsteifigkeit ~~ k = {self.feather.latex()}\\\\ ' \
-               f'Anfangswinkelgeschwindigkeit ~~ phi_0 = {self.start_angle.rounded_latex()}\\\\ ' \
-               f'\\\\Eigenkreisfrequenz ~~ w_0 = {self.circular_frequency().rounded_latex()}\\\\ ' \
-               f'Schwingungsdauer ~~ T = {self.duration().rounded_latex()}\\\\ ' \
-               f'Eigenfrequenz ~~ f_0 = {self.frequency().rounded_latex()}\\\\ ' \
-               f'Phi(t) = {self.get_evaluation()} ~~ [rad]$'
+        return f'<h1>Elastisch gelagerter, starrer Winkel</h1> <br />' \
+               f'Masse ${{m = {self.mass.latex()}}}$ <br />' \
+               f'Federsteifigkeit ${{k = {self.feather.latex()}}}$<br />' \
+               f'Anfangswinkelgeschwindigkeit ${{\phi_0 = {self.start_angle.rounded_latex()}}}$ <br />' \
+               f'<br />Eigenkreisfrequenz ${{w_0 = {self.circular_frequency().rounded_latex()}}}$ <br />' \
+               f'Schwingungsdauer ${{T = {self.duration().rounded_latex()}}}$ <br />' \
+               f'Eigenfrequenz ${{f_0 = {self.frequency().rounded_latex()}}}$ <br />' \
+               f'$\phi(t) = {self.get_evaluation()} ~~ [rad]$'
 
     def __str__(self):
         return self.__repr__()

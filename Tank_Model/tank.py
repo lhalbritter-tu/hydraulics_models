@@ -53,7 +53,10 @@ class Tank(Model):
 
         :return: the string representation of this model
         """
-        return "Depth h = " + str(self.get_depth().rounded(cut=3))
+        return f'<h1>Water Depth &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp</h1> <br />' \
+               f'Depth ${{h = \\frac{{1}}{{2g}} \cdot \left( \\frac{{4 \cdot Q_{{in}}}}{{n_{{holes}} \cdot \pi \cdot d^2_{{holes}}}} \\right)^2 [m] }}$ <br />' \
+               f'Depth ${{ h = \\frac{{1}}{{2 \cdot 9.81}} \cdot \left( \\frac{{4 \cdot {self.q.real()}}}{{{self.nHoles.real()} \cdot \pi \cdot {self.dHoles.real()}^2}}\\right)^2[m] }}$ <br />' \
+               f'Depth ${{h = {self.get_depth().rounded_latex(cut=3)}}}$'
 
     def update(self, args):
         """
@@ -80,13 +83,13 @@ class Tank(Model):
         self.holes = holes
         self.hole_callback = self.holes + create_holes(max_holes - len(self.holes), self.holes[0].d)
         self.canvas = c
-        self.q = FloatChangeable(q, _min=0.01, _max=1.0, desc="Water flow Q = ", unit="m³s⁻¹", step=0.01)
+        self.q = FloatChangeable(q, _min=0.01, _max=1.0, desc="Discharge Q = ", unit="m³s⁻¹", step=0.01)
         self.depth = FloatChangeable(max_depth, _min=0.5, _max=5.0, desc="Tank depth = ", unit="m")
         #self.depth.observe(self.draw)
         self.nHoles = IntChangeable(len(holes), _min=5, _max=max_holes, desc="Nr of Holes: ")
-        self.dHoles = FloatChangeable(holes[0].d, unit="cm", base=-2, _min=0.5, _max=10, desc="Diameter d = ")
+        self.dHoles = FloatChangeable(holes[0].d * 10**(-2), unit="m", base=0, _min=0.005, _max=0.1, desc="Diameter d = ", step=0.001)
 
-        self.plot_selection = ToggleGroup(["Water Flow", "Number of Holes", "Diameter of Holes"], tooltips=["Shows the plot in dependence of Water Flow Q",
+        self.plot_selection = ToggleGroup(["Discharge", "Number of Holes", "Diameter of Holes"], tooltips=["Shows the plot in dependence of Discharge Q",
                                                                                                             "Shows the plot in dependence of Number of Holes N",
                                                                                                             "Shows the plot in dependence of Diameter of Holes D"])
         self.plot_selection.observe(self.select_plot)
@@ -96,7 +99,9 @@ class Tank(Model):
 
         self.params = [
             ChangeableContainer([self.q, self.depth]),
+            ChangeableContainer([HorizontalSpace(50)]),
             ChangeableContainer([self.nHoles, self.dHoles]),
+            ChangeableContainer([HorizontalSpace(50)]),
             ChangeableContainer([self.plot_selection]),
         ]
         self.width = width
@@ -136,7 +141,7 @@ class Tank(Model):
         self.n_vars = np.linspace(5, 50, 100)
 
         self.in_flow_plot = self.plot.add_ax(self.q_vars, (1 / (2 * G)) * ((4 * self.q_vars) / (self.nHoles.real() * pymath.pi * self.dHoles.real() ** 2)) ** 2,
-                                            xlim=[0, 1], xlabel="Q [m^3s^(-1)]", ylabel="h [m]", title="Water Flow Q")
+                                            xlim=[0, 1], xlabel="Q [m^3s^(-1)]", ylabel="h [m]", title="Discharge Q")
         self.d_plot = self.plot.add_ax(self.d_vars, (1 / (2 * G)) * ((4 * self.q.real()) / (self.nHoles.real() * pymath.pi * self.d_vars ** 2)) ** 2, color='green',
                                        xlim=[0.5 * 10 ** (-2), 10 * 10 ** (-2)], xlabel="d [m]", ylabel="h [m]", title="Diameter d")
         self.n_plot = self.plot.add_ax(self.n_vars, (1 / (2 * G)) * ((4 * self.q.real()) / (self.n_vars * pymath.pi * self.dHoles.real() ** 2)) ** 2, color='orange',
@@ -150,7 +155,7 @@ class Tank(Model):
         self.scale = self.canvas.width / self.canvas.height * 1.5
 
     def select_plot(self, args):
-        if self.plot_selection.value == "Water Flow":
+        if self.plot_selection.value == "Discharge":
             self.plot.set_visible(self.in_flow_plot)
         elif self.plot_selection.value == "Number of Holes":
             self.plot.set_visible(self.n_plot)
