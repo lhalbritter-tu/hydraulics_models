@@ -256,17 +256,17 @@ class Tank(Model):
         """
         container = self.nHoles.real()
         fx = self.width / 2 + x_0
-        rects = [[fx - self.dHoles.value / 2, y, self.dHoles.value, ly]]
+        rects = [[fx - self.dHoles.value * 100 / 2, y, self.dHoles.value * 100, ly]]
         container -= 1
 
         for i in range(1, len(self.holes)):
-            if container <= 0:
+            if container - 2 < 0:
                 return rects
             if (fx - x_off * i) < 0 or (fx + x_off * i) >= self.width + x_0:
                 return rects
-            rects.append([fx - x_off * i - self.dHoles.value / 2, y, self.dHoles.value, ly])
+            rects.append([fx - x_off * i - self.dHoles.value * 100 / 2, y, self.dHoles.value * 100, ly])
             container -= 1
-            rects.append([fx + x_off * i - self.dHoles.value / 2, y, self.dHoles.value, ly])
+            rects.append([fx + x_off * i - self.dHoles.value * 100 / 2, y, self.dHoles.value * 100, ly])
             container -= 1
         return rects
 
@@ -299,11 +299,14 @@ class Tank(Model):
         # self.canvas.height = y_1 + 50
 
         partial = self.get_depth().real() / self.depth.real()
-        if self.get_depth().real() > self.depth.real():
+        overflow = partial > 1
+        if overflow:
             wy_0 = y_0 - 5
             self.canvas.stroke_style = 'red'
             self.canvas.stroke_text("OVERFLOW!", x_1 + 15, y_0 - 5)
-            self.canvas.stroke_style = 'black'
+            self.canvas.stroke_style = hexcode((20, 20, 20))
+            self.canvas.font = '8px sans-serif'
+            self.canvas.stroke_text("Equation invalidated", x_1 + 10, y_0 + 5)
         else:
             wy_0 = self.height * (1 - partial) + 50
         gradient = self.canvas.create_linear_gradient(
@@ -319,6 +322,12 @@ class Tank(Model):
 
         self.draw_stream(wy_0)
         self.canvas.fill_rect(x_0 + 1, wy_0, rect[2] - 1.5, y_1 - wy_0 - 1)
+
+        if overflow:
+            self.canvas.fill_rect(x_0 - 5, y_0 - 5, 5, y_1 - y_0 + 15)
+            self.canvas.fill_rect(x_0, y_0 - 5, 5, 5)
+            self.canvas.fill_rect(x_1, y_0 - 5, 5, y_1 - y_0 + 15)
+            self.canvas.fill_rect(x_1 - 5, y_0 - 5, 5, 5)
 
         """if 15 <= len(self.tank.holes) < 40:
             holes = self.tank.draw_holes(5, x_0, y_1, 20)
@@ -381,11 +390,14 @@ class Tank(Model):
                 x_1 = x_0 + rect[2]
                 y_1 = y_0 + rect[3]
                 partial = self.current_water_depth.real() / self.depth.real()
-                if partial > 1:
+                overflow = partial > 1
+                if overflow:
                     wy_0 = y_0 - 5
                     self.canvas.stroke_style = 'red'
                     self.canvas.stroke_text("OVERFLOW!", x_1 + 15, y_0 - 5)
-                    self.canvas.stroke_style = 'black'
+                    self.canvas.stroke_style = hexcode((20, 20, 20))
+                    self.canvas.font = '8px sans-serif'
+                    self.canvas.stroke_text("Equation invalidated", x_1 + 10, y_0 + 5)
                 else:
                     wy_0 = self.height * (1 - partial) + 50
                 gradient = self.canvas.create_linear_gradient(
@@ -401,6 +413,12 @@ class Tank(Model):
                 #if self.current_water_depth > bf:
                 self.draw_stream(wy_0)
                 self.canvas.fill_rect(x_0 + 1, wy_0, rect[2] - 1.5, y_1 - wy_0 - 1)
+
+                if overflow:
+                    self.canvas.fill_rect(x_0 - 5, y_0 - 5, 5, y_1 - y_0 + 15)
+                    self.canvas.fill_rect(x_0, y_0 - 5, 5, 5)
+                    self.canvas.fill_rect(x_1, y_0 - 5, 5, y_1 - y_0 + 15)
+                    self.canvas.fill_rect(x_1 - 5, y_0 - 5, 5, 5)
 
                 self.global_alpha = 1
 
@@ -460,12 +478,12 @@ class Tank(Model):
             hole_mesh.geometry.exec_three_obj_method("dispose")
         self.hole_meshes.clear()
 
-        diameter = self.dHoles.real()
+        diameter = self.dHoles.real() / 5
         tw = self.width / 100
         ref_hole = CylinderBufferGeometry(diameter, diameter, 1, 8, 4)
         y = -1.5
 
-        offset = 7 - self.dHoles.value / tw
+        offset = 10 - self.dHoles.value * 100 / tw
 
         #print(offset, diameter, tw)
 
