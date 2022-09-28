@@ -559,14 +559,17 @@ class Cylinder:
                 self.vertices.append([rt * np.cos(angle), min_height + offset * h, rt * np.sin(angle)])
                 vert = self.vertices[-1].copy()
                 vert[1] = slope if 1 < h < self.h_segments else 0
-                vert[0] *= -1 if h == self.h_segments - 1 else 1
-                vert[2] *= -1 if h == self.h_segments - 1 else 1
+                #vert[0] *= -1 if h == self.h_segments - 1 else 1
+                #vert[2] *= -1 if h == self.h_segments - 1 else 1
 
                 # if h == self.h_segments:
                 # vert[2] *= -1
                 # vert[0] *= -4
 
-                self.normals.append(normalize(vert))
+                #if h < self.h_segments - 1:
+                #self.normals.append([np.cos(angle), slope, np.sin(angle)])
+                #else:
+                    #self.normals.append([-np.cos(angle), slope, -np.sin(angle)])
 
             for i in range(segments):
                 angle = i * step
@@ -577,7 +580,10 @@ class Cylinder:
                 # vert[0] *= -1 if h == self.h_segments - 1 else 1
                 # vert[2] *= -1 if h == self.h_segments - 1 else 1
 
-                self.normals.append(vert)
+                #if h < self.h_segments - 1:
+                #self.normals.append([np.cos(angle), slope, np.sin(angle)])
+                #else:
+                    #self.normals.append([-np.cos(angle), slope, -np.sin(angle)])
             self.vertices.append([0, min_height + offset * h, 0])
             self.vertices.append([0, min_height + offset * (h - 1), 0])
             center_top_i = len(self.vertices) - 2
@@ -606,23 +612,19 @@ class Cylinder:
                 self.indices.append([((i + 1) % segments) + (2 * segments * (h - 1)) + (h - 1) * 2])
 
             # ----------------------- Normals -------------------------- #
-            """for i in range(segments * 2):
-                vert = self.vertices[i + (2 * segments * (h - 1)) + (h - 1) * 2].copy()
-                vert[1] = slope
-                self.normals.append(vert)"""
-
             if h == self.h_segments:
                 for i in range(segments):
                     self.normals.append([0., 1., 0.])
-
+                self.normals.append([0., 1., 0.])
             if h == 1:
                 for i in range(segments):
                     self.normals.append([0., -1., 0.])
+                self.normals.append([0., -1., 0.])
 
-            # if h == self.h_segments:
-            self.normals.append([0., 1., 0.])
-            # if h == 1:
-            self.normals.append([0., -1., 0.])
+            for i in range((segments + 1) * 2):
+                vert = self.vertices[i + (2 * segments * (h - 1)) + (h - 1) * 2].copy()
+                vert[1] = slope if 1 < h < self.h_segments else 0
+                self.normals.append(normalize(vert))
 
             # -------------------------- UVs ----------------------------- #
             max_angle = step * (segments - 1)
@@ -703,7 +705,9 @@ class MultiPlot:
         self.axes[-1].set_xlabel(xlabel)
         self.axes[-1].set_ylabel(ylabel)
         self.axes[-1].set_title(title)
-        self.axes.append(self.axes[-1].twinx())
+        self.axes.append(plt.axes())
+        self.marker.append(None)
+        self.mark(len(self.axes) - 2, x[0], y[0])
         return len(self.axes) - 2
 
     def grid(self, i, axis='both', color='gray', linestyle='-', linewidth=0.2):
@@ -716,6 +720,9 @@ class MultiPlot:
             self.axes[j].set_visible(i == j)
         xlim = self.ax_data[self.axes[i]]['xlim']
         ylim = self.ax_data[self.axes[i]]['ylim']
+        xlabel = self.ax_data[self.axes[i]]['xlabel']
+        ylabel = self.ax_data[self.axes[i]]['ylabel']
+        title = self.ax_data[self.axes[i]]['title']
         print(xlim, ylim)
         self.axes[i].set_xlim(xlim)
         self.axes[i].set_ylim(ylim)
@@ -735,6 +742,8 @@ class MultiPlot:
         ax.set_xlabel(xlabel)
         ax.set_ylabel(ylabel)
         ax.set_title(title)
+        self.marker[i] = None
+        #self.mark(i, x[0], y[0])
         # self.axes[i].set_data(x, y)
         return True
 
@@ -743,6 +752,7 @@ class MultiPlot:
         self.widget = self.fig.canvas
         self.axes = [self.ax]
         self.ax_data = {self.ax: {'x': [], 'y': []}}
+        self.marker = []
 
     def __len__(self):
         return len(self.axes) - 1
@@ -752,6 +762,13 @@ class MultiPlot:
 
     def show(self):
         self.fig.show()
+
+    def mark(self, i, x, y, symbol='o'):
+        if self.marker[i] is None:
+            self.marker[i] = self.axes[i].plot([x], [y], marker=symbol)[0]
+        self.marker[i].set_data([x], [y])
+        self.widget.draw()
+        self.widget.flush_events()
 
 
 if __name__ == '__main__':
@@ -773,7 +790,8 @@ if __name__ == '__main__':
     mp.show()
     while True:
         n = input("Enter Plot to show [0-" + str(len(mp) - 1) + "]: ")
-        if int(n) > len(mp) - 1:
+        if int(n) > len(mp) - 1 or int(n) < 0:
             mp.clear()
+            continue
         mp.set_visible(int(n))
         mp.show()

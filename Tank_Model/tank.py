@@ -73,7 +73,6 @@ class Tank(Model):
             self.draw_holes3D(self.threejs_scene)
         #self.water_pivot.scale = [1, self.get_depth().real(), 1]
 
-
         super().update(args)
 
     def set_threejs_scene(self, scene):
@@ -148,7 +147,7 @@ class Tank(Model):
                                        xlim=[5, 50], xlabel="n [#]", ylabel="h [m]", title="Number of Holes N")
         self.plot.set_visible(self.in_flow_plot)
 
-        self.plot.grid(self.in_flow_plot, axis='y')
+        self.plot.grid(self.in_flow_plot)
         self.plot.grid(self.d_plot)
         self.plot.grid(self.n_plot)
         self.canvas.on_client_ready(self.do_draw)
@@ -166,9 +165,12 @@ class Tank(Model):
         self.plot.set_data(self.in_flow_plot, self.q_vars, (1 / (2 * G)) * ((4 * self.q_vars) / (self.nHoles.real() * pymath.pi * self.dHoles.real() ** 2)) ** 2)
         self.plot.set_data(self.d_plot, self.d_vars, (1 / (2 * G)) * ((4 * self.q.real()) / (self.nHoles.real() * pymath.pi * self.d_vars ** 2)) ** 2)
         self.plot.set_data(self.n_plot, self.n_vars, (1 / (2 * G)) * ((4 * self.q.real()) / (self.n_vars * pymath.pi * self.dHoles.real() ** 2)) ** 2)
-        self.plot.grid(self.in_flow_plot, axis='y')
+        self.plot.grid(self.in_flow_plot)
         self.plot.grid(self.d_plot)
         self.plot.grid(self.n_plot)
+        self.plot.mark(self.d_plot, self.dHoles.real(), self.get_depth().real())
+        self.plot.mark(self.n_plot, self.nHoles.real(), self.get_depth().real())
+        self.plot.mark(self.in_flow_plot, self.q.real(), self.get_depth().real())
 
     def add_hole(self):
         """
@@ -320,7 +322,7 @@ class Tank(Model):
         self.canvas.fill_style = gradient
         self.canvas.global_alpha = 0.75
 
-        self.draw_stream(wy_0)
+        self.draw_stream(wy_0 - 10)
         self.canvas.fill_rect(x_0 + 1, wy_0, rect[2] - 1.5, y_1 - wy_0 - 1)
 
         if overflow:
@@ -411,7 +413,7 @@ class Tank(Model):
                 self.canvas.fill_style = gradient
                 self.canvas.global_alpha = 0.75
                 #if self.current_water_depth > bf:
-                self.draw_stream(wy_0)
+                self.draw_stream(wy_0 - 10)
                 self.canvas.fill_rect(x_0 + 1, wy_0, rect[2] - 1.5, y_1 - wy_0 - 1)
 
                 if overflow:
