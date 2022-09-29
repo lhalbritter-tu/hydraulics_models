@@ -439,6 +439,74 @@ import matplotlib.pyplot as plt
 
 
 class Plot:
+    def __init__(self, x, y, width=5, height=3.5, title="Plot", xlabel="x", ylabel="y", xlim=None, ylim=None):
+        self.x = x
+        self.y = y
+        self.title = title
+        self.xlabel = xlabel
+        self.ylabel = ylabel
+        self.xlim = xlim
+        self.ylim = ylim
+        self.fig, self.ax = plt.subplots(figsize=(width, height))
+        self.ax.set_title(title)
+        self.ax.plot(x, y)
+        self.ax.set_xlabel(self.xlabel)
+        self.ax.set_ylabel(self.ylabel)
+        self.ax.set_xlim(xlim)
+        self.ax.set_ylim(ylim)
+        self.widget = self.fig.canvas
+
+    def update_plot(self, x=None, y=None, title=None, xlabel=None, ylabel=None, xlim=None, ylim=None):
+        if x is not None:
+            self.x = x
+        if y is not None:
+            self.y = y
+        self.title = title if title is not None else self.title
+        self.xlabel = xlabel if xlabel is not None else self.xlabel
+        self.ylabel = ylabel if ylabel is not None else self.ylabel
+        self.xlim = xlim if xlim is not None else self.xlim
+        self.ylim = ylim if ylim is not None else self.ylim
+        self.ax.clear()
+        self.ax.set_title(self.title)
+        self.ax.plot(self.x, self.y)
+        self.ax.set_xlabel(self.xlabel)
+        self.ax.set_ylabel(self.ylabel)
+        self.ax.set_xlim(self.xlim)
+        self.ax.set_ylim(self.ylim)
+        self.widget.draw()
+        self.widget.flush_events()
+
+    def set_data(self, x, y):
+        self.ax.set_data(x, y)
+
+    def set_xlim(self, xlim):
+        self.xlim = xlim
+        self.ax.set_xlim(self.xlim)
+
+    def grid(self):
+        self.ax.grid()
+
+    def add_line(self, x, color='gray', label=None):
+        """
+        Adds a vertical line to the plot
+
+        :param x: the x position for the line
+        :return: None
+        """
+        line = self.ax.axvline(x=x, color=color)
+        if label is not None:
+            self.ax.text(x + 0.5, self.ax.get_ylim()[1] / 2, label)
+        self.widget.draw()
+        self.widget.flush_events()
+        return line
+
+    def update_line(self, line, x):
+        line.set_xdata(x)
+        self.widget.draw()
+        self.widget.flush_events()
+
+
+class MarkerPlot:
     """
     Helper Class for including a matplotlib Plot with a moveable marker
     """
@@ -590,17 +658,17 @@ class Cylinder:
             center_bot_i = len(self.vertices) - 1
 
             # ---------------------- Indices --------------------- #
+            if h == self.h_segments:
+                for i in range(segments):
+                    self.indices.append([((i + 1) % segments) + (2 * segments * (h - 1)) + (h - 1) * 2])
+                    self.indices.append([i + (2 * segments * (h - 1)) + (h - 1) * 2])
+                    self.indices.append([center_top_i])
             if h == 1:
                 for i in range(segments):
                     self.indices.append([i + segments + (2 * segments * (h - 1)) + (h - 1) * 2])
                     self.indices.append([((i + 1) % segments + segments) + (2 * segments * (h - 1)) + (h - 1) * 2])
                     self.indices.append([center_bot_i])
 
-            if h == self.h_segments:
-                for i in range(segments):
-                    self.indices.append([((i + 1) % segments) + (2 * segments * (h - 1)) + (h - 1) * 2])
-                    self.indices.append([i + (2 * segments * (h - 1)) + (h - 1) * 2])
-                    self.indices.append([center_top_i])
 
             for i in range(segments):
                 self.indices.append([i + (2 * segments * (h - 1)) + (h - 1) * 2])
@@ -612,6 +680,10 @@ class Cylinder:
                 self.indices.append([((i + 1) % segments) + (2 * segments * (h - 1)) + (h - 1) * 2])
 
             # ----------------------- Normals -------------------------- #
+            for i in range(segments * 2):
+                vert = self.vertices[i + (2 * segments * (h - 1)) + (h - 1) * 2].copy()
+                vert[1] = slope
+                self.normals.append(normalize(vert))
             if h == self.h_segments:
                 for i in range(segments):
                     self.normals.append([0., 1., 0.])
@@ -620,11 +692,6 @@ class Cylinder:
                 for i in range(segments):
                     self.normals.append([0., -1., 0.])
                 self.normals.append([0., -1., 0.])
-
-            for i in range((segments + 1) * 2):
-                vert = self.vertices[i + (2 * segments * (h - 1)) + (h - 1) * 2].copy()
-                vert[1] = slope if 1 < h < self.h_segments else 0
-                self.normals.append(normalize(vert))
 
             # -------------------------- UVs ----------------------------- #
             max_angle = step * (segments - 1)
