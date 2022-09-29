@@ -247,6 +247,7 @@ class DropDownGroup(Changeable):
         if self.widget is not None:
             self.widget.on_trait_change(func)
 
+
 class BoxHorizontal(PseudoChangeable):
     def __init__(self, children):
         super().__init__(widgets.HBox(
@@ -275,6 +276,7 @@ class ClickButton(PseudoChangeable):
     def observe(self, func):
         self.widget.on_click(func)
 
+
 class HorizontalDivider(PseudoChangeable):
     def __init__(self):
         super().__init__(widgets.HTML("<hr>"))
@@ -283,6 +285,7 @@ class HorizontalDivider(PseudoChangeable):
 
     def observe(self, func):
         pass
+
 
 class HorizontalSpace(PseudoChangeable):
     def __init__(self, count=3):
@@ -430,7 +433,8 @@ class Demo:
         self.output.clear_output(wait=True)
         op = widgets.HTMLMath(self.model.calculate(), layout=widgets.Layout(width='100%'))
         if self.extra_output is not None:
-            op = widgets.HBox([widgets.HTMLMath(self.model.calculate(), layout=widgets.Layout(width='100%')), self.extra_output])
+            op = widgets.HBox(
+                [widgets.HTMLMath(self.model.calculate(), layout=widgets.Layout(width='100%')), self.extra_output])
         with self.output:
             display(op)
 
@@ -449,7 +453,7 @@ class Plot:
         self.ylim = ylim
         self.fig, self.ax = plt.subplots(figsize=(width, height))
         self.ax.set_title(title)
-        self.ax.plot(x, y)
+        self.pl = self.ax.plot(x, y)[0]
         self.ax.set_xlabel(self.xlabel)
         self.ax.set_ylabel(self.ylabel)
         self.ax.set_xlim(xlim)
@@ -466,9 +470,8 @@ class Plot:
         self.ylabel = ylabel if ylabel is not None else self.ylabel
         self.xlim = xlim if xlim is not None else self.xlim
         self.ylim = ylim if ylim is not None else self.ylim
-        self.ax.clear()
         self.ax.set_title(self.title)
-        self.ax.plot(self.x, self.y)
+        self.pl.set_data(self.x, self.y)
         self.ax.set_xlabel(self.xlabel)
         self.ax.set_ylabel(self.ylabel)
         self.ax.set_xlim(self.xlim)
@@ -617,6 +620,7 @@ class Cylinder:
         # print(min_height, offset)
 
         step = 2. * np.pi / segments
+        count_extra = 0
 
         for h in range(1, self.h_segments + 1):
             rt = lerp(radiusBottom, radiusTop, h / self.h_segments)
@@ -627,17 +631,17 @@ class Cylinder:
                 self.vertices.append([rt * np.cos(angle), min_height + offset * h, rt * np.sin(angle)])
                 vert = self.vertices[-1].copy()
                 vert[1] = slope if 1 < h < self.h_segments else 0
-                #vert[0] *= -1 if h == self.h_segments - 1 else 1
-                #vert[2] *= -1 if h == self.h_segments - 1 else 1
+                # vert[0] *= -1 if h == self.h_segments - 1 else 1
+                # vert[2] *= -1 if h == self.h_segments - 1 else 1
 
                 # if h == self.h_segments:
                 # vert[2] *= -1
                 # vert[0] *= -4
 
-                #if h < self.h_segments - 1:
-                #self.normals.append([np.cos(angle), slope, np.sin(angle)])
-                #else:
-                    #self.normals.append([-np.cos(angle), slope, -np.sin(angle)])
+                # if h < self.h_segments - 1:
+                # self.normals.append([np.cos(angle), slope, np.sin(angle)])
+                # else:
+                # self.normals.append([-np.cos(angle), slope, -np.sin(angle)])
 
             for i in range(segments):
                 angle = i * step
@@ -648,77 +652,79 @@ class Cylinder:
                 # vert[0] *= -1 if h == self.h_segments - 1 else 1
                 # vert[2] *= -1 if h == self.h_segments - 1 else 1
 
-                #if h < self.h_segments - 1:
-                #self.normals.append([np.cos(angle), slope, np.sin(angle)])
-                #else:
-                    #self.normals.append([-np.cos(angle), slope, -np.sin(angle)])
-            self.vertices.append([0, min_height + offset * h, 0])
-            self.vertices.append([0, min_height + offset * (h - 1), 0])
-            center_top_i = len(self.vertices) - 2
+                # if h < self.h_segments - 1:
+                # self.normals.append([np.cos(angle), slope, np.sin(angle)])
+                # else:
+                # self.normals.append([-np.cos(angle), slope, -np.sin(angle)])
+            if h == self.h_segments:
+                self.vertices.append([0, min_height + offset * h, 0])
+            if h == 1:
+                self.vertices.append([0, min_height + offset * (h - 1), 0])
+            center_top_i = len(self.vertices) - 1
             center_bot_i = len(self.vertices) - 1
 
             # ---------------------- Indices --------------------- #
             if h == self.h_segments:
                 for i in range(segments):
-                    self.indices.append([((i + 1) % segments) + (2 * segments * (h - 1)) + (h - 1) * 2])
-                    self.indices.append([i + (2 * segments * (h - 1)) + (h - 1) * 2])
+                    self.indices.append([((i + 1) % segments) + (2 * segments * (h - 1)) + count_extra])
+                    self.indices.append([i + (2 * segments * (h - 1)) + count_extra])
                     self.indices.append([center_top_i])
             if h == 1:
                 for i in range(segments):
-                    self.indices.append([i + segments + (2 * segments * (h - 1)) + (h - 1) * 2])
-                    self.indices.append([((i + 1) % segments + segments) + (2 * segments * (h - 1)) + (h - 1) * 2])
+                    self.indices.append([i + segments + (2 * segments * (h - 1))])
+                    self.indices.append([((i + 1) % segments + segments) + (2 * segments * (h - 1))])
                     self.indices.append([center_bot_i])
 
-
             for i in range(segments):
-                self.indices.append([i + (2 * segments * (h - 1)) + (h - 1) * 2])
-                self.indices.append([((i + 1) % segments) + (2 * segments * (h - 1)) + (h - 1) * 2])
-                self.indices.append([i + segments + (2 * segments * (h - 1)) + (h - 1) * 2])
+                self.indices.append([i + (2 * segments * (h - 1)) + count_extra])
+                self.indices.append([((i + 1) % segments) + (2 * segments * (h - 1)) + count_extra])
+                self.indices.append([i + segments + (2 * segments * (h - 1)) + count_extra])
 
-                self.indices.append([((i + 1) % segments + segments) + (2 * segments * (h - 1)) + (h - 1) * 2])
-                self.indices.append([i + segments + (2 * segments * (h - 1)) + (h - 1) * 2])
-                self.indices.append([((i + 1) % segments) + (2 * segments * (h - 1)) + (h - 1) * 2])
+                self.indices.append([((i + 1) % segments + segments) + (2 * segments * (h - 1)) + count_extra])
+                self.indices.append([i + segments + (2 * segments * (h - 1)) + count_extra])
+                self.indices.append([((i + 1) % segments) + (2 * segments * (h - 1)) + count_extra])
 
             # ----------------------- Normals -------------------------- #
             for i in range(segments * 2):
-                vert = self.vertices[i + (2 * segments * (h - 1)) + (h - 1) * 2].copy()
+                vert = self.vertices[i + (2 * segments * (h - 1)) + count_extra].copy()
                 vert[1] = slope
                 self.normals.append(normalize(vert))
             if h == self.h_segments:
                 for i in range(segments):
                     self.normals.append([0., 1., 0.])
                 self.normals.append([0., 1., 0.])
+                count_extra += 1
             if h == 1:
-                for i in range(segments):
-                    self.normals.append([0., -1., 0.])
+                #for i in range(segments - 1):
+                #    self.normals.append([0., -1., 0.])
                 self.normals.append([0., -1., 0.])
+                count_extra += 1
 
             # -------------------------- UVs ----------------------------- #
             max_angle = step * (segments - 1)
             for i in range(segments):
-                u = i * step
-                self.uv.append([u, 0.])
+                    u = i * step
+                    self.uv.append([u, min_height + offset * (h - 1)])
 
             for i in range(segments):
-                u = i * step
-                self.uv.append([u, 1.])
+                    u = i * step
+                    self.uv.append([u, min_height + offset * h])
 
             for i in range(segments):
                 angle = i * step
-                u = radiusTop * np.cos(angle) / max_angle
-                v = radiusTop * np.sin(angle) / max_angle
+                u = rt * np.cos(angle) / max_angle
+                v = rt * np.sin(angle) / max_angle
 
                 self.uv.append([u, v])
 
             for i in range(segments):
                 angle = i * step
-                u = radiusBottom * np.cos(angle) / max_angle
-                v = radiusBottom * np.sin(angle) / max_angle
+                u = rb * np.cos(angle) / max_angle
+                v = rb * np.sin(angle) / max_angle
 
                 self.uv.append([u, v])
-
             self.uv.append([0., 0.])
-            self.uv.append([0., 0.])
+            #self.uv.append([0., min_height + offset * (h - 1)])
 
     def my_cyl(self):
         return BufferGeometry(index=BufferAttribute(array=np.array(self.indices, dtype=np.uint16)), attributes={
@@ -810,7 +816,7 @@ class MultiPlot:
         ax.set_ylabel(ylabel)
         ax.set_title(title)
         self.marker[i] = None
-        #self.mark(i, x[0], y[0])
+        # self.mark(i, x[0], y[0])
         # self.axes[i].set_data(x, y)
         return True
 

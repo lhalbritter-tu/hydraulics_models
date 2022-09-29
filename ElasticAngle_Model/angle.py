@@ -33,10 +33,10 @@ class Angle(Model):
         self.mass = FloatChangeable(mass, unit="kg", base=0, _min=1.0, desc="Mass m = ")
         self.feather = FloatChangeable(feather, unit="kN/m", base=3, _min=1.0, desc="Feather stiffness k = ")
         self.start_angle = FloatChangeable(start_angle, unit="rad/s", _min=0.1, _max=pymath.pi / 2, step=0.001, desc="Initial angular velocity Phi(0) = ")
-        self.t = FloatChangeable(0, unit="s", _min=0, _max=30, desc="Time t = ", continuous_update=True, step=30.303 / 100, should_update=False)
-        self.canvas = c
 
         self.w_0 = self.circular_frequency().real()
+        self.t = FloatChangeable(0, unit="s", _min=-self.duration().real() * 3, _max=self.duration().real() * 3, desc="Time t = ", continuous_update=True, step=self.duration().real() / 100, should_update=True)
+        self.canvas = c
 
         self.params = [
             ChangeableContainer([self.mass, self.feather, self.start_angle]),
@@ -67,14 +67,14 @@ class Angle(Model):
 
     def __repr__(self):
         return f'<h1>Ergebnisse &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp</h1> <br />' \
-               f'<p font-size="calc(0.75em + 1vmin)">Masse ${{m = {self.mass.latex()}}}$ <br />' \
+               f'<div class=output-box width="100%"><p font-size="calc(0.75em + 1vmin)">Masse ${{m = {self.mass.latex()}}}$ <br />' \
                f'Federsteifigkeit ${{k = {self.feather.latex()}}}$<br />' \
                f'Anfangswinkelgeschwindigkeit ${{\dot{{\phi_0}} = {self.start_angle.rounded_latex()}}}$ <br />' \
                f'<br />Eigenkreisfrequenz ${{w_0 = {self.circular_frequency().rounded_latex()}}}$ <br />' \
                f'Schwingungsdauer ${{T = {self.duration().rounded_latex()}}}$ <br />' \
                f'Eigenfrequenz ${{f_0 = {self.frequency().rounded_latex()}}}$ <br />' \
                f'Lösung des Anfangswertproblems $\phi(t) = {self.get_evaluation()} ~~ [rad]$ <br />' \
-               f'Lösung für ${{\phi({self.t.rounded_latex()}) = {self.evaluate(self.t.real()).rounded_latex()}}}$ </p>' \
+               f'Lösung für ${{\phi({self.t.rounded_latex()}) = {self.evaluate(self.t.real()).rounded_latex(cut=5)}}}$ </p></div>' \
 
     def __str__(self):
         return self.__repr__()
@@ -145,7 +145,7 @@ class AngleCanvas():
                 self.plot.set_xlim([t - max_t, t + max_t])
                 self.plot.update_line(self.line, [t])
                 #self.plot.mark(t, phi.real())
-            self.canvas.sleep(20)
+            self.canvas.sleep(10)
             i = (i + 1) % len(vals)
         #print("I am outta here!")
         self.canvas.reset_transform()

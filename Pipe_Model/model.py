@@ -303,11 +303,11 @@ class AdvancedPipe(Model):
         #q2 = Variable(self.q2(), unit='m^3s^{-1}')
         u2 = Variable(self.u2(), unit='ms^{-1}')
         dp = Variable(self.dp(), unit='Pa')
-        return f'<b>Calculations</b> $Q_1 = Q_2 = Q = {self.i1.area():.3f} \cdot {self.u1} = {q1.rounded_latex()} \\\\ ' \
+        return f'<b>Calculations</b> <div class="output-box">$Q_1 = Q_2 = Q = {self.i1.area():.3f} \cdot {self.u1} = {q1.rounded_latex()} \\\\ ' \
                f'U_1 = {self.u1Param.latex()} \\rightarrow U_2 = \\frac{{{self.i1.area():.3f}}}{{{self.i2.area():.3f}}} \cdot {self.u1} = {u2.rounded_latex()} \\\\ ' \
-               f'$<b>Difference in pressure</b> $\Delta E = \Delta h + \\frac{{\Delta p}}{{\\rho \cdot g}} + \\frac{{\Delta U^2}}{{2 \cdot g}} \\\\' \
+               f'$</div><b>Difference in pressure</b> <div class="output-box">$\Delta E = \Delta h + \\frac{{\Delta p}}{{\\rho \cdot g}} + \\frac{{\Delta U^2}}{{2 \cdot g}} \\\\' \
                f'$${{E_1 = E_2 = \Delta E = 0}}$, because the pipe is frictionless$\\\\' \
-               f'\Rightarrow \\frac{{\Delta p}}{{\\rho}} = \\frac{{{self.u1:.3f}^2 - {self.u2():.3f}^2}}{{2}} + {self.i1yParam.real()} - {self.i2yParam.real()} = {dp.rounded_latex()}$'
+               f'\Rightarrow \\frac{{\Delta p}}{{\\rho}} = \\frac{{{self.u1:.3f}^2 - {self.u2():.3f}^2}}{{2}} + {self.i1yParam.real()} - {self.i2yParam.real()} = {dp.rounded_latex()}$</div>'
 
     def lines(self):
         margin = 450

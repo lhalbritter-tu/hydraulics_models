@@ -54,9 +54,9 @@ class Tank(Model):
         :return: the string representation of this model
         """
         return f'<h1>Water Depth &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp</h1> <br />' \
-               f'Depth ${{h = \\frac{{1}}{{2g}} \cdot \left( \\frac{{4 \cdot Q_{{in}}}}{{n_{{holes}} \cdot \pi \cdot d^2_{{holes}}}} \\right)^2 [m] }}$ <br />' \
+               f'<div class="output-box">Depth ${{h = \\frac{{1}}{{2g}} \cdot \left( \\frac{{4 \cdot Q_{{in}}}}{{n_{{holes}} \cdot \pi \cdot d^2_{{holes}}}} \\right)^2 [m] }}$ <br />' \
                f'Depth ${{ h = \\frac{{1}}{{2 \cdot 9.81}} \cdot \left( \\frac{{4 \cdot {self.q.real()}}}{{{self.nHoles.real()} \cdot \pi \cdot {self.dHoles.real()}^2}}\\right)^2[m] }}$ <br />' \
-               f'Depth ${{h = {self.get_depth().rounded_latex(cut=3)}}}$'
+               f'Depth ${{h = {self.get_depth().rounded_latex(cut=3)}}}$</div>'
 
     def update(self, args):
         """
