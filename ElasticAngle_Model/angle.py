@@ -351,7 +351,7 @@ class AngleCanvas():
         xp2, yp2 = self.rotate_point(pivot, (x2, y2), s, c)
         xp3, yp3 = self.rotate_point(pivot, (x3, y3), s, c)
 
-        self.canvas.stroke_line(xp + cx, self.angle.mass.value + yp + cy, xp1 + cx,
+        self.canvas.stroke_line(xp + cx, 9 + yp + cy, xp1 + cx,
                                 self.angle.mass.value / 2 + y + self.L)
         # self.canvas.stroke_line(x, y, xp, yp)self.canvas.fill_style = hexcode((230, 230, 230))
         self.canvas.fill_circle(xp + cx, yp + cy, 9)
