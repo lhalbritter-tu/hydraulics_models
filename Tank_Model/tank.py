@@ -137,13 +137,13 @@ class Tank(Model):
         self.plot = MultiPlot(width=5, height=5)
         self.q_vars = np.linspace(0, 1, 100)
         self.d_vars = np.linspace(0.5 * 10 ** (-2), 10 * 10 ** (-2), 100)
-        self.n_vars = np.linspace(5, 50, 100)
+        self.n_vars = np.array(range(5, 51))
 
-        self.in_flow_plot = self.plot.add_ax(self.q_vars, (1 / (2 * G)) * ((4 * self.q_vars) / (self.nHoles.real() * pymath.pi * self.dHoles.real() ** 2)) ** 2,
+        self.in_flow_plot = self.plot.add_plot(self.q_vars, (1 / (2 * G)) * ((4 * self.q_vars) / (self.nHoles.real() * pymath.pi * self.dHoles.real() ** 2)) ** 2,
                                             xlim=[0, 1], xlabel="Q [m^3s^(-1)]", ylabel="h [m]", title="Discharge Q")
-        self.d_plot = self.plot.add_ax(self.d_vars, (1 / (2 * G)) * ((4 * self.q.real()) / (self.nHoles.real() * pymath.pi * self.d_vars ** 2)) ** 2, color='green',
+        self.d_plot = self.plot.add_plot(self.d_vars, (1 / (2 * G)) * ((4 * self.q.real()) / (self.nHoles.real() * pymath.pi * self.d_vars ** 2)) ** 2, color='green',
                                        xlim=[0.5 * 10 ** (-2), 10 * 10 ** (-2)], xlabel="d [m]", ylabel="h [m]", title="Diameter d")
-        self.n_plot = self.plot.add_ax(self.n_vars, (1 / (2 * G)) * ((4 * self.q.real()) / (self.n_vars * pymath.pi * self.dHoles.real() ** 2)) ** 2, color='orange',
+        self.n_plot = self.plot.add_scatter(self.n_vars, (1 / (2 * G)) * ((4 * self.q.real()) / (self.n_vars * pymath.pi * self.dHoles.real() ** 2)) ** 2, color='orange',
                                        xlim=[5, 50], xlabel="n [#]", ylabel="h [m]", title="Number of Holes N")
         self.plot.set_visible(self.in_flow_plot)
 
@@ -164,7 +164,7 @@ class Tank(Model):
     def update_plots(self, args):
         self.plot.set_data(self.in_flow_plot, self.q_vars, (1 / (2 * G)) * ((4 * self.q_vars) / (self.nHoles.real() * pymath.pi * self.dHoles.real() ** 2)) ** 2)
         self.plot.set_data(self.d_plot, self.d_vars, (1 / (2 * G)) * ((4 * self.q.real()) / (self.nHoles.real() * pymath.pi * self.d_vars ** 2)) ** 2)
-        self.plot.set_data(self.n_plot, self.n_vars, (1 / (2 * G)) * ((4 * self.q.real()) / (self.n_vars * pymath.pi * self.dHoles.real() ** 2)) ** 2)
+        self.plot.set_data(self.n_plot, self.n_vars, (1 / (2 * G)) * ((4 * self.q.real()) / (self.n_vars * pymath.pi * self.dHoles.real() ** 2)) ** 2, scatter=True)
         self.plot.grid(self.in_flow_plot)
         self.plot.grid(self.d_plot)
         self.plot.grid(self.n_plot)

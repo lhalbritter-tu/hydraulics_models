@@ -481,7 +481,7 @@ class Plot:
 
     def flush(self):
         self.widget.draw()
-        #self.widget.flush_events()
+        # self.widget.flush_events()
 
     def set_data(self, x, y):
         self.ax.set_data(x, y)
@@ -552,7 +552,8 @@ class MarkerPlot:
             self.y = y
         self.ax.clear()
         self.ax.set_title(self.title)
-        self.ax.plot(self.x, self.y)
+        if x is not None or y is not None:
+            self.ax.plot(self.x, self.y)
         self.ax.set_xlabel(self.xlabel)
         self.ax.set_ylabel(self.ylabel)
         self.ax.set_ylim([-0.5, 0.5])
@@ -703,7 +704,7 @@ class Cylinder:
                 self.normals.append([0., 1., 0.])
                 count_extra += 1
             if h == 1:
-                #for i in range(segments - 1):
+                # for i in range(segments - 1):
                 #    self.normals.append([0., -1., 0.])
                 self.normals.append([0., -1., 0.])
                 count_extra += 1
@@ -711,12 +712,12 @@ class Cylinder:
             # -------------------------- UVs ----------------------------- #
             max_angle = step * (segments - 1)
             for i in range(segments):
-                    u = i * step
-                    self.uv.append([u, min_height + offset * (h - 1)])
+                u = i * step
+                self.uv.append([u, min_height + offset * (h - 1)])
 
             for i in range(segments):
-                    u = i * step
-                    self.uv.append([u, min_height + offset * h])
+                u = i * step
+                self.uv.append([u, min_height + offset * h])
 
             for i in range(segments):
                 angle = i * step
@@ -732,7 +733,7 @@ class Cylinder:
 
                 self.uv.append([u, v])
             self.uv.append([0., 0.])
-            #self.uv.append([0., min_height + offset * (h - 1)])
+            # self.uv.append([0., min_height + offset * (h - 1)])
 
     def my_cyl(self):
         return BufferGeometry(index=BufferAttribute(array=np.array(self.indices, dtype=np.uint16)), attributes={
@@ -780,15 +781,24 @@ class MultiPlot:
         self.height = height
         self.clear()
 
-    def add_ax(self, x, y, color='blue', xlim=None, ylim=None, xlabel=None, ylabel=None, title=None):
+    def add_plot(self, x, y, color='blue', xlim=None, ylim=None, xlabel=None, ylabel=None, title=None):
         self.axes[-1].plot(x, y, color=color)
-        self.ax_data[self.axes[-1]] = {'xlim': xlim, 'ylim': ylim, 'xlabel': xlabel, 'ylabel': ylabel, 'title': title}
+        self.marker.append(None)
+        self.mark(len(self.axes) - 1, x[0], y[0])
+        return self.add_ax(xlim, ylim, xlabel, ylabel, title)
+
+    def add_scatter(self, x, y, color='blue', xlim=None, ylim=None, xlabel=None, ylabel=None, title=None):
+        self.axes[-1].scatter(x, y, color=color)
+        self.marker.append(None)
+        self.mark(len(self.axes) - 1, x[0], y[0])
+        return self.add_ax(xlim, ylim, xlabel, ylabel, title, color=color)
+
+    def add_ax(self, xlim=None, ylim=None, xlabel=None, ylabel=None, title=None, color=None):
+        self.ax_data[self.axes[-1]] = {'xlim': xlim, 'ylim': ylim, 'xlabel': xlabel, 'ylabel': ylabel, 'title': title, 'color': color}
         self.axes[-1].set_xlabel(xlabel)
         self.axes[-1].set_ylabel(ylabel)
         self.axes[-1].set_title(title)
         self.axes.append(plt.axes())
-        self.marker.append(None)
-        self.mark(len(self.axes) - 2, x[0], y[0])
         return len(self.axes) - 2
 
     def grid(self, i, axis='both', color='gray', linestyle='-', linewidth=0.2):
@@ -810,14 +820,20 @@ class MultiPlot:
         self.widget.draw()
         self.widget.flush_events()
 
-    def set_data(self, i, x, y):
+    def set_data(self, i, x, y, scatter=False):
         if i < 0 or i >= len(self.axes):
             return False
         ax = self.axes[i]
         col = ax.get_lines()[0].get_color()
         xlim, ylim, xlabel, ylabel, title = ax.get_xlim(), ax.get_ylim(), ax.get_xlabel(), ax.get_ylabel(), ax.get_title()
+        color = self.ax_data[ax]['color']
+        if color is not None:
+            col = color
         ax.clear()
-        ax.plot(x, y, color=col)
+        if not scatter:
+            ax.plot(x, y, color=col)
+        else:
+            ax.scatter(x, y, color=col)
         ax.set_xlim(xlim)
         ax.set_ylim(ylim)
         ax.set_xlabel(xlabel)
@@ -852,8 +868,35 @@ class MultiPlot:
         self.widget.flush_events()
 
 
+class ScatterPlot(Plot):
+    def __init__(self, x, y, width=5, height=3.5, title="Plot", xlabel="x", ylabel="y", xlim=None, ylim=None):
+        self.x = x
+        self.y = y
+        self.xlim = xlim
+        self.ylim = ylim
+        self.xlabel = xlabel
+        self.ylabel = ylabel
+        self.title = title
+        self.width = width
+        self.height = height
+        self.fig, self.ax = plt.subplots(figsize=(self.width, self.height))
+        self.widget = self.fig.canvas
+        self.ax.scatter(x, y)
+        self.update_plot(self.x, self.y, self.title, self.xlabel, self.ylabel, self.xlim, self.ylim)
+
+    def update_plot(self, x=None, y=None, title=None, xlabel=None, ylabel=None, xlim=None, ylim=None):
+        super().update_plot(None, None, title, xlabel, ylabel, xlim, ylim)
+        if x is not None:
+            self.x = x
+        if y is not None:
+            self.y = y
+        if x is not None or y is not None:
+            self.ax.scatter(self.x, self.y)
+
+
 def spaces(n=10):
     return ' &nbsp ' * n
+
 
 if __name__ == '__main__':
     mp = MultiPlot()
