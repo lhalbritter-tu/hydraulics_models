@@ -476,8 +476,10 @@ class Plot:
         self.ax.set_ylabel(self.ylabel)
         self.ax.set_xlim(self.xlim)
         self.ax.set_ylim(self.ylim)
+
+    def flush(self):
         self.widget.draw()
-        self.widget.flush_events()
+        #self.widget.flush_events()
 
     def set_data(self, x, y):
         self.ax.set_data(x, y)
@@ -499,14 +501,18 @@ class Plot:
         line = self.ax.axvline(x=x, color=color)
         if label is not None:
             self.ax.text(x + 0.5, self.ax.get_ylim()[1] / 2, label)
-        self.widget.draw()
-        self.widget.flush_events()
         return line
 
     def update_line(self, line, x):
         line.set_xdata(x)
-        self.widget.draw()
-        self.widget.flush_events()
+
+    def plot(self, x, y):
+        [l.remove() for l in self.ax.lines]
+        self.pl = self.ax.plot(x, y)[0]
+
+    def sleep(self, param):
+        plt.pause(param)
+        pass
 
 
 class MarkerPlot:

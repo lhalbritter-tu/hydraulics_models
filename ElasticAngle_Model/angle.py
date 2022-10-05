@@ -144,8 +144,10 @@ class AngleCanvas():
                 self.draw(phi.real())
                 self.plot.set_xlim([t - max_t, t + max_t])
                 self.plot.update_line(self.line, [t])
+                self.plot.flush()
                 #self.plot.mark(t, phi.real())
             self.canvas.sleep(10)
+            self.plot.sleep(0.01)
             i = (i + 1) % len(vals)
         #print("I am outta here!")
         self.canvas.reset_transform()
@@ -154,6 +156,7 @@ class AngleCanvas():
         # self.stop_oscilate(None)
         self.plot.set_xlim([-max_t, max_t])
         self.plot.update_line(self.line, [0])
+        self.plot.flush()
         plt.ion()
 
     def pl_thr(self):
