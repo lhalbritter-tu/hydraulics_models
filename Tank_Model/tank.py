@@ -53,10 +53,10 @@ class Tank(Model):
 
         :return: the string representation of this model
         """
-        return f'<h1>Water Depth &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp</h1> <br />' \
+        return f'<h1>Water Depth{spaces(10)}</h1> <br />' \
                f'<div class="output-box">Depth ${{h = \\frac{{1}}{{2g}} \cdot \left( \\frac{{4 \cdot Q_{{in}}}}{{n_{{holes}} \cdot \pi \cdot d^2_{{holes}}}} \\right)^2 [m] }}$ <br />' \
-               f'Depth ${{ h = \\frac{{1}}{{2 \cdot 9.81}} \cdot \left( \\frac{{4 \cdot {self.q.real()}}}{{{self.nHoles.real()} \cdot \pi \cdot {self.dHoles.real()}^2}}\\right)^2[m] }}$ <br />' \
-               f'Depth ${{h = {self.get_depth().rounded_latex(cut=3)}}}$</div>'
+               f'${{ h = \\frac{{1}}{{2 \cdot 9.81}} \cdot \left( \\frac{{4 \cdot {self.q.real()}}}{{{self.nHoles.real()} \cdot \pi \cdot {self.dHoles.real()}^2}}\\right)^2[m] }}$ <br />' \
+               f'${{h = {self.get_depth().rounded_latex(cut=3)}}}$</div>'
 
     def update(self, args):
         """
@@ -82,11 +82,11 @@ class Tank(Model):
         self.holes = holes
         self.hole_callback = self.holes + create_holes(max_holes - len(self.holes), self.holes[0].d)
         self.canvas = c
-        self.q = FloatChangeable(q, _min=0.01, _max=1.0, desc="Discharge Q = ", unit="m³s⁻¹", step=0.01)
-        self.depth = FloatChangeable(max_depth, _min=0.5, _max=5.0, desc="Tank depth = ", unit="m")
+        self.q = FloatChangeable(q, _min=0.01, _max=1.0, desc="Discharge $Q_{in}$:", unit="m³s⁻¹", step=0.01)
+        self.depth = FloatChangeable(max_depth, _min=0.5, _max=5.0, desc="Tank depth $D$:", unit="m")
         #self.depth.observe(self.draw)
-        self.nHoles = IntChangeable(len(holes), _min=5, _max=max_holes, desc="Nr of Holes: ")
-        self.dHoles = FloatChangeable(holes[0].d * 10**(-2), unit="m", base=0, _min=0.005, _max=0.1, desc="Diameter d = ", step=0.001)
+        self.nHoles = IntChangeable(len(holes), _min=5, _max=max_holes, desc="Number of holes $n_{holes}$:")
+        self.dHoles = FloatChangeable(holes[0].d * 10**(-2), unit="m", base=0, _min=0.005, _max=0.1, desc="Diameter $d_{holes}$:", step=0.001)
 
         self.plot_selection = ToggleGroup(["Discharge", "Number of Holes", "Diameter of Holes"], tooltips=["Shows the plot in dependence of Discharge Q",
                                                                                                             "Shows the plot in dependence of Number of Holes N",
@@ -312,11 +312,11 @@ class Tank(Model):
         else:
             wy_0 = self.height * (1 - partial) + 50
         gradient = self.canvas.create_linear_gradient(
-            x_0, wy_0, x_1, y_1,
+            x_1, wy_0, x_1, y_1,
             # List of color stops
             [
-                (0, '#CAFAD4'),
-                (1, '#90D3D6'),
+                (0, '#C2E5F2'),
+                (1, '#07B2D9'),
             ],
         )
         self.canvas.fill_style = gradient
@@ -403,11 +403,11 @@ class Tank(Model):
                 else:
                     wy_0 = self.height * (1 - partial) + 50
                 gradient = self.canvas.create_linear_gradient(
-                    x_0, wy_0, x_1, y_1,
+                    x_1, wy_0, x_1, y_1,
                     # List of color stops
                     [
-                        (0, '#CAFAD4'),
-                        (1, '#90D3D6'),
+                        (0, '#C2E5F2'),
+                        (1, '#07B2D9'),
                     ],
                 )
                 self.canvas.fill_style = gradient

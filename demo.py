@@ -412,8 +412,10 @@ class Demo:
         :return: None
         """
         display(self.widget_output)
+        display(widgets.HTML("<div class='seperator'></div> <br />"))
         if self.canvas is not None:
             display(self.canvas)
+            display(widgets.HTML("<div class='seperator'></div>"))
         display(self.output)
         self.update_output()
         # self.model.update(None)
@@ -849,6 +851,9 @@ class MultiPlot:
         self.widget.draw()
         self.widget.flush_events()
 
+
+def spaces(n=10):
+    return ' &nbsp ' * n
 
 if __name__ == '__main__':
     mp = MultiPlot()

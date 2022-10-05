@@ -212,6 +212,7 @@ class AdvancedPipe(Model):
         )
 
         self.u1Param = FloatChangeable(u1, _min=u1, _max=u1 * 5, desc="$U_1$: ", unit="ms^{-1}")
+        self.qParam = FloatChangeable(7.85, _min=0, _max=100, desc="$Q$: ", unit="m^3s^{-1}", step=0.01)
         self.i1ChoiceGroup = DropDownGroup(['Circle', 'Rectangle'], ['Choose a circular end', 'Choose a rectangular end'])
         self.i1ChoiceWidget = BoxHorizontal([widgets.Label("Shape: "), self.i1ChoiceGroup.display])
         self.i1dParam = FloatChangeable(self.i1.d if self.i1.type == "Circle" else 1, _min=1, _max=5, desc="Diameter: ",
@@ -246,7 +247,7 @@ class AdvancedPipe(Model):
                 [self.i1ChoiceWidget, self.i1dParam, self.i1wParam, self.i1hParam, self.i1yParam]),
             ChangeableContainer([HorizontalSpace(count=15)]),
             ChangeableContainer([self.i2ChoiceWidget, self.i2dParam, self.i2wParam, self.i2hParam, self.i2yParam]),
-            ChangeableContainer([self.u1Param])
+            ChangeableContainer([self.u1Param, self.qParam])
         ]
 
         self.i1.y = self.i1yParam.widget.max - self.i1yParam.real() + 75
@@ -302,12 +303,14 @@ class AdvancedPipe(Model):
         q1 = Variable(self.q1(), unit='m^3s^{-1}')
         #q2 = Variable(self.q2(), unit='m^3s^{-1}')
         u2 = Variable(self.u2(), unit='ms^{-1}')
-        dp = Variable(self.dp(), unit='Pa')
-        return f'<b>Calculations</b> <div class="output-box">$Q_1 = Q_2 = Q = {self.i1.area():.3f} \cdot {self.u1} = {q1.rounded_latex()} \\\\ ' \
-               f'U_1 = {self.u1Param.latex()} \\rightarrow U_2 = \\frac{{{self.i1.area():.3f}}}{{{self.i2.area():.3f}}} \cdot {self.u1} = {u2.rounded_latex()} \\\\ ' \
-               f'$</div><b>Difference in pressure</b> <div class="output-box">$\Delta E = \Delta h + \\frac{{\Delta p}}{{\\rho \cdot g}} + \\frac{{\Delta U^2}}{{2 \cdot g}} \\\\' \
-               f'$${{E_1 = E_2 = \Delta E = 0}}$, because the pipe is frictionless$\\\\' \
-               f'\Rightarrow \\frac{{\Delta p}}{{\\rho}} = \\frac{{{self.u1:.3f}^2 - {self.u2():.3f}^2}}{{2}} + {self.i1yParam.real()} - {self.i2yParam.real()} = {dp.rounded_latex()}$</div>'
+        dp = Variable(self.dp(), unit='m')
+        return f'<h1>Calculations {spaces(25)}</h1>' \
+               f'<div class="output-box">$Q_1 = Q_2 = Q = {self.i1.area():.3f} \cdot {self.u1} = {q1.rounded_latex()}$ <br /> ' \
+               f'$U_1 = {self.u1Param.latex()} \\rightarrow U_2 = \\frac{{{self.i1.area():.3f}}}{{{self.i2.area():.3f}}} \cdot {self.u1} = {u2.rounded_latex()}$ <br />' \
+               f'</div><h1>Difference in Pressure {spaces(10)}</h1> ' \
+               f'<div class="output-box">$\Delta E = \Delta h + \\frac{{\Delta p}}{{\\rho \cdot g}} + \\frac{{\Delta U^2}}{{2 \cdot g}}$ <br />' \
+               f'${{E_1 = E_2 = \Delta E = 0}}$, because the pipe is frictionless <br />' \
+               f'$\Rightarrow \\frac{{\Delta p}}{{\\rho}} = \\frac{{{self.u1:.3f}^2 - {self.u2():.3f}^2}}{{2}} + {self.i1yParam.real()} - {self.i2yParam.real()} = {dp.rounded_latex()}$</div>'
 
     def lines(self):
         margin = 450
@@ -334,8 +337,8 @@ class AdvancedPipe(Model):
         argsi1 = self.i1.display(50)
         argsi2 = self.i2.display(450)
         self.canvas.clear()
-        self.canvas.stroke_line(0, 0, self.canvas.width, 0)
-        self.canvas.stroke_line(0, self.canvas.height - 1, self.canvas.width, self.canvas.height - 1)
+        #self.canvas.stroke_line(0, 0, self.canvas.width, 0)
+        #self.canvas.stroke_line(0, self.canvas.height - 1, self.canvas.width, self.canvas.height - 1)
         self.canvas.filter = "drop-shadow(-9px 9px 3px #ccc)"
         self.canvas.fill_style = hexcode((200, 182, 195))
 
@@ -347,7 +350,7 @@ class AdvancedPipe(Model):
             self.canvas.line_to(connector[2], connector[3])
 
         gradient = self.canvas.create_linear_gradient(
-            connectors[0][0],
+            connectors[2][2],
             connectors[0][1],  # Start position (x0, y0)
             connectors[2][2],
             connectors[2][3],  # End position (x1, y1)
@@ -467,11 +470,6 @@ class AdvancedPipe(Model):
         plane = PlaneGeometry()
         planeMesh = Mesh(geometry=plane, material=MeshStandardMaterial(map=dat_tex), rotation=[pymath.pi, 0, 0, "XYZ"], position=[0, 0, -2])
         return dat_tex
-
-
-class AdvancedPipe3D(AdvancedPipe):
-    def draw(self):
-        pass
 
 
 def get_lines(selected, i, margin=0, offset=10, end=False):
