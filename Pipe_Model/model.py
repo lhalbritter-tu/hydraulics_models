@@ -333,6 +333,27 @@ class AdvancedPipe(Model):
         return [l1c1, l1c1c2, l1c2r, l2c2, l2c1c2, l2c1r]
         # return [l1c1, l2c1, l1c2, l2c2, l1c1c2, l2c1c2]
 
+    def direct_lines(self):
+        margin = 450
+        i1Lines = get_lines("CIRC" if self.i1.type == "Circle" else "RECT", self.i1, 50)
+        i2Lines = get_lines("CIRC" if self.i2.type == "Circle" else "RECT", self.i2, margin, end=True)
+
+        x0 = i1Lines[0][0]
+        y0 = i1Lines[0][1]
+        x1 = i2Lines[0][0]
+        y1 = i2Lines[0][1]
+
+        l1 = [x0, y0, x1, y1]
+
+        x0 = i1Lines[1][0]
+        y0 = i1Lines[1][1]
+        x1 = i2Lines[1][0]
+        y1 = i2Lines[1][1]
+
+        l2 = [x1, y1, x0, y0]
+
+        return [l1, l2]
+
     def draw(self, scale=10):
         argsi1 = self.i1.display(50)
         argsi2 = self.i2.display(450)
@@ -342,7 +363,7 @@ class AdvancedPipe(Model):
         self.canvas.filter = "drop-shadow(-9px 9px 3px #ccc)"
         self.canvas.fill_style = hexcode((200, 182, 195))
 
-        connectors = self.lines()
+        connectors = self.direct_lines()
         self.canvas.begin_path()
         self.canvas.move_to(connectors[0][0], connectors[0][1])
         for connector in connectors:
@@ -350,10 +371,10 @@ class AdvancedPipe(Model):
             self.canvas.line_to(connector[2], connector[3])
 
         gradient = self.canvas.create_linear_gradient(
-            connectors[2][2],
+            connectors[1][2],
+            connectors[1][3],  # End position (x1, y1)
+            connectors[0][0],
             connectors[0][1],  # Start position (x0, y0)
-            connectors[2][2],
-            connectors[2][3],  # End position (x1, y1)
             # List of color stops
             [
                 (0, hexcode((222, 202, 215))),
@@ -370,14 +391,20 @@ class AdvancedPipe(Model):
 
         self.canvas.filter = "none"
 
+        ratio1 = self.i1.y / self.i2.y
+        ratio2 = self.i2.y / self.i1.y
+
+        fill_col1 = hexcode((222, 202, 215)) if ratio1 < ratio2 else hexcode((158, 144, 153))
+        fill_col2 = hexcode((158, 144, 153)) if ratio1 < ratio2 else hexcode((222, 202, 215))
+
         if self.i1.type == "Circle":
-            self.draw_ellipse(argsi1[0], argsi1[1], argsi1[2] / 2, argsi1[2], hexcode((222, 202, 215)))
+            self.draw_ellipse(argsi1[0], argsi1[1], argsi1[2] / 2, argsi1[2], fill_col1)
             # self.canvas.fill_circle(*argsi1)
         else:
             self.canvas.stroke_rect(*argsi1)
             self.canvas.fill_rect(*argsi1)
         if self.i2.type == "Circle":
-            self.draw_ellipse(argsi2[0], argsi2[1], argsi2[2] / 2, argsi2[2], hexcode((158, 144, 153)))
+            self.draw_ellipse(argsi2[0], argsi2[1], argsi2[2] / 2, argsi2[2], fill_col2)
         else:
             self.canvas.stroke_rect(*argsi2)
             self.canvas.fill_rect(*argsi2)
@@ -403,8 +430,8 @@ class AdvancedPipe(Model):
         self.canvas.stroke_style = hexcode((50, 50, 130))
         self.canvas.stroke_text("U1", self.i1.x + self.i1.rx / 4 - 15 * 3, hi1 - self.i1.ry / 4 - 5)
         self.canvas.stroke_style = 'black'
-        self.draw_arrow_hor(50, 100, 55, 5, 10, (0, 0, 0), label="x", left=False)
-        self.draw_arrow_vert(50, 55, 5, 5, 10, (0, 0, 0), label="z", top=True)
+        self.draw_arrow_hor(50, 70, 25, 5, 10, (0, 0, 0), label="x", left=False)
+        self.draw_arrow_vert(50, 25, 5, 5, 10, (0, 0, 0), label="z", top=True)
 
     def draw_heights(self, hi1, hi2):
         halfLine1 = (0.0, hi1, self.canvas.width, hi1)
@@ -419,8 +446,10 @@ class AdvancedPipe(Model):
         self.canvas.set_line_dash([0, 0])
         self.canvas.stroke_style = "black"
         xi = self.i2.rx + self.i2.x + 25
-        self.canvas.stroke_line(xi, hi1, xi, hi2)
-        self.canvas.stroke_text("Delta H", xi + 25, (hi1 + hi2) / 2)
+        self.draw_arrow_vert(xi, hi1, hi2, -5, 10, (0, 0, 0), label="Δh", top=True)
+        self.draw_arrow_vert(xi, hi2, hi1, 5, 10, (0, 0, 0), label="", top=False)
+        #self.canvas.stroke_line(xi, hi1, xi, hi2)
+        #self.canvas.stroke_text("Delta H", xi + 25, (hi1 + hi2) / 2)
 
     def draw_arrow_hor(self, x1, x2, y, y_offs, x_offs, rgb, label="", left=True):
         self.canvas.stroke_style = hexcode(rgb)
