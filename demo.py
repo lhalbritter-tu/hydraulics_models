@@ -68,10 +68,10 @@ class Variable:
         return f'{self.value: .{cut}f} [{self.unit}]'
 
     def latex(self):
-        return str(self.value) + " ~~ " + '[' + self.unit + ']'
+        return str(self.value) + " ~~ " + '[\mathrm{' + self.unit + '}]'
 
     def rounded_latex(self, cut=2):
-        return f'{self.value: .{cut}f} ~~ [{self.unit}]'
+        return f'{self.value: .{cut}f} ~~ [\mathrm{{{self.unit}}}]'
 
     def __repr__(self):
         """

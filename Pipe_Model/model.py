@@ -41,6 +41,24 @@ class IntersectionForm(ABC):
         """
         pass
 
+    @abc.abstractmethod
+    def describe(self, canvas, label="S", scale=1):
+        if canvas is None:
+            print("Please specify a canvas")
+        actual_y = 100 - self.y
+        actual_y = 1 if actual_y == 0 else actual_y
+        y0 = (self.y + 10 * np.sign(actual_y)) / scale
+        y1 = (self.y + 30 * np.sign(actual_y)) / scale
+        y2 = (self.y + 40 * np.sign(actual_y)) / scale
+        y3 = (self.y + 50 * np.sign(actual_y)) / scale
+        canvas.stroke_style = "black"
+        canvas.dash_style = "solid"
+        canvas.line_width = 1 / scale
+        canvas.stroke_line(self.x / scale, y0, (self.x + 5) / scale, y1)
+        canvas.stroke_text(label, (self.x + 10) / scale, y3)
+        canvas.dash_style = "dashed"
+        return y2
+
 
 class Circle(IntersectionForm):
     """
@@ -69,6 +87,11 @@ class Circle(IntersectionForm):
         self.r = self.rx = self.ry = self.d * 10 / 2
         return self.x, self.y, self.r
 
+    def describe(self, canvas, label="S", scale=1):
+        y = super().describe(canvas, label, scale)
+        canvas.stroke_circle((self.x + 5) / scale, y, 5 / scale)
+        canvas.dash_style = "solid"
+
 
 class Rect(IntersectionForm):
     """
@@ -95,6 +118,11 @@ class Rect(IntersectionForm):
         self.rx = self.w * 20 / 2
         self.ry = self.h * 20 / 2
         return self.x, self.y, self.rx, self.ry
+
+    def describe(self, canvas, label="S", scale=1):
+        y = super().describe(canvas, label, scale)
+        canvas.stroke_rect((self.x + 5) / scale, y, 5 / scale, 5 / scale)
+        canvas.dash_style = "solid"
 
 
 class SimplePipe(Model):
@@ -155,7 +183,8 @@ class AdvancedPipe(Model):
     """
 
     def update(self, args):
-        self.u1 = self.u1Param.real()
+        #self.u1 = self.u1Param.real()
+        self.q = self.qParam.real()
 
         self.i1 = self.i1Circ if self.i1ChoiceGroup.value == "Circle" else self.i1Rect
         self.i2 = self.i2Circ if self.i2ChoiceGroup.value == "Circle" else self.i2Rect
@@ -189,7 +218,10 @@ class AdvancedPipe(Model):
        # self.rendering.geometry = CylinderBufferGeometry(self.i1.d / 2, self.i2.d / 2, 5, 16, 1)
 
     def __init__(self, i1: IntersectionForm, i2: IntersectionForm, u1, canvas=None):
-        self.u1 = u1
+        self.scale = 600 / 200 * 2.5
+        self.scale = 1
+        canvas.font = f'{10 / self.scale}px serif'
+        #self.u1 = u1
         self.canvas = canvas
 
         self.i1Circ = i1 if i1.type == "Circle" else Circle(1, 0)
@@ -213,6 +245,7 @@ class AdvancedPipe(Model):
 
         self.u1Param = FloatChangeable(u1, _min=u1, _max=u1 * 5, desc="$U_1$: ", unit="ms^{-1}")
         self.qParam = FloatChangeable(7.85, _min=0, _max=100, desc="$Q$: ", unit="m^3s^{-1}", step=0.01)
+        self.q = self.qParam.real();
         self.i1ChoiceGroup = DropDownGroup(['Circle', 'Rectangle'], ['Choose a circular end', 'Choose a rectangular end'])
         self.i1ChoiceWidget = BoxHorizontal([widgets.Label("Shape: "), self.i1ChoiceGroup.display])
         self.i1dParam = FloatChangeable(self.i1.d if self.i1.type == "Circle" else 1, _min=1, _max=5, desc="Diameter: ",
@@ -247,7 +280,7 @@ class AdvancedPipe(Model):
                 [self.i1ChoiceWidget, self.i1dParam, self.i1wParam, self.i1hParam, self.i1yParam]),
             ChangeableContainer([HorizontalSpace(count=15)]),
             ChangeableContainer([self.i2ChoiceWidget, self.i2dParam, self.i2wParam, self.i2hParam, self.i2yParam]),
-            ChangeableContainer([self.u1Param, self.qParam])
+            ChangeableContainer([self.qParam])
         ]
 
         self.i1.y = self.i1yParam.widget.max - self.i1yParam.real() + 75
@@ -264,7 +297,7 @@ class AdvancedPipe(Model):
         """
         if self.i1 is None:
             return 0
-        return self.i1.area() * self.u1
+        return self.i1.area() * self.u1()
 
     def q2(self):
         """
@@ -276,6 +309,9 @@ class AdvancedPipe(Model):
             return 0
         return self.i2.area() * self.u2()
 
+    def u1(self):
+        return self.q / self.i1.area()
+
     def u2(self):
         """
         Calculates the velocity of the water after flowing through the pipe
@@ -283,7 +319,7 @@ class AdvancedPipe(Model):
         """
         if self.i1 is None or self.i2 is None:
             return 0
-        return self.i1.area() / self.i2.area() * self.u1
+        return self.i1.area() / self.i2.area() * self.u1()
 
     def dp(self):
         """
@@ -292,7 +328,7 @@ class AdvancedPipe(Model):
         """
         if self.i1 is None or self.i2 is None:
             return 0
-        return self.u1 ** 2 - self.u2() ** 2 + self.i1yParam.real() - self.i2yParam.real()
+        return self.u1() ** 2 - self.u2() ** 2 + self.i1yParam.real() - self.i2yParam.real()
 
     def calculate(self):
         if self.i1 is None or self.i2 is None:
@@ -301,16 +337,17 @@ class AdvancedPipe(Model):
 
     def get_latex(self):
         q1 = Variable(self.q1(), unit='m^3s^{-1}')
+        u1 = Variable(self.u1(), unit='ms^{-1}')
         #q2 = Variable(self.q2(), unit='m^3s^{-1}')
         u2 = Variable(self.u2(), unit='ms^{-1}')
         dp = Variable(self.dp(), unit='m')
         return f'<h1>Calculations {spaces(25)}</h1>' \
-               f'<div class="output-box">$Q_1 = Q_2 = Q = {self.i1.area():.3f} \cdot {self.u1} = {q1.rounded_latex()}$ <br /> ' \
-               f'$U_1 = {self.u1Param.latex()} \\rightarrow U_2 = \\frac{{{self.i1.area():.3f}}}{{{self.i2.area():.3f}}} \cdot {self.u1} = {u2.rounded_latex()}$ <br />' \
+               f'<div class="output-box">$Q_1 = Q_2 = Q = {self.i1.area():.3f} \cdot {u1.real():.3f} = {q1.rounded_latex(3)}$ <br /> ' \
+               f'$U_1 = {u1.rounded_latex(3)} \\rightarrow U_2 = \\frac{{{self.i1.area():.3f}}}{{{self.i2.area():.3f}}} \cdot {u1.real():.3f} = {u2.rounded_latex(3)}$ <br />' \
                f'</div><h1>Difference in Pressure {spaces(10)}</h1> ' \
                f'<div class="output-box">$\Delta E = \Delta h + \\frac{{\Delta p}}{{\\rho \cdot g}} + \\frac{{\Delta U^2}}{{2 \cdot g}}$ <br />' \
                f'${{E_1 = E_2 = \Delta E = 0}}$, because the pipe is frictionless <br />' \
-               f'$\Rightarrow \\frac{{\Delta p}}{{\\rho}} = \\frac{{{self.u1:.3f}^2 - {self.u2():.3f}^2}}{{2}} + {self.i1yParam.real()} - {self.i2yParam.real()} = {dp.rounded_latex()}$</div>'
+               f'$\Rightarrow \\frac{{\Delta p}}{{\\rho}} = \\frac{{{u1.real():.3f}^2 - {self.u2():.3f}^2}}{{2}} + {self.i1yParam.real()} - {self.i2yParam.real()} = {dp.rounded_latex()}$</div>'
 
     def lines(self):
         margin = 450
@@ -355,15 +392,21 @@ class AdvancedPipe(Model):
         return [l1, l2]
 
     def draw(self, scale=10):
+        self.canvas.clear()
+        self.canvas.reset_transform()
+        self.canvas.scale(self.scale, self.scale)
         argsi1 = self.i1.display(50)
         argsi2 = self.i2.display(450)
-        self.canvas.clear()
+        argsi1 = [arg / self.scale for arg in argsi1]
+        argsi2 = [arg / self.scale for arg in argsi2]
         #self.canvas.stroke_line(0, 0, self.canvas.width, 0)
         #self.canvas.stroke_line(0, self.canvas.height - 1, self.canvas.width, self.canvas.height - 1)
         self.canvas.filter = "drop-shadow(-9px 9px 3px #ccc)"
+        self.canvas.line_width = 1 / self.scale
         self.canvas.fill_style = hexcode((200, 182, 195))
 
         connectors = self.direct_lines()
+        connectors = [[arg / self.scale for arg in connector] for connector in connectors]
         self.canvas.begin_path()
         self.canvas.move_to(connectors[0][0], connectors[0][1])
         for connector in connectors:
@@ -371,15 +414,15 @@ class AdvancedPipe(Model):
             self.canvas.line_to(connector[2], connector[3])
 
         gradient = self.canvas.create_linear_gradient(
-            connectors[1][2],
-            connectors[1][3],  # End position (x1, y1)
             connectors[0][0],
+            connectors[1][3],  # End position (x1, y1)
+            connectors[1][2],
             connectors[0][1],  # Start position (x0, y0)
             # List of color stops
             [
-                (0, hexcode((222, 202, 215))),
-                (0.5, "white"),
-                (1, hexcode((158, 144, 153))),
+                (0, hexcode((225, 225, 225))),
+                #(0.2, hexcode((158, 144, 153))),
+                (1, hexcode((100, 94, 97))),
             ],
         )
 
@@ -398,17 +441,19 @@ class AdvancedPipe(Model):
         fill_col2 = hexcode((158, 144, 153)) if ratio1 < ratio2 else hexcode((222, 202, 215))
 
         if self.i1.type == "Circle":
-            self.draw_ellipse(argsi1[0], argsi1[1], argsi1[2] / 2, argsi1[2], fill_col1)
+            self.draw_ellipse(argsi1[0], argsi1[1], argsi1[2] / 2, argsi1[2], gradient)
             # self.canvas.fill_circle(*argsi1)
         else:
             self.canvas.stroke_rect(*argsi1)
             self.canvas.fill_rect(*argsi1)
         if self.i2.type == "Circle":
-            self.draw_ellipse(argsi2[0], argsi2[1], argsi2[2] / 2, argsi2[2], fill_col2)
+            self.draw_ellipse(argsi2[0], argsi2[1], argsi2[2] / 2, argsi2[2], gradient)
         else:
             self.canvas.stroke_rect(*argsi2)
             self.canvas.fill_rect(*argsi2)
         self.draw_details()
+        self.i1.describe(self.canvas, "S1", self.scale)
+        self.i2.describe(self.canvas, "S2", self.scale)
         pass
 
     def draw_ellipse(self, x, y, rx, ry, fill_col="white", rot=0):
@@ -421,17 +466,20 @@ class AdvancedPipe(Model):
 
     def draw_details(self):
         hi1 = self.i1.y + (self.i1.ry / 8 if self.i1.type == "Circle" else self.i1.ry / 2)
+        #hi1 /= self.scale
         hi2 = self.i2.y + (self.i2.ry / 8 if self.i2.type == "Circle" else self.i2.ry / 2)
+        #hi2 /= self.scale
         if self.i1.y != self.i2.y:
-            self.draw_heights(hi1, hi2)
+            self.draw_heights(hi1 / self.scale, hi2 / self.scale)
         x1 = self.i1.x + (self.i1.rx / 4)
-        x2 = x1 + 50
-        self.draw_arrow_hor(x1, x2, hi1 - self.i1.ry / 4, 5, 10, (50, 50, 130), "")
+        x1 /= self.scale
+        x2 = x1 + 50 / self.scale
+        self.draw_arrow_hor(x1 / self.scale, x2 / self.scale, (hi1 - self.i1.ry / 4) / self.scale, 5 / self.scale, 10 / self.scale, (50, 50, 130), "")
         self.canvas.stroke_style = hexcode((50, 50, 130))
-        self.canvas.stroke_text("U1", self.i1.x + self.i1.rx / 4 - 15 * 3, hi1 - self.i1.ry / 4 - 5)
+        self.canvas.stroke_text("U1", (self.i1.x + self.i1.rx / 4 - 15 * 3) / self.scale, (hi1 - self.i1.ry / 4 - 5) / self.scale)
         self.canvas.stroke_style = 'black'
-        self.draw_arrow_hor(50, 70, 25, 5, 10, (0, 0, 0), label="x", left=False)
-        self.draw_arrow_vert(50, 25, 5, 5, 10, (0, 0, 0), label="z", top=True)
+        self.draw_arrow_hor(50 / self.scale, 70 / self.scale, 25 / self.scale, 5 / self.scale, 10 / self.scale, (0, 0, 0), label="x", left=False)
+        self.draw_arrow_vert(50 / self.scale, 25 / self.scale, 5 / self.scale, 5 / self.scale, 10 / self.scale, (0, 0, 0), label="z", top=True)
 
     def draw_heights(self, hi1, hi2):
         halfLine1 = (0.0, hi1, self.canvas.width, hi1)

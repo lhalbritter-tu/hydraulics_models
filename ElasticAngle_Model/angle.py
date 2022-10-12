@@ -73,7 +73,7 @@ class Angle(Model):
                f'<br />Eigenkreisfrequenz ${{w_0 = {self.circular_frequency().rounded_latex()}}}$ <br />' \
                f'Schwingungsdauer ${{T = {self.duration().rounded_latex()}}}$ <br />' \
                f'Eigenfrequenz ${{f_0 = {self.frequency().rounded_latex()}}}$ <br />' \
-               f'Lösung des Anfangswertproblems $\phi(t) = {self.get_evaluation()} ~~ [rad]$ <br />' \
+               f'Lösung des Anfangswertproblems $\phi(t) = {self.get_evaluation()} ~~ [\mathrm{{rad}}]$ <br />' \
                f'Lösung für ${{\phi({self.t.rounded_latex()}) = {self.evaluate(self.t.real()).rounded_latex(cut=5)}}}$ </p></div>' \
 
     def __str__(self):
