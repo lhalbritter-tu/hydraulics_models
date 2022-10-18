@@ -417,8 +417,16 @@ class Demo:
             display(self.canvas)
             display(widgets.HTML("<div class='seperator'></div>"))
         display(self.output)
+        self.update_input()
         self.update_output()
         # self.model.update(None)
+
+    def update_input(self):
+        self.widget_output.clear_output(wait=True)
+        for container in self.params:
+            container.update()
+        with self.widget_output:
+            display(widgets.HBox([param.display for param in self.params]))
 
     def update_output(self):
         """
@@ -426,12 +434,6 @@ class Demo:
 
         :return: None
         """
-        self.widget_output.clear_output(wait=True)
-        for container in self.params:
-            container.update()
-        with self.widget_output:
-            display(widgets.HBox([param.display for param in self.params]))
-
         self.output.clear_output(wait=True)
         op = widgets.HTMLMath(self.model.calculate(), layout=widgets.Layout(width='100%'))
         if self.extra_output is not None:

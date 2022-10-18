@@ -1,6 +1,10 @@
+import time
 from abc import ABC
 import abc
 import math as pymath
+
+import ipycanvas
+
 from demo import *
 
 
@@ -55,8 +59,11 @@ class IntersectionForm(ABC):
         canvas.dash_style = "solid"
         canvas.line_width = 1 / scale
         canvas.stroke_line(self.x / scale, y0, (self.x + 5) / scale, y1)
-        canvas.stroke_text(label, (self.x + 10) / scale, y3)
+        old_fill_style = canvas.fill_style
+        canvas.fill_style = "black"
+        canvas.fill_text(label, (self.x + 10) / scale, y3)
         canvas.dash_style = "dashed"
+        canvas.fill_style = old_fill_style
         return y2
 
 
@@ -87,9 +94,12 @@ class Circle(IntersectionForm):
         self.r = self.rx = self.ry = self.d * 10 / 2
         return self.x, self.y, self.r
 
-    def describe(self, canvas, label="S", scale=1):
+    def describe(self, canvas, label="S", scale=1, model=None):
         y = super().describe(canvas, label, scale)
-        canvas.stroke_circle((self.x + 5) / scale, y, 5 / scale)
+        if model is None:
+            canvas.stroke_circle((self.x + 5) / scale, y, 5 / scale)
+        else:
+            model.dash_ellipse((self.x + 5) / scale, y, 3 / scale, 5 / scale)
         canvas.dash_style = "solid"
 
 
@@ -217,12 +227,16 @@ class AdvancedPipe(Model):
 
        # self.rendering.geometry = CylinderBufferGeometry(self.i1.d / 2, self.i2.d / 2, 5, 16, 1)
 
-    def __init__(self, i1: IntersectionForm, i2: IntersectionForm, u1, canvas=None):
-        self.scale = 600 / 200 * 2.5
-        self.scale = 1
-        canvas.font = f'{10 / self.scale}px serif'
+    def __init__(self, i1: IntersectionForm, i2: IntersectionForm, u1, canvas=None, margin_left=50, margin_right=50):
+        self.scale = canvas.width / canvas.height * 2.5
+        #self.scale = 1
+        canvas.font = f'{self.scale * 2}px serif'
         #self.u1 = u1
         self.canvas = canvas
+
+        self.margin_left = margin_left
+        self.margin_right = margin_right
+        self.margin = self.canvas.width - self.margin_left - self.margin_right
 
         self.i1Circ = i1 if i1.type == "Circle" else Circle(1, 0)
         self.i2Circ = i2 if i2.type == "Circle" else Circle(1, 0)
@@ -248,8 +262,8 @@ class AdvancedPipe(Model):
         self.q = self.qParam.real();
         self.i1ChoiceGroup = DropDownGroup(['Circle', 'Rectangle'], ['Choose a circular end', 'Choose a rectangular end'])
         self.i1ChoiceWidget = BoxHorizontal([widgets.Label("Shape: "), self.i1ChoiceGroup.display])
-        self.i1dParam = FloatChangeable(self.i1.d if self.i1.type == "Circle" else 1, _min=1, _max=5, desc="Diameter: ",
-                                        unit="m")
+        self.i1dParam = FloatChangeable(self.i1.d if self.i1.type == "Circle" else 1, _min=0.1, _max=5, desc="Diameter: ",
+                                        unit="m", step=0.01)
         self.i1dParam.set_active(self.i1.type == "Circle")
 
         self.i1wParam = FloatChangeable(self.i1.w if self.i1.type != "Circle" else 1, _min=1, _max=5, desc="Width: ",
@@ -263,8 +277,8 @@ class AdvancedPipe(Model):
         self.i2ChoiceGroup = DropDownGroup(['Circle', 'Rectangle'],
                                            ['Choose a circular end', 'Choose a rectangular end'])
         self.i2ChoiceWidget = BoxHorizontal([widgets.Label("Shape: "), self.i2ChoiceGroup.display])
-        self.i2dParam = FloatChangeable(self.i2.d if self.i2.type == "Circle" else 1, _min=1, _max=5, desc="Diameter: ",
-                                        unit="m")
+        self.i2dParam = FloatChangeable(self.i2.d if self.i2.type == "Circle" else 1, _min=0.1, _max=5, desc="Diameter: ",
+                                        unit="m", step=0.01)
         self.i2dParam.set_active(self.i2.type == "Circle")
 
         self.i2wParam = FloatChangeable(self.i2.w if self.i2.type != "Circle" else 1, _min=1, _max=5, desc="Width: ",
@@ -371,9 +385,8 @@ class AdvancedPipe(Model):
         # return [l1c1, l2c1, l1c2, l2c2, l1c1c2, l2c1c2]
 
     def direct_lines(self):
-        margin = 450
-        i1Lines = get_lines("CIRC" if self.i1.type == "Circle" else "RECT", self.i1, 50)
-        i2Lines = get_lines("CIRC" if self.i2.type == "Circle" else "RECT", self.i2, margin, end=True)
+        i1Lines = get_lines("CIRC" if self.i1.type == "Circle" else "RECT", self.i1, self.margin_left / self.scale)
+        i2Lines = get_lines("CIRC" if self.i2.type == "Circle" else "RECT", self.i2, self.margin / self.scale, end=True)
 
         x0 = i1Lines[0][0]
         y0 = i1Lines[0][1]
@@ -395,18 +408,18 @@ class AdvancedPipe(Model):
         self.canvas.clear()
         self.canvas.reset_transform()
         self.canvas.scale(self.scale, self.scale)
-        argsi1 = self.i1.display(50)
-        argsi2 = self.i2.display(450)
-        argsi1 = [arg / self.scale for arg in argsi1]
-        argsi2 = [arg / self.scale for arg in argsi2]
+        argsi1 = self.i1.display(self.margin_left / self.scale)
+        argsi2 = self.i2.display(self.margin / self.scale)
+        #argsi1 = [arg / self.scale for arg in argsi1]
+        #argsi2 = [arg / self.scale for arg in argsi2]
         #self.canvas.stroke_line(0, 0, self.canvas.width, 0)
         #self.canvas.stroke_line(0, self.canvas.height - 1, self.canvas.width, self.canvas.height - 1)
         self.canvas.filter = "drop-shadow(-9px 9px 3px #ccc)"
-        self.canvas.line_width = 1 / self.scale
+        #self.canvas.line_width = 1 / self.scale
         self.canvas.fill_style = hexcode((200, 182, 195))
 
         connectors = self.direct_lines()
-        connectors = [[arg / self.scale for arg in connector] for connector in connectors]
+        #connectors = [[arg / self.scale for arg in connector] for connector in connectors]
         self.canvas.begin_path()
         self.canvas.move_to(connectors[0][0], connectors[0][1])
         for connector in connectors:
@@ -434,12 +447,6 @@ class AdvancedPipe(Model):
 
         self.canvas.filter = "none"
 
-        ratio1 = self.i1.y / self.i2.y
-        ratio2 = self.i2.y / self.i1.y
-
-        fill_col1 = hexcode((222, 202, 215)) if ratio1 < ratio2 else hexcode((158, 144, 153))
-        fill_col2 = hexcode((158, 144, 153)) if ratio1 < ratio2 else hexcode((222, 202, 215))
-
         if self.i1.type == "Circle":
             self.draw_ellipse(argsi1[0], argsi1[1], argsi1[2] / 2, argsi1[2], gradient)
             # self.canvas.fill_circle(*argsi1)
@@ -452,8 +459,8 @@ class AdvancedPipe(Model):
             self.canvas.stroke_rect(*argsi2)
             self.canvas.fill_rect(*argsi2)
         self.draw_details()
-        self.i1.describe(self.canvas, "S1", self.scale)
-        self.i2.describe(self.canvas, "S2", self.scale)
+        self.i1.describe(self.canvas, "S1", 1, model=self)
+        self.i2.describe(self.canvas, "S2", 1, model=self)
         pass
 
     def draw_ellipse(self, x, y, rx, ry, fill_col="white", rot=0):
@@ -464,22 +471,37 @@ class AdvancedPipe(Model):
         self.canvas.fill()
         # self.canvas.end_path()
 
+    def dash_ellipse(self, x, y, rx, ry, fill_col="white", rot=0):
+        i = 0
+        #self.canvas.ellipse(x, y, rx, ry, rot, 0.5 * pymath.pi, pymath.pi)
+        #self.canvas.stroke()
+        #time.sleep(5)
+        while i <= 2:
+            self.canvas.begin_path()
+            self.canvas.ellipse(x, y, rx, ry, rot, i * pymath.pi, (i + 0.2) * pymath.pi)
+            i += 0.3
+            self.canvas.stroke()
+            #time.sleep(0.5)
+            #self.canvas.end_path()
+        #self.canvas.fill()
+        # self.canvas.end_path()
+
     def draw_details(self):
         hi1 = self.i1.y + (self.i1.ry / 8 if self.i1.type == "Circle" else self.i1.ry / 2)
         #hi1 /= self.scale
         hi2 = self.i2.y + (self.i2.ry / 8 if self.i2.type == "Circle" else self.i2.ry / 2)
         #hi2 /= self.scale
         if self.i1.y != self.i2.y:
-            self.draw_heights(hi1 / self.scale, hi2 / self.scale)
+            self.draw_heights(hi1, hi2)
         x1 = self.i1.x + (self.i1.rx / 4)
-        x1 /= self.scale
-        x2 = x1 + 50 / self.scale
-        self.draw_arrow_hor(x1 / self.scale, x2 / self.scale, (hi1 - self.i1.ry / 4) / self.scale, 5 / self.scale, 10 / self.scale, (50, 50, 130), "")
+        #x1 /= self.scale
+        x2 = x1 + 50
+        self.draw_arrow_hor(x1, x2, (hi1 - self.i1.ry / 4), 5, 10, (50, 50, 130), "")
         self.canvas.stroke_style = hexcode((50, 50, 130))
-        self.canvas.stroke_text("U1", (self.i1.x + self.i1.rx / 4 - 15 * 3) / self.scale, (hi1 - self.i1.ry / 4 - 5) / self.scale)
+        self.canvas.fill_text("U1", (self.i1.x + self.i1.rx / 4 - 15 * 3), (hi1 - self.i1.ry / 4 - 5))
         self.canvas.stroke_style = 'black'
-        self.draw_arrow_hor(50 / self.scale, 70 / self.scale, 25 / self.scale, 5 / self.scale, 10 / self.scale, (0, 0, 0), label="x", left=False)
-        self.draw_arrow_vert(50 / self.scale, 25 / self.scale, 5 / self.scale, 5 / self.scale, 10 / self.scale, (0, 0, 0), label="z", top=True)
+        self.draw_arrow_hor(50, 70, 25, 5, 10, (0, 0, 0), label="x", left=False)
+        self.draw_arrow_vert(50, 25, 5, 5, 10, (0, 0, 0), label="z", top=True)
 
     def draw_heights(self, hi1, hi2):
         halfLine1 = (0.0, hi1, self.canvas.width, hi1)
@@ -508,11 +530,14 @@ class AdvancedPipe(Model):
         self.canvas.move_to(x2, y)
         self.canvas.line_to(x2 - x_offs, y - y_offs)
         self.canvas.stroke()
+        old_fill_style = self.canvas.fill_style
+        self.canvas.fill_style = hexcode(rgb)
         if left:
-            self.canvas.stroke_text(label, x1 - x_offs, y - y_offs)
+            self.canvas.fill_text(label, x1 - x_offs, y - y_offs)
         else:
-            self.canvas.stroke_text(label, x2 + x_offs, y - y_offs)
+            self.canvas.fill_text(label, x2 + x_offs, y - y_offs)
         self.canvas.stroke_style = "black"
+        self.canvas.fill_style = old_fill_style
 
     def draw_arrow_vert(self, x, y1, y2, x_offs, y_offs, rgb, label="", top=True):
         self.canvas.stroke_style = hexcode(rgb)
@@ -530,11 +555,14 @@ class AdvancedPipe(Model):
             self.canvas.move_to(x, y2)
             self.canvas.line_to(x - x_offs, y2 + y_offs)
         self.canvas.stroke()
+        old_fill_style = self.canvas.fill_style
+        self.canvas.fill_style = hexcode(rgb)
         if top:
-            self.canvas.stroke_text(label, x - x_offs * 2.5, y_top + y_offs)
+            self.canvas.fill_text(label, x - x_offs * 2.5, y_top + y_offs)
         else:
-            self.canvas.stroke_text(label, x - x_offs, y_bot - y_offs)
+            self.canvas.fill_text(label, x - x_offs, y_bot - y_offs)
         self.canvas.stroke_style = "black"
+        self.canvas.fill_style = old_fill_style
 
     def observe(self, func):
         for param in self.params:
