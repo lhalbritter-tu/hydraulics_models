@@ -244,8 +244,9 @@ class DropDownGroup(Changeable):
         :param func: the callback function for this widget
         :return: None
         """
-        if self.widget is not None:
-            self.widget.on_trait_change(func)
+        #if self.widget is not None:
+        #    self.widget.on_trait_change(func)
+        pass
 
 
 class BoxHorizontal(PseudoChangeable):
