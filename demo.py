@@ -68,10 +68,13 @@ class Variable:
         return f'{self.value: .{cut}f} [{self.unit}]'
 
     def latex(self):
-        return str(self.value) + " ~~ " + '[\mathrm{' + self.unit + '}]'
+        return str(self.value) + " ~~ " + self.rmunit()
 
     def rounded_latex(self, cut=2):
-        return f'{self.value: .{cut}f} ~~ [\mathrm{{{self.unit}}}]'
+        return f'{self.value: .{cut}f} ~~ {self.rmunit()}'
+
+    def rmunit(self):
+        return f'[\mathrm{{{self.unit}}}]'
 
     def __repr__(self):
         """
@@ -180,7 +183,7 @@ class IntChangeable(Changeable):
             step=step,
             continuous_update=False
         ), base, unit)
-        self.unitLabel = widgets.Label(f"[{unit}]")
+        self.unitLabel = widgets.Label(f'${self.rmunit()}$')
         self.display = widgets.HBox([self.widget, self.unitLabel])
 
 
@@ -206,7 +209,7 @@ class FloatChangeable(Changeable):
             step=step,
             continuous_update=continuous_update
         ), base, unit, should_update=should_update)
-        self.unitLabel = widgets.Label(f"$[{unit}]$")
+        self.unitLabel = widgets.Label(f"${self.rmunit()}$")
         self.display = widgets.HBox([self.widget, self.unitLabel])
 
 
@@ -236,17 +239,6 @@ class DropDownGroup(Changeable):
             tooltips=tooltips
         ))
         self.display = self.widget
-
-    def observe(self, func):
-        """
-        Registers func as callback to the ipywidgets.widget.observe method
-
-        :param func: the callback function for this widget
-        :return: None
-        """
-        #if self.widget is not None:
-        #    self.widget.on_trait_change(func)
-        pass
 
 
 class BoxHorizontal(PseudoChangeable):
@@ -422,14 +414,14 @@ class Demo:
         self.update_output()
         # self.model.update(None)
 
-    def update_input(self):
+    def update_input(self, args=None):
         self.widget_output.clear_output(wait=True)
         for container in self.params:
             container.update()
         with self.widget_output:
             display(widgets.HBox([param.display for param in self.params]))
 
-    def update_output(self):
+    def update_output(self, args=None):
         """
         Callback Method to update the output widgets
 

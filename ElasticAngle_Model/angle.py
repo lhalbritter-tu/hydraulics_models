@@ -66,7 +66,7 @@ class Angle(Model):
         return f'{(self.start_angle.real() / w_0.real()):.2f} * sin({w_0.real():.2f}t)'
 
     def __repr__(self):
-        return f'<h1>Ergebnisse {spaces(10)}</h1> <br />' \
+        return f'<h1 class="heading">Ergebnisse {spaces(10)}</h1> <br />' \
                f'<div class=output-box width="100%"><p font-size="calc(0.75em + 1vmin)">Masse ${{m = {self.mass.latex()}}}$ <br />' \
                f'Federsteifigkeit ${{k = {self.feather.latex()}}}$<br />' \
                f'Anfangswinkelgeschwindigkeit ${{\dot{{\phi_0}} = {self.start_angle.rounded_latex()}}}$ <br />' \

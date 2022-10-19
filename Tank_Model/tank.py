@@ -53,10 +53,10 @@ class Tank(Model):
 
         :return: the string representation of this model
         """
-        return f'<h1>Water Depth{spaces(10)}</h1> <br />' \
-               f'<div class="output-box">Depth ${{h = \\frac{{1}}{{2g}} \cdot \left( \\frac{{4 \cdot Q_{{in}}}}{{n_{{holes}} \cdot \pi \cdot d^2_{{holes}}}} \\right)^2 [m] }}$ <br />' \
+        return f'<table><thead><tr><th><h1 class="heading" margin-bottom="0px">{spaces(1)}Water Depth{spaces(5)}</h1></th></tr></thead>' \
+               f'<tbody><tr><td><div class="output-box" text-align="justify" margin-top="0px">Depth $h = \\frac{{1}}{{2g}} \cdot \left( \\frac{{4 \cdot Q_{{in}}}}{{n_{{holes}} \cdot \pi \cdot d^2_{{holes}}}} \\right)^2 [m]$ <br />' \
                f'${{ h = \\frac{{1}}{{2 \cdot 9.81}} \cdot \left( \\frac{{4 \cdot {self.q.real()}}}{{{self.nHoles.real()} \cdot \pi \cdot {self.dHoles.real()}^2}}\\right)^2[m] }}$ <br />' \
-               f'${{h = {self.get_depth().rounded_latex(cut=3)}}}$</div>'
+               f'${{h = {self.get_depth().rounded_latex(cut=3)}}}$</div></td></tr></tbody></table>'
 
     def update(self, args):
         """
