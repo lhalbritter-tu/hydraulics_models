@@ -66,15 +66,12 @@ class Angle(Model):
         return f'{(self.start_angle.real() / w_0.real()):.2f} * sin({w_0.real():.2f}t)'
 
     def __repr__(self):
-        return f'<h1 class="heading">Ergebnisse {spaces(10)}</h1> <br />' \
-               f'<div class=output-box width="100%"><p font-size="calc(0.75em + 1vmin)">Masse ${{m = {self.mass.latex()}}}$ <br />' \
-               f'Federsteifigkeit ${{k = {self.feather.latex()}}}$<br />' \
-               f'Anfangswinkelgeschwindigkeit ${{\dot{{\phi_0}} = {self.start_angle.rounded_latex()}}}$ <br />' \
-               f'<br />Eigenkreisfrequenz ${{w_0 = {self.circular_frequency().rounded_latex()}}}$ <br />' \
-               f'Schwingungsdauer ${{T = {self.duration().rounded_latex()}}}$ <br />' \
-               f'Eigenfrequenz ${{f_0 = {self.frequency().rounded_latex()}}}$ <br />' \
-               f'Lösung des Anfangswertproblems $\phi(t) = {self.get_evaluation()} ~~ [\mathrm{{rad}}]$ <br />' \
-               f'Lösung für ${{\phi({self.t.rounded_latex()}) = {self.evaluate(self.t.real()).rounded_latex(cut=5)}}}$ </p></div>' \
+        return table_style() + f'<table class="tg"><thead><tr><th class="tg-0gzz"><h1>Ergebnisse</h1></th></tr></thead>' \
+                               f'<tbody><tr><td class="tg-tdqd">Eigenkreisfrequenz $w_0 = {self.circular_frequency().rounded_latex(2)}$</td></tr>' \
+                               f'<tr><td class="tg-tdqd">Schwingungsdauer $T = {self.duration().rounded_latex(2)}$</td></tr>' \
+                               f'<tr><td class="tg-tdqd">Eigenfrequenz $f_0 = {self.frequency().rounded_latex(2)}$</td></tr>' \
+                               f'<tr><td class="tg-tdqd">Lösung des Anfangswertproblems $\phi(t) = {self.get_evaluation()} ~~ [\mathrm{{rad}}]$</td></tr>' \
+                               f'<tr><td class="tg-tdqd">Lösung für $\phi({self.t.real()}) = {self.evaluate(self.t.real()).rounded_latex(2)}$</td></tr></tbody></table>' \
 
     def __str__(self):
         return self.__repr__()
@@ -86,7 +83,7 @@ class Angle(Model):
         self.t.observe(func)
 
 
-class AngleCanvas():
+class AngleCanvas:
     def __init__(self, angle: Angle, plot: Plot, width=600, height=200, L=2):
         super().__init__()
         self.angle = angle
@@ -108,6 +105,7 @@ class AngleCanvas():
             disabled=False,
             button_style='',
             tooltip='Stops the animation of the model.',
+            theme='danger',
         )
         self.stop_btn.observe(self.stop_oscilate)
 

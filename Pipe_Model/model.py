@@ -10,6 +10,7 @@ from demo import *
 ROW_START = "<div class='row'>"
 COLUMN_START = "<div class='column'>"
 DIV_END = "</div>"
+G_CONSTANT = 9.81
 
 class IntersectionForm(ABC):
     """
@@ -282,9 +283,11 @@ class AdvancedPipe(Model):
 
         self.u1Param = FloatChangeable(u1, _min=u1, _max=u1 * 5, desc="$U_1$: ", unit="ms^{-1}")
         self.qParam = FloatChangeable(7.85, _min=0, _max=100, desc="$Q$: ", unit="m^3s^{-1}", step=0.01)
-        self.q = self.qParam.real();
+        self.q = self.qParam.real()
+        shLabel = widgets.HTML(f"{spaces(1)} SHAPE {spaces(1)}")
+        shLabel.add_class("heading")
         self.i1ChoiceGroup = DropDownGroup(['Circle', 'Rectangle'], ['Choose a circular end', 'Choose a rectangular end'])
-        self.i1ChoiceWidget = BoxHorizontal([widgets.Label("Shape: "), self.i1ChoiceGroup.display])
+        self.i1ChoiceWidget = BoxHorizontal([shLabel, self.i1ChoiceGroup.display], spacing=0)
         self.i1dParam = FloatChangeable(self.i1.d if self.i1.type == "Circle" else 1, _min=0.1, _max=5, desc="Diameter: ",
                                         unit="m", step=0.01)
         self.i1dParam.set_active(self.i1.type == "Circle")
@@ -299,7 +302,7 @@ class AdvancedPipe(Model):
 
         self.i2ChoiceGroup = DropDownGroup(['Circle', 'Rectangle'],
                                            ['Choose a circular end', 'Choose a rectangular end'])
-        self.i2ChoiceWidget = BoxHorizontal([widgets.Label("Shape: "), self.i2ChoiceGroup.display])
+        self.i2ChoiceWidget = BoxHorizontal([shLabel, self.i2ChoiceGroup.display], spacing=0)
         self.i2dParam = FloatChangeable(self.i2.d if self.i2.type == "Circle" else 1, _min=0.1, _max=5, desc="Diameter: ",
                                         unit="m", step=0.01)
         self.i2dParam.set_active(self.i2.type == "Circle")
@@ -370,7 +373,7 @@ class AdvancedPipe(Model):
         """
         if self.i1 is None or self.i2 is None:
             return 0
-        return self.u1() ** 2 - self.u2() ** 2 + self.i1yParam.real() - self.i2yParam.real()
+        return (self.u1() ** 2 - self.u2() ** 2) / (2 * G_CONSTANT) + self.i1yParam.real() - self.i2yParam.real()
 
     def calculate(self):
         if self.i1 is None or self.i2 is None:
@@ -378,46 +381,19 @@ class AdvancedPipe(Model):
         return self.get_latex()
 
     def table(self):
-        table = f"""<style type="text/css">
-        .tg  {{border-collapse:collapse;border-color:#9ABAD9;border-spacing:0;border-style:solid;border-width:1px;}}
-.tg td{{background-color:#EBF5FF;border-color:#9ABAD9;border-style:solid;border-width:0px;color:#444;
-  font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;word-break:normal;}}
-.tg th{{background-color:#409cff;border-color:#9ABAD9;border-style:solid;border-width:0px;color:#fff;
-  font-family:Arial, sans-serif;font-size:14px;font-weight:normal;overflow:hidden;padding:10px 5px;word-break:normal;}}
-.tg .tg-tdqd{{background-color:#d0e4f5;border-color:inherit;text-align:left;vertical-align:middle}}
-.tg .tg-0gzz{{background-color:#3166ff;border-color:inherit;text-align:left;vertical-align:middle}}
-.tg .tg-ndm2{{background-color:#d0e4f5;text-align:left;vertical-align:middle}}
-.row {{
-  display: flex;
-}}
-
-.column {{
-  flex: 50%;
-  margin-top:auto; 
-  margin-bottom:auto;
-  margin-right:20px;
-}}
-@media screen and (max-width: 600px) {{
-  .column {{
-    width: 100%;
-  }}
-}}
-h1 {{
-    margin-bottom:0px;
-}}
-</style>
+        table = table_style() + f"""
 <table class="tg" width="100%">
 <thead>
   <tr>
-    <th class="tg-0gzz">Side 1</th>
-    <th class="tg-0gzz">Side 2</th>
-    <th class="tg-0gzz">General / Rule {spaces(20)} </th>
-    <th class="tg-0gzz">Unit</th>
+    <th class="tg-0gzz"><h1>Side 1 {spaces(5)}</h1></th>
+    <th class="tg-0gzz"><h1>Side 2 {spaces(5)}</h1></th>
+    <th class="tg-0gzz"><h1>General / Rule {spaces(5)} </h1></th>
+    <th class="tg-0gzz"><h1>Unit</h1></th>
   </tr>
 </thead>
 <tbody>
   <tr>
-    <td class="tg-tdqd">${{Q_1 = }}$</td>
+    <td class="tg-tdqd">${{Q_1 = {self.q:.3f}}}$</td>
     <td class="tg-tdqd">${{Q_2 = {self.q:.3f}}}$</td>
     <td class="tg-tdqd">${{= Q}}$ - pipe is frictionless</td>
     <td class="tg-tdqd">${Variable("", 0, "m^3s^{-1}").latex().replace('~', '')}$</td>
@@ -445,10 +421,13 @@ h1 {{
         u2 = Variable(self.u2(), unit='ms^{-1}')
         dp = Variable(self.dp(), unit='m')
         return f'{self.table()}<br />' \
-               f'<h1 class="heading"> {spaces(1)} Difference in Pressure {spaces(10)}</h1> ' \
-               f'<div class="output-box">$~\Delta E = \Delta h + \\frac{{\Delta p}}{{\\rho \cdot g}} + \\frac{{\Delta U^2}}{{2 \cdot g}}$ <br />' \
-               f'$~\Rightarrow \\frac{{\Delta p}}{{\\rho}} = \\frac{{{u1.real():.3f}^2 - {self.u2():.3f}^2}}{{2}} + {self.i1yParam.real()} - {self.i2yParam.real()} = \\\\' \
-               f'~= {(u1.real()**2 - u2.real()**2)/2:.3f} + {self.i1yParam.real() - self.i2yParam.real()} = {dp.rounded_latex()}$</div></div>' \
+               f'<table class="tg" width="100%">' \
+               f'<thead><tr><th class="tg-0gzz"><h1>Difference in Pressure</h1></th></tr></thead>' \
+               f'<tbody><tr><td class="tg-tdqd">$\Delta E = \Delta h + \\frac{{\Delta p}}{{\\rho \cdot g}} + \\frac{{\Delta U^2}}{{2 \cdot g}}$</td></tr>' \
+               f'<tr><td class="tg-tdqd">$\Delta E = 0 \\rightarrow 0 = (h_1 - h_2) + \\frac{{\Delta p}}{{\\rho \cdot g}} + \\frac{{(U_1^2 - U_2^2)}}{{2 \cdot g}}$</td></tr>' \
+               f'<tr><td class="tg-tdqd">$\\Rightarrow \\frac{{\Delta p}}{{\\rho \cdot g}} = \\frac{{({u1.real()**2:.3f} - {u2.real()**2:.3f})}}{{2 \cdot g}} + ({self.i1yParam.real():.3f} - {self.i2yParam.real():.3f})$</td></tr>' \
+               f'<tr><td class="tg-tdqd">$\\frac{{\Delta p}}{{\\rho \cdot g}} = {(u1.real()**2 - u2.real()**2) / (2 * G_CONSTANT):.3f} + {self.i1yParam.real() - self.i2yParam.real():.3f} = {dp.rounded_latex(3)}$</td></tr>' \
+               f'</tbody></table>' \
 
 
     def lines(self):

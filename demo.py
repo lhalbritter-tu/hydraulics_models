@@ -4,6 +4,16 @@ import numpy as np
 from IPython.display import display, Latex
 from pythreejs import *
 
+THEME = {
+    'slider': "#F2F2F2",
+    'button-primary': "#02735E",
+    'button-secondary': "#731702",
+    'drop-down-primary': "#014040",
+    'drop-down-secondary': "#02735E",
+    'text-black': "#000000",
+    'text-white': "#FFFFFF",
+}
+
 key_light = DirectionalLight(color='white', position=[3, 5, 1], intensity=0.5)
 camera = PerspectiveCamera(aspect=3.0, children=(
     DirectionalLight(color='white', intensity=0.5, matrixWorldNeedsUpdate=True, position=(3.0, 5.0, 1.0),
@@ -163,7 +173,7 @@ class IntChangeable(Changeable):
     Concrete Implementation of Changeable which implements an IntSlider as UI Widget
     """
 
-    def __init__(self, value, base=0, unit=" ", _min=0, _max=10, desc="", step=1):
+    def __init__(self, value, base=0, unit=" ", _min=0, _max=10, desc="", step=1, theme='slider'):
         """
         Initializes the internal Variable and Changeable with an ipywidgets.IntSlider with the following attributes:
 
@@ -183,13 +193,14 @@ class IntChangeable(Changeable):
             step=step,
             continuous_update=False
         ), base, unit)
+        self.widget.style.handle_color = THEME[theme]
         self.unitLabel = widgets.Label(f'${self.rmunit()}$')
         self.display = widgets.HBox([self.widget, self.unitLabel])
 
 
 class FloatChangeable(Changeable):
     def __init__(self, value, base=0, unit=" ", _min=.0, _max=10.0, desc="", step=0.1, continuous_update=False,
-                 should_update=True):
+                 should_update=True, theme='slider'):
         """
         Initializes the internal Variable and Changeable with an ipywidgets.FloatSlider with the following attributes:
 
@@ -209,6 +220,7 @@ class FloatChangeable(Changeable):
             step=step,
             continuous_update=continuous_update
         ), base, unit, should_update=should_update)
+        self.widget.style.handle_color = THEME[theme]
         self.unitLabel = widgets.Label(f"${self.rmunit()}$")
         self.display = widgets.HBox([self.widget, self.unitLabel])
 
@@ -218,7 +230,7 @@ class ToggleGroup(Changeable):
     Implementation of Changeable which implements a ToggleButtonGroup
     """
 
-    def __init__(self, options, tooltips):
+    def __init__(self, options, tooltips, theme='button-primary'):
         """
         Initializes a ipywidgets.ToggleButtons Object with options=options and tooltips=tooltips
 
@@ -229,22 +241,24 @@ class ToggleGroup(Changeable):
             options=options,
             tooltips=tooltips
         ))
+        self.widget.button_style = 'primary'
         self.display = self.widget
 
 
 class DropDownGroup(Changeable):
-    def __init__(self, options, tooltips):
+    def __init__(self, options, tooltips, theme='drop-down-primary'):
         super().__init__(widgets.Dropdown(
             options=options,
             tooltips=tooltips
         ))
+        self.widget.add_class('dropdown')
         self.display = self.widget
 
 
 class BoxHorizontal(PseudoChangeable):
-    def __init__(self, children):
+    def __init__(self, children, spacing=10):
         super().__init__(widgets.HBox(
-            children=children
+            children=children, spacing=spacing
         ))
         self.display = self.widget
         self.should_update = True
@@ -256,13 +270,18 @@ class BoxHorizontal(PseudoChangeable):
 
 
 class ClickButton(PseudoChangeable):
-    def __init__(self, description="Button", disabled=False, button_style='', tooltip=''):
+    def __init__(self, description="Button", disabled=False, button_style='', tooltip='', theme='primary',
+                 text_col='text-white'):
         super().__init__(widgets.Button(
             description=description,
             disabled=disabled,
             button_style=button_style,
             tooltip=tooltip
         ))
+        self.widget.button_style = theme
+        self.widget.add_class('btn_class')
+        # self.widget.style.button_color = THEME[theme]
+        # self.widget.style.text_color = THEME[text_col]
         self.display = self.widget
         self.should_update = False
 
@@ -434,6 +453,22 @@ class Demo:
                 [widgets.HTMLMath(self.model.calculate(), layout=widgets.Layout(width='100%')), self.extra_output])
         with self.output:
             display(op)
+
+
+class PipeDemo(Demo):
+
+    def __init__(self, params: [ChangeableContainer], model: Model, drawable=None, extra_output=None):
+        super().__init__(params, model, drawable, extra_output)
+
+    def show(self):
+        display(self.widget_output)
+        display(widgets.HTML("<div class='seperator'></div> <br />"))
+        if self.canvas is not None:
+            display(widgets.HBox([self.canvas, widgets.HTML(spaces(20)), self.output]))
+        else:
+            display(self.output)
+        self.update_input()
+        self.update_output()
 
 
 import matplotlib.pyplot as plt
@@ -789,7 +824,8 @@ class MultiPlot:
         return self.add_ax(xlim, ylim, xlabel, ylabel, title, color=color)
 
     def add_ax(self, xlim=None, ylim=None, xlabel=None, ylabel=None, title=None, color=None):
-        self.ax_data[self.axes[-1]] = {'xlim': xlim, 'ylim': ylim, 'xlabel': xlabel, 'ylabel': ylabel, 'title': title, 'color': color}
+        self.ax_data[self.axes[-1]] = {'xlim': xlim, 'ylim': ylim, 'xlabel': xlabel, 'ylabel': ylabel, 'title': title,
+                                       'color': color}
         self.axes[-1].set_xlabel(xlabel)
         self.axes[-1].set_ylabel(ylabel)
         self.axes[-1].set_title(title)
@@ -891,6 +927,37 @@ class ScatterPlot(Plot):
 
 def spaces(n=10):
     return ' &nbsp ' * n
+
+
+def table_style():
+    return f"""<style type="text/css">
+                .tg  {{border-collapse:collapse;border-color:#9ABAD9;border-spacing:0;border-style:solid;border-width:1px;}}
+                .tg td{{background-color:#EBF5FF;border-color:#9ABAD9;border-style:solid;border-width:0px;color:#444;
+                  font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;word-break:normal;}}
+                .tg th{{background-color:#409cff;border-color:#9ABAD9;border-style:solid;border-width:0px;color:#fff;
+                  font-family:Arial, sans-serif;font-size:14px;font-weight:normal;overflow:hidden;padding:10px 5px;word-break:normal;}}
+                .tg .tg-tdqd{{background-color:#d0e4f5;border-color:inherit;text-align:left;vertical-align:middle}}
+                .tg .tg-0gzz{{background-color:#3166ff;border-color:inherit;text-align:left;vertical-align:middle}}
+                .tg .tg-ndm2{{background-color:#d0e4f5;text-align:left;vertical-align:middle}}
+                .row {{
+                  display: flex;
+                }}
+                
+                .column {{
+                  flex: 50%;
+                  margin-top:auto; 
+                  margin-bottom:auto;
+                  margin-right:20px;
+                }}
+                @media screen and (max-width: 600px) {{
+                  .column {{
+                    width: 100%;
+                  }}
+                }}
+                h1 {{
+                    margin-bottom:0px;
+                }}
+                </style>"""
 
 
 if __name__ == '__main__':
