@@ -268,6 +268,19 @@ class BoxHorizontal(PseudoChangeable):
         for child in self.children:
             child.observe(func)
 
+class BoxVertical(PseudoChangeable):
+    def __init__(self, children, spacing=10):
+        super().__init__(widgets.VBox(
+            children=children, spacing=spacing
+        ))
+        self.display = self.widget
+        self.should_update = True
+        self.children = children
+
+    def observe(self, func):
+        for child in self.children:
+            child.observe(func)
+
 
 class ClickButton(PseudoChangeable):
     def __init__(self, description="Button", disabled=False, button_style='', tooltip='', theme='primary',

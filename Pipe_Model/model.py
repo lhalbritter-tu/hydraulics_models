@@ -63,12 +63,13 @@ class IntersectionForm(ABC):
         canvas.line_width = 1 / scale
         x = self.rx / 8 + self.x
         canvas.stroke_line(x / scale, y0, x / scale, y1)
+        canvas.stroke_circle(x / scale, y1 - 7.5, 7.5 / scale)
         old_fill_style = canvas.fill_style
         canvas.fill_style = "black"
         i = 0
         for text in label:
             i += 10
-            canvas.fill_text(text, (x + 10) / scale, y3 + i)
+            canvas.fill_text(text, (x - 7.5 / 2) / scale, y1 - 7.5 / 2)
         canvas.dash_style = "dashed"
         canvas.fill_style = old_fill_style
         return x, y2
@@ -101,15 +102,17 @@ class Circle(IntersectionForm):
         self.r = self.rx = self.ry = self.d * 10 / 2
         return self.x, self.y, self.r
 
-    def describe(self, canvas, label="S", scale=1, model=None, y=0):
+    def describe(self, canvas, label="S", scale=1, model = None, y=0):
         x, y = super().describe(canvas, label, scale, y=y)
         #if not y.isnumeric():
             #return y
         if model is None:
-            canvas.stroke_circle(x / scale, y, 5 / scale)
+            canvas.stroke_circle(x / scale, 0, 5 / scale)
         else:
-            model.dash_ellipse(x / scale, y, 3 / scale, 5 / scale)
+            model.dash_ellipse(x / scale, 1 + self.ry, min(self.ry / scale, 10 / scale), min(self.ry / scale, 10 / scale))
         canvas.dash_style = "solid"
+        model.draw_arrow_hor((x - self.ry / 2) / scale, (x + self.ry / 2) / scale, self.ry, 4, 2.5, hexcode((0, 0, 0)), label="", left=True)
+
 
 
 class Rect(IntersectionForm):
@@ -134,18 +137,18 @@ class Rect(IntersectionForm):
 
     def display(self, dw=0):
         self.x = dw
-        self.rx = self.w * 20 / 2
+        self.rx = 8
         self.ry = self.h * 20 / 2
-        return self.x, self.y, self.rx, self.ry
+        return self.x, self.y - self.ry / 2, 2, self.ry
 
     def describe(self, canvas, label="S", scale=1, model=None, y=0):
         x, y = super().describe(canvas, label, scale, y=y)
         #if not y.isnumeric():
             #return y
         if model is None:
-            canvas.stroke_rect(x / scale, y, 5 / scale, 5 / scale)
+            canvas.stroke_rect((x - self.rx) / scale, y, 5 / scale, 5 / scale)
         else:
-            model.dash_rect(x / scale, y, 5 / scale, 10 / scale)
+            model.dash_rect((x - self.rx) / scale, y, 5 / scale, 10 / scale)
         canvas.dash_style = "solid"
 
 
@@ -284,10 +287,10 @@ class AdvancedPipe(Model):
         self.u1Param = FloatChangeable(u1, _min=u1, _max=u1 * 5, desc="$U_1$: ", unit="ms^{-1}")
         self.qParam = FloatChangeable(7.85, _min=0, _max=100, desc="$Q$: ", unit="m^3s^{-1}", step=0.01)
         self.q = self.qParam.real()
-        shLabel = widgets.HTML(f"{spaces(1)} SHAPE {spaces(1)}")
+        shLabel = widgets.HTML(f"SHAPE")
         shLabel.add_class("heading")
         self.i1ChoiceGroup = DropDownGroup(['Circle', 'Rectangle'], ['Choose a circular end', 'Choose a rectangular end'])
-        self.i1ChoiceWidget = BoxHorizontal([shLabel, self.i1ChoiceGroup.display], spacing=0)
+        self.i1ChoiceWidget = BoxVertical([shLabel, self.i1ChoiceGroup.display])
         self.i1dParam = FloatChangeable(self.i1.d if self.i1.type == "Circle" else 1, _min=0.1, _max=5, desc="Diameter: ",
                                         unit="m", step=0.01)
         self.i1dParam.set_active(self.i1.type == "Circle")
@@ -302,7 +305,7 @@ class AdvancedPipe(Model):
 
         self.i2ChoiceGroup = DropDownGroup(['Circle', 'Rectangle'],
                                            ['Choose a circular end', 'Choose a rectangular end'])
-        self.i2ChoiceWidget = BoxHorizontal([shLabel, self.i2ChoiceGroup.display], spacing=0)
+        self.i2ChoiceWidget = BoxVertical([shLabel, self.i2ChoiceGroup.display], spacing=0)
         self.i2dParam = FloatChangeable(self.i2.d if self.i2.type == "Circle" else 1, _min=0.1, _max=5, desc="Diameter: ",
                                         unit="m", step=0.01)
         self.i2dParam.set_active(self.i2.type == "Circle")
@@ -586,9 +589,9 @@ class AdvancedPipe(Model):
         # self.canvas.end_path()
 
     def draw_details(self):
-        hi1 = self.i1.y + (self.i1.ry / 8 if self.i1.type == "Circle" else self.i1.ry / 2)
+        hi1 = self.i1.y + self.i1.ry / 8
         #hi1 /= self.scale
-        hi2 = self.i2.y + (self.i2.ry / 8 if self.i2.type == "Circle" else self.i2.ry / 2)
+        hi2 = self.i2.y + self.i2.ry / 8
         #hi2 /= self.scale
         if self.i1.y != self.i2.y:
             self.draw_heights(hi1, hi2)
@@ -614,8 +617,8 @@ class AdvancedPipe(Model):
         self.canvas.set_line_dash([0, 0])
         self.canvas.stroke_style = "black"
         xi = self.i2.rx + self.i2.x + 25
-        self.draw_arrow_vert(xi, hi1, hi2, -5, 10, (0, 0, 0), label="Δh", top=True)
-        self.draw_arrow_vert(xi, hi2, hi1, 5, 10, (0, 0, 0), label="", top=False)
+        self.draw_arrow_vert(xi, hi1, hi2, -2.5, 4, (0, 0, 0), label="Δh", top=True)
+        self.draw_arrow_vert(xi, hi2, hi1, 2.5, 4, (0, 0, 0), label="", top=False)
         #self.canvas.stroke_line(xi, hi1, xi, hi2)
         #self.canvas.stroke_text("Delta H", xi + 25, (hi1 + hi2) / 2)
 
@@ -684,7 +687,7 @@ class AdvancedPipe(Model):
 
 def get_lines(selected, i, margin=0, end=False):
     offset = i.rx / 2
-    py1 = i.ry + i.y
+    py1 = i.ry + i.y - (0 if selected == "CIRC" else i.ry / 2)
     py2 = py1 - i.ry * (2 if selected == "CIRC" else 1)
 
     px1 = i.rx / 2 + i.x - offset

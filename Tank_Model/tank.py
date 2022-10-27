@@ -108,9 +108,9 @@ class Tank(Model):
 
         self.params = [
             ChangeableContainer([self.q, self.depth]),
-            ChangeableContainer([HorizontalSpace(50)]),
+            ChangeableContainer([HorizontalSpace(10)]),
             ChangeableContainer([self.nHoles, self.dHoles]),
-            ChangeableContainer([HorizontalSpace(50)]),
+            ChangeableContainer([HorizontalSpace(20)]),
             ChangeableContainer([self.plot_selection]),
         ]
         self.width = width
