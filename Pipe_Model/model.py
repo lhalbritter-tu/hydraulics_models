@@ -250,6 +250,8 @@ class AdvancedPipe(Model):
 
     def __init__(self, i1: IntersectionForm, i2: IntersectionForm, u1, canvas=None, margin_left=50, margin_right=50):
         if canvas is not None:
+            canvas.layout.width = 'auto'
+            canvas.layout.height = '40%'
             self.scale = canvas.width / canvas.height * 2.5
             #self.scale = 1
             #canvas.font = f'{self.scale * 2}px serif'
@@ -380,7 +382,7 @@ class AdvancedPipe(Model):
 
     def table(self):
         table = table_style() + f"""
-<table class="tg" width="100%">
+<table class="tg" width="100%" height="100%" margin-right="15%">
 <thead>
   <tr>
     <th class="tg-0gzz"><h1>Side 1 {spaces(5)}</h1></th>
@@ -419,7 +421,7 @@ class AdvancedPipe(Model):
         u2 = Variable(self.u2(), unit='ms^{-1}')
         dp = Variable(self.dp(), unit='m')
         return f'{self.table()}<br />' \
-               f'<table class="tg" width="100%">' \
+               f'<table class="tg" width="100%" height="100%" margin-right="15%">' \
                f'<thead><tr><th class="tg-0gzz"><h1>Difference in Pressure</h1></th></tr></thead>' \
                f'<tbody><tr><td class="tg-tdqd">$\Delta E = \Delta h + \\frac{{\Delta p}}{{\\rho \cdot g}} + \\frac{{\Delta U^2}}{{2 \cdot g}}$</td></tr>' \
                f'<tr><td class="tg-tdqd">$\Delta E = 0 \\rightarrow 0 = (h_1 - h_2) + \\frac{{\Delta p}}{{\\rho \cdot g}} + \\frac{{(U_1^2 - U_2^2)}}{{2 \cdot g}}$</td></tr>' \

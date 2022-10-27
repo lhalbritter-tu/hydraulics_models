@@ -464,7 +464,7 @@ class PipeDemo(Demo):
         display(self.widget_output)
         display(widgets.HTML("<div class='seperator'></div> <br />"))
         if self.canvas is not None:
-            display(widgets.HBox([self.canvas, widgets.HTML(spaces(20)), self.output]))
+            display(widgets.HBox([self.canvas, self.output]))
         else:
             display(self.output)
         self.update_input()
