@@ -50,27 +50,25 @@ class IntersectionForm(ABC):
         pass
 
     @abc.abstractmethod
-    def describe(self, canvas, label="S", scale=1):
+    def describe(self, canvas, label="S", scale=1, y=0):
         if canvas is None:
             print("Please specify a canvas")
             return self.type + "\n" + str(self)
-        actual_y = 100 - self.y
-        actual_y = 1 if actual_y == 0 else actual_y
-        y0 = (self.y + (self.ry / 2 + 20) * np.sign(actual_y)) / scale
-        y1 = (self.y + (self.ry / 2 + 40) * np.sign(actual_y)) / scale
-        y2 = (self.y + (self.ry / 2 + 50) * np.sign(actual_y)) / scale
-        y3 = (self.y + (self.ry / 2 + 60) * np.sign(actual_y)) / scale
+        y0 = self.y
+        y1 = (y - 20) / scale
+        y2 = (y - 30) / scale
+        y3 = (y - 50) / scale
         canvas.stroke_style = "black"
         canvas.dash_style = "solid"
         canvas.line_width = 1 / scale
-        x = self.rx / 2 + self.x
-        canvas.stroke_line(x / scale, y0, (x + 5) / scale, y1)
+        x = self.rx / 8 + self.x
+        canvas.stroke_line(x / scale, y0, x / scale, y1)
         old_fill_style = canvas.fill_style
         canvas.fill_style = "black"
         i = 0
         for text in label:
             i += 10
-            canvas.fill_text(text, (x + 10) / scale, y3 + i * np.sign(actual_y) * -1)
+            canvas.fill_text(text, (x + 10) / scale, y3 + i)
         canvas.dash_style = "dashed"
         canvas.fill_style = old_fill_style
         return x, y2
@@ -103,14 +101,14 @@ class Circle(IntersectionForm):
         self.r = self.rx = self.ry = self.d * 10 / 2
         return self.x, self.y, self.r
 
-    def describe(self, canvas, label="S", scale=1, model=None):
-        x, y = super().describe(canvas, label, scale)
+    def describe(self, canvas, label="S", scale=1, model=None, y=0):
+        x, y = super().describe(canvas, label, scale, y=y)
         #if not y.isnumeric():
             #return y
         if model is None:
-            canvas.stroke_circle((x + 5) / scale, y, 5 / scale)
+            canvas.stroke_circle(x / scale, y, 5 / scale)
         else:
-            model.dash_ellipse((x + 5) / scale, y, 3 / scale, 5 / scale)
+            model.dash_ellipse(x / scale, y, 3 / scale, 5 / scale)
         canvas.dash_style = "solid"
 
 
@@ -140,14 +138,14 @@ class Rect(IntersectionForm):
         self.ry = self.h * 20 / 2
         return self.x, self.y, self.rx, self.ry
 
-    def describe(self, canvas, label="S", scale=1, model=None):
-        x, y = super().describe(canvas, label, scale)
+    def describe(self, canvas, label="S", scale=1, model=None, y=0):
+        x, y = super().describe(canvas, label, scale, y=y)
         #if not y.isnumeric():
             #return y
         if model is None:
-            canvas.stroke_rect((x + 5) / scale, y, 5 / scale, 5 / scale)
+            canvas.stroke_rect(x / scale, y, 5 / scale, 5 / scale)
         else:
-            model.dash_rect((x + 5) / scale, y, 5 / scale, 10 / scale)
+            model.dash_rect(x / scale, y, 5 / scale, 10 / scale)
         canvas.dash_style = "solid"
 
 
@@ -557,8 +555,9 @@ class AdvancedPipe(Model):
             self.canvas.stroke_rect(*argsi2)
             self.canvas.fill_rect(*argsi2)
         self.draw_details()
-        self.i1.describe(self.canvas, ["S₁"], 1, model=self)
-        self.i2.describe(self.canvas, ["S₂"], 1, model=self)
+        y_max = min(self.i1.y, self.i2.y)
+        self.i1.describe(self.canvas, ["S₁"], 1, model=self, y=y_max)
+        self.i2.describe(self.canvas, ["S₂"], 1, model=self, y=y_max)
         pass
 
     def draw_ellipse(self, x, y, rx, ry, fill_col="white", rot=0):
