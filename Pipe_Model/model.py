@@ -102,16 +102,17 @@ class Circle(IntersectionForm):
         self.r = self.rx = self.ry = self.d * 10 / 2
         return self.x, self.y, self.r
 
-    def describe(self, canvas, label="S", scale=1, model = None, y=0):
+    def describe(self, canvas, label="S", scale=1, model=None, y=0):
         x, y = super().describe(canvas, label, scale, y=y)
         #if not y.isnumeric():
             #return y
         if model is None:
             canvas.stroke_circle(x / scale, 0, 5 / scale)
         else:
-            model.dash_ellipse(x / scale, 1 + self.ry, min(self.ry / scale, 10 / scale), min(self.ry / scale, 10 / scale))
+            model.dash_ellipse(x / scale, 1 + min(max(self.ry, 5), 10), min(max(5 / scale, self.ry / scale), 10 / scale), min(max(self.ry / scale, 5 / scale), 10 / scale))
+            model.draw_arrow_hor(x / scale, (x + min(max(self.ry, 5), 10)) / scale, 5 + min(max(self.ry, 5), 10) * 2, 2, 1.5, (0, 0, 0), label="d", left=False)
+            model.draw_arrow_hor(x / scale, (x - min(max(self.ry, 5), 10)) / scale, 5 + min(max(self.ry, 5), 10) * 2, -2, -1.5, (0, 0, 0), label="", left=True)
         canvas.dash_style = "solid"
-        model.draw_arrow_hor((x - self.ry / 2) / scale, (x + self.ry / 2) / scale, self.ry, 4, 2.5, hexcode((0, 0, 0)), label="", left=True)
 
 
 
@@ -148,7 +149,15 @@ class Rect(IntersectionForm):
         if model is None:
             canvas.stroke_rect((x - self.rx) / scale, y, 5 / scale, 5 / scale)
         else:
-            model.dash_rect((x - self.rx) / scale, y, 5 / scale, 10 / scale)
+            model.dash_rect(x / scale, 1 + min(max(self.ry, 5), 10),
+                               min(max(5 / scale, self.rx / scale), 10 / scale),
+                               min(max(self.ry / scale, 5 / scale), 10 / scale))
+            model.draw_arrow_hor(x / scale, (x + min(max(self.rx, 5), 10)) / scale, 5 + min(max(self.ry, 5), 10) * 2, 2,
+                                 1.5, (0, 0, 0), label="h", left=False)
+            model.draw_arrow_hor(x / scale, (x - min(max(self.rx, 5), 10) / 4) / scale, 5 + min(max(self.ry, 5), 10) * 2,
+                                 -2, -1.5, (0, 0, 0), label="", left=True)
+            model.draw_arrow_vert((x - min(max(self.rx, 5), 10) / 4 - 2.5) / scale, (1 + min(max(self.ry, 5), 10)) / scale, (1 + min(max(self.ry, 5), 10)) / scale, -2, -1.5, (0, 0, 0), label="w", top=True)
+            model.draw_arrow_vert((x - min(max(self.rx, 5), 10) / 4 - 2.5) / scale, (1 + min(max(self.ry, 5), 10)) / scale, (1 + min(max(self.ry, 5), 10) * 2) / scale, 2, 1.5, (0, 0, 0), label="", top=False)
         canvas.dash_style = "solid"
 
 
@@ -390,8 +399,8 @@ class AdvancedPipe(Model):
   <tr>
     <th class="tg-0gzz"><h1>Side 1 {spaces(5)}</h1></th>
     <th class="tg-0gzz"><h1>Side 2 {spaces(5)}</h1></th>
-    <th class="tg-0gzz"><h1>General / Rule {spaces(5)} </h1></th>
-    <th class="tg-0gzz"><h1>Unit</h1></th>
+    <th class="tg-0gzz"><h1>Comment {spaces(5)} </h1></th>
+    <th class="tg-0gzz"><h1>Unit {spaces(2)}</h1></th>
   </tr>
 </thead>
 <tbody>
@@ -561,8 +570,9 @@ class AdvancedPipe(Model):
             self.canvas.fill_rect(*argsi2)
         self.draw_details()
         y_max = min(self.i1.y, self.i2.y)
-        self.i1.describe(self.canvas, ["S₁"], 1, model=self, y=y_max)
-        self.i2.describe(self.canvas, ["S₂"], 1, model=self, y=y_max)
+        r_max = max(self.i1.ry, self.i2.ry)
+        self.i1.describe(self.canvas, ["S₁"], 1, model=self, y=y_max - r_max / 2)
+        self.i2.describe(self.canvas, ["S₂"], 1, model=self, y=y_max - r_max / 2)
         pass
 
     def draw_ellipse(self, x, y, rx, ry, fill_col="white", rot=0):
@@ -593,6 +603,7 @@ class AdvancedPipe(Model):
         #hi1 /= self.scale
         hi2 = self.i2.y + self.i2.ry / 8
         #hi2 /= self.scale
+        xi = self.i2.rx / 2 + self.i2.x + 25
         if self.i1.y != self.i2.y:
             self.draw_heights(hi1, hi2)
         x1 = self.i1.x + (self.i1.rx / 4)
@@ -601,8 +612,8 @@ class AdvancedPipe(Model):
         self.draw_arrow_hor(x1, x2, (hi1 - self.i1.ry / 4), 5, 10, (50, 50, 130), "U₁")
         self.canvas.stroke_style = hexcode((50, 50, 130))
         self.canvas.stroke_style = 'black'
-        self.draw_arrow_hor(50, 70, 25, 5, 10, (0, 0, 0), label="x", left=False)
-        self.draw_arrow_vert(50, 25, 5, 5, 10, (0, 0, 0), label="z", top=True)
+        self.draw_arrow_hor(xi, xi + 20, 25, 5, 10, (0, 0, 0), label="x", left=False)
+        self.draw_arrow_vert(xi, 25, 5, 5, 10, (0, 0, 0), label="z", top=True)
 
     def draw_heights(self, hi1, hi2):
         halfLine1 = (0.0, hi1, self.canvas.width, hi1)
@@ -619,6 +630,7 @@ class AdvancedPipe(Model):
         xi = self.i2.rx + self.i2.x + 25
         self.draw_arrow_vert(xi, hi1, hi2, -2.5, 4, (0, 0, 0), label="Δh", top=True)
         self.draw_arrow_vert(xi, hi2, hi1, 2.5, 4, (0, 0, 0), label="", top=False)
+        return xi
         #self.canvas.stroke_line(xi, hi1, xi, hi2)
         #self.canvas.stroke_text("Delta H", xi + 25, (hi1 + hi2) / 2)
 
