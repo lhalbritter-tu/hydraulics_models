@@ -300,32 +300,32 @@ class AdvancedPipe(Model):
         shLabel.add_class("heading")
         self.i1ChoiceGroup = DropDownGroup(['Circle', 'Rectangle'], ['Choose a circular end', 'Choose a rectangular end'])
         self.i1ChoiceWidget = BoxVertical([shLabel, self.i1ChoiceGroup.display])
-        self.i1dParam = FloatChangeable(self.i1.d if self.i1.type == "Circle" else 1, _min=0.1, _max=5, desc="Diameter: ",
+        self.i1dParam = FloatChangeable(self.i1.d if self.i1.type == "Circle" else 1, _min=0.1, _max=5, desc="Diameter: $D_1$",
                                         unit="m", step=0.01)
         self.i1dParam.set_active(self.i1.type == "Circle")
 
-        self.i1wParam = FloatChangeable(self.i1.w if self.i1.type != "Circle" else 1, _min=1, _max=5, desc="Width: ",
+        self.i1wParam = FloatChangeable(self.i1.w if self.i1.type != "Circle" else 1, _min=1, _max=5, desc="Width: $W_1$",
                                         unit="m")
-        self.i1hParam = FloatChangeable(self.i1.h if self.i1.type != "Circle" else 1, _min=1, _max=5, desc="Height: ",
+        self.i1hParam = FloatChangeable(self.i1.h if self.i1.type != "Circle" else 1, _min=1, _max=5, desc="Height: $H_1$",
                                         unit="m")
         self.i1wParam.set_active(self.i1.type == "Rectangle")
         self.i1hParam.set_active(self.i1.type == "Rectangle")
-        self.i1yParam = FloatChangeable(self.i1.y, _min=-25, _max=25, desc="Z Position: ", unit="m")
+        self.i1yParam = FloatChangeable(self.i1.y, _min=-25, _max=25, desc="Z Position: $z_1$", unit="m")
 
         self.i2ChoiceGroup = DropDownGroup(['Circle', 'Rectangle'],
                                            ['Choose a circular end', 'Choose a rectangular end'])
         self.i2ChoiceWidget = BoxVertical([shLabel, self.i2ChoiceGroup.display], spacing=0)
-        self.i2dParam = FloatChangeable(self.i2.d if self.i2.type == "Circle" else 1, _min=0.1, _max=5, desc="Diameter: ",
+        self.i2dParam = FloatChangeable(self.i2.d if self.i2.type == "Circle" else 1, _min=0.1, _max=5, desc="Diameter: $D_2$",
                                         unit="m", step=0.01)
         self.i2dParam.set_active(self.i2.type == "Circle")
 
-        self.i2wParam = FloatChangeable(self.i2.w if self.i2.type != "Circle" else 1, _min=1, _max=5, desc="Width: ",
+        self.i2wParam = FloatChangeable(self.i2.w if self.i2.type != "Circle" else 1, _min=1, _max=5, desc="Width: $W_2$",
                                         unit="m")
-        self.i2hParam = FloatChangeable(self.i2.h if self.i2.type != "Circle" else 1, _min=1, _max=5, desc="Height: ",
+        self.i2hParam = FloatChangeable(self.i2.h if self.i2.type != "Circle" else 1, _min=1, _max=5, desc="Height: $H_2$",
                                         unit="m")
         self.i2wParam.set_active(self.i2.type == "Rectangle")
         self.i2hParam.set_active(self.i2.type == "Rectangle")
-        self.i2yParam = FloatChangeable(self.i2.y, _min=-25, _max=25, desc="Z Position: ", unit="m")
+        self.i2yParam = FloatChangeable(self.i2.y, _min=-25, _max=25, desc="Z Position: $z_2$", unit="m")
 
         self.params = [
             ChangeableContainer(
@@ -399,7 +399,7 @@ class AdvancedPipe(Model):
   <tr>
     <th class="tg-0gzz"><h1>Side 1 {spaces(5)}</h1></th>
     <th class="tg-0gzz"><h1>Side 2 {spaces(5)}</h1></th>
-    <th class="tg-0gzz"><h1>Comment {spaces(5)} </h1></th>
+    <th class="tg-0gzz"><h1>Explanation {spaces(5)} </h1></th>
     <th class="tg-0gzz"><h1>Unit {spaces(2)}</h1></th>
   </tr>
 </thead>
@@ -407,7 +407,7 @@ class AdvancedPipe(Model):
   <tr>
     <td class="tg-tdqd">${{Q_1 = {self.q:.3f}}}$</td>
     <td class="tg-tdqd">${{Q_2 = {self.q:.3f}}}$</td>
-    <td class="tg-tdqd">${{= Q}}$ - pipe is frictionless</td>
+    <td class="tg-tdqd">${{= Q}}$ - mass conservation</td>
     <td class="tg-tdqd">${Variable("", 0, "m^3s^{-1}").latex().replace('~', '')}$</td>
   </tr>
   <tr>
@@ -415,12 +415,6 @@ class AdvancedPipe(Model):
     <td class="tg-tdqd">${{U_2 = {self.u2():.3f}}}$</td>
     <td class="tg-tdqd">${{\Delta U = {self.u1() - self.u2():.3f}}}$ - {"Sides are not equal" if self.u1() != self.u2() else "Sides are equal"}</td>
     <td class="tg-tdqd">${Variable("", 0, "ms^{-1}").latex().replace('~', '')}$</td>
-  </tr>
-  <tr>
-    <td class="tg-ndm2">${{E_1 = 0}}$</td>
-    <td class="tg-ndm2">${{E_2 = 0}}$</td>
-    <td class="tg-ndm2">${{\Delta E = 0}}$ - energy conservation</td>
-    <td class="tg-tdqd">${Variable("", 0, "m").latex().replace('~', '')}$</td>
   </tr>
 </tbody>
 </table>"""
@@ -436,7 +430,8 @@ class AdvancedPipe(Model):
                f'<table class="tg" width="100%" height="100%" margin-right="15%">' \
                f'<thead><tr><th class="tg-0gzz"><h1>Difference in Pressure</h1></th></tr></thead>' \
                f'<tbody><tr><td class="tg-tdqd">$\Delta E = \Delta h + \\frac{{\Delta p}}{{\\rho \cdot g}} + \\frac{{\Delta U^2}}{{2 \cdot g}}$</td></tr>' \
-               f'<tr><td class="tg-tdqd">$\Delta E = 0 \\rightarrow 0 = (h_1 - h_2) + \\frac{{\Delta p}}{{\\rho \cdot g}} + \\frac{{(U_1^2 - U_2^2)}}{{2 \cdot g}}$</td></tr>' \
+               f'<tr><td class="tg-tdqd">$\Delta E = 0$ - energy conservation, because of frictionless flow</td></tr>' \
+               f'<tr><td class="tg-tdqd">$\\rightarrow 0 = (h_1 - h_2) + \\frac{{\Delta p}}{{\\rho \cdot g}} + \\frac{{(U_1^2 - U_2^2)}}{{2 \cdot g}}$</td></tr>' \
                f'<tr><td class="tg-tdqd">$\\Rightarrow \\frac{{\Delta p}}{{\\rho \cdot g}} = \\frac{{({u1.real()**2:.3f} - {u2.real()**2:.3f})}}{{2 \cdot g}} + ({self.i1yParam.real():.3f} - {self.i2yParam.real():.3f})$</td></tr>' \
                f'<tr><td class="tg-tdqd">$\\frac{{\Delta p}}{{\\rho \cdot g}} = {(u1.real()**2 - u2.real()**2) / (2 * G_CONSTANT):.3f} + {self.i1yParam.real() - self.i2yParam.real():.3f} = {dp.rounded_latex(3)}$</td></tr>' \
                f'</tbody></table>' \

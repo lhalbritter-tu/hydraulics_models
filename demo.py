@@ -40,6 +40,9 @@ camera = PerspectiveCamera(aspect=3.0, children=(
 
 
 def hexcode(rgb):
+    """
+    Converts a tuple of RGB values to a hexcode
+    """
     return '#%02x%02x%02x' % rgb
 
 
@@ -78,17 +81,34 @@ class Variable:
         return f'{self.value: .{cut}f} [{self.unit}]'
 
     def latex(self):
+        """
+        Returns a LaTeX representation of this Variable
+
+        :return: string of LaTeX representation
+        """
         return str(self.value) + " ~~ " + self.rmunit()
 
     def rounded_latex(self, cut=2):
+        """
+        Returns a LaTeX representation of this Variable with cut floating points
+
+        :param cut: the number of floating points to represent [Default: 2]
+        :return: string of LaTeX representation
+        """
         return f'{self.value: .{cut}f} ~~ {self.rmunit()}'
 
     def rmunit(self):
+        """
+        Returns only the unit of this Variable in normal text style instead of italic
+
+        :return: string of unit
+        """
         return f'[\mathrm{{{self.unit}}}]'
 
     def __repr__(self):
         """
         The standard string representation of this Variable, value + unit
+
         :return: value + unit
         """
         return str(self.value) + " [" + self.unit + "]"
@@ -96,6 +116,7 @@ class Variable:
     def __str__(self):
         """
         Wrapper for __repr__
+
         :return: self.__repr__()
         """
         return self.__repr__()
@@ -160,6 +181,10 @@ class Changeable(Variable):
 
 
 class PseudoChangeable(Changeable):
+    """
+    Implementation of Changeable which does not have a UI widget, but can be changed manually
+    """
+
     def __init__(self, widget, base=0, unit=" "):
         self.value = 0
         self.base = base
@@ -230,9 +255,9 @@ class ToggleGroup(Changeable):
     Implementation of Changeable which implements a ToggleButtonGroup
     """
 
-    def __init__(self, options, tooltips, theme='button-primary'):
+    def __init__(self, options, tooltips):
         """
-        Initializes a ipywidgets.ToggleButtons Object with options=options and tooltips=tooltips
+        Initializes an ipywidgets.ToggleButtons Object with options=options and tooltips=tooltips
 
         :param options: List of Options for the Buttons
         :param tooltips: List of Tooltips for each option
@@ -246,7 +271,17 @@ class ToggleGroup(Changeable):
 
 
 class DropDownGroup(Changeable):
-    def __init__(self, options, tooltips, theme='drop-down-primary'):
+    """
+    Implementation of Changeable which implements a Dropdown List
+    """
+
+    def __init__(self, options, tooltips):
+        """
+        Initializes an ipywidgets.Dropdown Object with options=options and tooltips=tooltips
+
+        :param options: List of Options for the Dropdown Elements
+        :param tooltips: List of Tooltips for each option
+        """
         super().__init__(widgets.Dropdown(
             options=options,
             tooltips=tooltips
@@ -256,7 +291,17 @@ class DropDownGroup(Changeable):
 
 
 class BoxHorizontal(PseudoChangeable):
+    """
+    Implementation of PseudoChangeable which implements a Horizontal Layout Box
+    """
+
     def __init__(self, children, spacing=10):
+        """
+        Initializes an ipywidgets.HBox Object with children=children and spacing=spacing
+
+        :param children: List of ipywidgets objects to be displayed in the HBox
+        :param spacing: Spacing between each child [Default: 10]
+        """
         super().__init__(widgets.HBox(
             children=children, spacing=spacing
         ))
@@ -265,11 +310,28 @@ class BoxHorizontal(PseudoChangeable):
         self.children = children
 
     def observe(self, func):
+        """
+        Registers func as callback to the ipywidgets.widget.observe method for each child
+
+        :param func: function to call, when a child changes
+        :return: None
+        """
         for child in self.children:
             child.observe(func)
 
+
 class BoxVertical(PseudoChangeable):
+    """
+    Implementation of PseudoChangeable which implements a Vertical Layout Box
+    """
+
     def __init__(self, children, spacing=10):
+        """
+        Initializes an ipywidgets.VBox Object with children=children and spacing=spacing
+
+        :param children: List of ipywidgets objects to be displayed in the VBox
+        :param spacing: Spacing between each child [Default: 10]
+        """
         super().__init__(widgets.VBox(
             children=children, spacing=spacing
         ))
@@ -278,20 +340,37 @@ class BoxVertical(PseudoChangeable):
         self.children = children
 
     def observe(self, func):
+        """
+        Registers func as callback to the ipywidgets.widget.observe method for each child
+
+        :param func: Function to call, when a child changes
+        :return: None
+        """
         for child in self.children:
             child.observe(func)
 
 
 class ClickButton(PseudoChangeable):
-    def __init__(self, description="Button", disabled=False, button_style='', tooltip='', theme='primary',
-                 text_col='text-white'):
+    """
+    Implementation of PseudoChangeable which implements a Button
+    """
+
+    def __init__(self, description="Button", disabled=False, button_style='primary', tooltip=''):
+        """
+        Initializes an ipywidgets.Button Object with description=description, disabled=disabled, button_style=button_style
+        and tooltip=tooltip
+
+        :param description: Text on the button
+        :param disabled: Whether the button is disabled or not
+        :param button_style: Bootstrap style of the button ['primary' (Default), 'success', 'info', 'warning', 'danger', '']
+        :param tooltip: Tooltip of the button
+        """
         super().__init__(widgets.Button(
             description=description,
             disabled=disabled,
             button_style=button_style,
             tooltip=tooltip
         ))
-        self.widget.button_style = theme
         self.widget.add_class('btn_class')
         # self.widget.style.button_color = THEME[theme]
         # self.widget.style.text_color = THEME[text_col]
@@ -299,11 +378,24 @@ class ClickButton(PseudoChangeable):
         self.should_update = False
 
     def observe(self, func):
+        """
+        Registers func as callback to the ipywidgets.Button.on_click method for the button
+
+        :param func: Function to call on click
+        :return: None
+        """
         self.widget.on_click(func)
 
 
 class HorizontalDivider(PseudoChangeable):
+    """
+    Implementation of PseudoChangeable which implements a Horizontal Divider
+    """
+
     def __init__(self):
+        """
+        Initializes an ipywidgets.HTML Object with a horizontal divider
+        """
         super().__init__(widgets.HTML("<hr>"))
         self.display = self.widget
         self.should_update = False
@@ -313,7 +405,15 @@ class HorizontalDivider(PseudoChangeable):
 
 
 class HorizontalSpace(PseudoChangeable):
+    """
+    Implementation of PseudoChangeable which implements a Horizontal Spacer
+    """
     def __init__(self, count=3):
+        """
+        Initializes an ipywidgets.HTML Object with count non-breaking spaces
+
+        :param count: The amount of horizontal space to add
+        """
         super().__init__(widgets.HTML("&nbsp;" * count))
         self.display = self.widget
         self.should_update = False
@@ -389,7 +489,23 @@ class ChangeableContainer:
         self.update(orientation)
 
     def add(self, changeable: Changeable):
+        """
+        Adds a new Changeable to this container
+
+        :param changeable: A Changeable Object to add
+        :return: None
+        """
         self.params.append(changeable)
+        self.update()
+
+    def remove(self, changeable: Changeable):
+        """
+        Removes a Changeable from this container
+
+        :param changeable: A Changeable Object to remove
+        :return: None
+        """
+        self.params.remove(changeable)
         self.update()
 
     def update(self, orientation='vertical'):
@@ -447,6 +563,11 @@ class Demo:
         # self.model.update(None)
 
     def update_input(self, args=None):
+        """
+        Callback Method for updating the input widgets
+
+        :return: None
+        """
         self.widget_output.clear_output(wait=True)
         for container in self.params:
             container.update()
@@ -469,11 +590,19 @@ class Demo:
 
 
 class PipeDemo(Demo):
+    """
+    Implementation of Demo specifically for Pipe Models
+    """
 
     def __init__(self, params: [ChangeableContainer], model: Model, drawable=None, extra_output=None):
         super().__init__(params, model, drawable, extra_output)
 
     def show(self):
+        """
+        Shows all the UI Elements as well as Output widgets and the optional drawable widget
+
+        :return: None
+        """
         display(self.widget_output)
         display(widgets.HTML("<div class='seperator'></div> <br />"))
         if self.canvas is not None:
@@ -488,7 +617,24 @@ import matplotlib.pyplot as plt
 
 
 class Plot:
+    """
+    Wrapper class for matplotlib.pyplot
+    """
+
     def __init__(self, x, y, width=5, height=3.5, title="Plot", xlabel="x", ylabel="y", xlim=None, ylim=None):
+        """
+        Initializes the plot with given values
+
+        :param x: The x-range of the plot
+        :param y: The function of the plot
+        :param width: The width of the figure widget [Default: 5]
+        :param height: The height of the figure widget [Default: 3.5]
+        :param title: The title of the figure [Default: "Plot"]
+        :param xlabel: The label of the x-axis [Default: "x"]
+        :param ylabel: The label of the y-axis [Default: "y"]
+        :param xlim: The x-limits of the plot [Default: None]
+        :param ylim: The y-limits of the plot [Default: None]
+        """
         self.x = x
         self.y = y
         self.title = title
@@ -506,6 +652,9 @@ class Plot:
         self.widget = self.fig.canvas
 
     def update_plot(self, x=None, y=None, title=None, xlabel=None, ylabel=None, xlim=None, ylim=None):
+        """
+        Updates the plot with given values, see further descriptions at Plot::__init__()
+        """
         if x is not None:
             self.x = x
         if y is not None:
@@ -523,17 +672,40 @@ class Plot:
         self.ax.set_ylim(self.ylim)
 
     def flush(self):
+        """
+        Flushes buffered events of the plot
+
+        :return: None
+        """
         self.widget.draw()
         # self.widget.flush_events()
 
     def set_data(self, x, y):
+        """
+        Sets the x-range and function of the plot
+
+        :param x: the x-range of the plot
+        :param y: the function of the plot
+        :return: None
+        """
         self.ax.set_data(x, y)
 
     def set_xlim(self, xlim):
+        """
+        Sets the x-limits of the plot
+
+        :param xlim: the x-limits of the plot
+        :return: None
+        """
         self.xlim = xlim
         self.ax.set_xlim(self.xlim)
 
     def grid(self):
+        """
+        Toggles the grid for the plot
+
+        :return: None
+        """
         self.ax.grid()
 
     def add_line(self, x, color='gray', label=None):
@@ -549,14 +721,34 @@ class Plot:
         return line
 
     def update_line(self, line, x):
+        """
+        Updates the x-position of a line
+
+        :param line: the line to update the position for
+        :param x: the new x-position
+        :return: None
+        """
         line.set_xdata(x)
 
     def plot(self, x, y):
+        """
+        Removes the current plot and lines and plots a new function
+
+        :param x: the x-range of the plot
+        :param y: the function of the plot
+        :return: None
+        """
         [l.remove() for l in self.ax.lines]
         self.pl = self.ax.plot(x, y)[0]
 
-    def sleep(self, param):
-        plt.pause(param)
+    def sleep(self, seconds):
+        """
+        Sleeps for the given amount of seconds
+
+        :param seconds: the amount of seconds
+        :return: None
+        """
+        plt.pause(seconds)
         pass
 
 
