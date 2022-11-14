@@ -110,7 +110,7 @@ class Circle(IntersectionForm):
             canvas.stroke_circle(x / scale, 0, 5 / scale)
         else:
             model.dash_ellipse(x / scale, 1 + min(max(self.ry, 5), 10), min(max(5 / scale, self.ry / scale), 10 / scale), min(max(self.ry / scale, 5 / scale), 10 / scale))
-            model.draw_arrow_hor(x / scale, (x + min(max(self.ry, 5), 10)) / scale, 5 + min(max(self.ry, 5), 10) * 2, 2, 1.5, (0, 0, 0), label="d", left=False)
+            model.draw_arrow_hor(x / scale, (x + min(max(self.ry, 5), 10)) / scale, 5 + min(max(self.ry, 5), 10) * 2, 2, 1.5, (0, 0, 0), label="D" + label[0][-1], left=False)
             model.draw_arrow_hor(x / scale, (x - min(max(self.ry, 5), 10)) / scale, 5 + min(max(self.ry, 5), 10) * 2, -2, -1.5, (0, 0, 0), label="", left=True)
         canvas.dash_style = "solid"
 
@@ -153,11 +153,13 @@ class Rect(IntersectionForm):
                                min(max(5 / scale, self.rx / scale), 10 / scale),
                                min(max(self.ry / scale, 5 / scale), 10 / scale))
             model.draw_arrow_hor(x / scale, (x + min(max(self.rx, 5), 10)) / scale, 5 + min(max(self.ry, 5), 10) * 2, 2,
-                                 1.5, (0, 0, 0), label="h", left=False)
+                                 1.5, (0, 0, 0), label="H" + label[0][-1], left=False)
             model.draw_arrow_hor(x / scale, (x - min(max(self.rx, 5), 10) / 4) / scale, 5 + min(max(self.ry, 5), 10) * 2,
                                  -2, -1.5, (0, 0, 0), label="", left=True)
-            model.draw_arrow_vert((x - min(max(self.rx, 5), 10) / 4 - 2.5) / scale, (1 + min(max(self.ry, 5), 10)) / scale, (1 + min(max(self.ry, 5), 10)) / scale, -2, -1.5, (0, 0, 0), label="w", top=True)
-            model.draw_arrow_vert((x - min(max(self.rx, 5), 10) / 4 - 2.5) / scale, (1 + min(max(self.ry, 5), 10)) / scale, (1 + min(max(self.ry, 5), 10) * 2) / scale, 2, 1.5, (0, 0, 0), label="", top=False)
+            model.draw_arrow_vert((x - min(max(self.rx, 5), 10) / 4 - 2.5) / scale, (1 + min(max(self.ry, 5), 10)) / scale,
+                                  (1 + min(max(self.ry, 5), 10)) / scale, -2, -1.5, (0, 0, 0), label="W" + label[0][-1], top=True)
+            model.draw_arrow_vert((x - min(max(self.rx, 5), 10) / 4 - 2.5) / scale, (1 + min(max(self.ry, 5), 10)) / scale,
+                                  (1 + min(max(self.ry, 5), 10) * 2) / scale, 2, 1.5, (0, 0, 0), label="", top=False)
         canvas.dash_style = "solid"
 
 
@@ -294,7 +296,7 @@ class AdvancedPipe(Model):
         )
 
         self.u1Param = FloatChangeable(u1, _min=u1, _max=u1 * 5, desc="$U_1$: ", unit="ms^{-1}")
-        self.qParam = FloatChangeable(7.85, _min=0, _max=100, desc="$Q$: ", unit="m^3s^{-1}", step=0.01)
+        self.qParam = FloatChangeable(7.85, _min=0, _max=100, desc="$Q_1$: ", unit="m^3s^{-1}", step=0.01)
         self.q = self.qParam.real()
         shLabel = widgets.HTML(f"SHAPE")
         shLabel.add_class("heading")
@@ -405,9 +407,9 @@ class AdvancedPipe(Model):
 </thead>
 <tbody>
   <tr>
-    <td class="tg-tdqd">${{Q_1 = {self.q:.3f}}}$</td>
-    <td class="tg-tdqd">${{Q_2 = {self.q:.3f}}}$</td>
-    <td class="tg-tdqd">${{= Q}}$ - mass conservation</td>
+    <td class="tg-tdqd">${{Q_1 = }}$</td>
+    <td class="tg-tdqd">${{Q_2 = }}$</td>
+    <td class="tg-tdqd">${{Q = {self.q:.3f}}}$ - mass conservation</td>
     <td class="tg-tdqd">${Variable("", 0, "m^3s^{-1}").latex().replace('~', '')}$</td>
   </tr>
   <tr>
@@ -607,8 +609,8 @@ class AdvancedPipe(Model):
         self.draw_arrow_hor(x1, x2, (hi1 - self.i1.ry / 4), 5, 10, (50, 50, 130), "U₁")
         self.canvas.stroke_style = hexcode((50, 50, 130))
         self.canvas.stroke_style = 'black'
-        self.draw_arrow_hor(xi, xi + 20, 25, 5, 10, (0, 0, 0), label="x", left=False)
-        self.draw_arrow_vert(xi, 25, 5, 5, 10, (0, 0, 0), label="z", top=True)
+        self.draw_arrow_hor(xi / 2, xi / 2 + 20, 25, 5, 10, (0, 0, 0), label="x", left=False)
+        self.draw_arrow_vert(xi / 2, 25, 5, 5, 10, (0, 0, 0), label="z", top=True)
 
     def draw_heights(self, hi1, hi2):
         halfLine1 = (0.0, hi1, self.canvas.width, hi1)

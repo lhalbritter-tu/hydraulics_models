@@ -64,7 +64,7 @@ class Tank(Model):
         :return: the string representation of this model
         """
         return table_style() + f'<table class="tg" width="100%"><thead><tr><th class="tg-0gzz"><h1>Water Depth {spaces(10)}</h1></th></tr></thead>' \
-               f'<tbody><tr><td class="tg-tdqd">Depth $h = \\frac{{1}}{{2g}} \cdot \left( \\frac{{4 \cdot Q_{{in}}}}{{n_{{holes}} \cdot \pi \cdot d^2_{{holes}}}} \\right)^2 [m]$</td></tr>' \
+               f'<tbody><tr><td class="tg-tdqd">Depth $h = \\frac{{1}}{{2g}} \cdot \left( \\frac{{4 \cdot Q_{{in}}}}{{n_{{holes}} \cdot \pi \cdot d^2_{{holes}}}} \\right)^2 [m]$ - Combination of Bernoulli and mass conservation</td></tr>' \
                f'<tr><td class="tg-tdqd">${{ h = \\frac{{1}}{{2 \cdot 9.81}} \cdot \left( \\frac{{4 \cdot {self.q.real()}}}{{{self.nHoles.real()} \cdot \pi \cdot {self.dHoles.real()}^2}}\\right)^2[m] }}$</td></tr>' \
                f'<tr><td class="tg-tdqd">${{h = {self.get_depth().rounded_latex(cut=3)}}}$</td></tr></tbody></table>'
 
@@ -110,8 +110,8 @@ class Tank(Model):
             ChangeableContainer([self.q, self.depth]),
             ChangeableContainer([HorizontalSpace(10)]),
             ChangeableContainer([self.nHoles, self.dHoles]),
-            ChangeableContainer([HorizontalSpace(20)]),
-            ChangeableContainer([self.plot_selection]),
+            #ChangeableContainer([HorizontalSpace(20)]),
+            #ChangeableContainer([self.plot_selection]),
         ]
         self.width = width
         self.height = height
@@ -160,6 +160,9 @@ class Tank(Model):
         self.plot.grid(self.in_flow_plot)
         self.plot.grid(self.d_plot)
         self.plot.grid(self.n_plot)
+
+        self.plot_box = BoxVertical([self.plot_selection.widget, self.plot.widget]).widget
+
         self.canvas.on_client_ready(self.do_draw)
         self.scale = self.canvas.width / self.canvas.height * 1.5
 

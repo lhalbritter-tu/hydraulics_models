@@ -105,7 +105,6 @@ class AngleCanvas:
             disabled=False,
             button_style='',
             tooltip='Stops the animation of the model.',
-            theme='danger',
         )
         self.stop_btn.observe(self.stop_oscilate)
 

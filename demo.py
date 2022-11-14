@@ -1083,6 +1083,7 @@ class MultiPlot:
     def clear(self):
         self.fig, self.ax = plt.subplots(figsize=(self.width, self.height))
         self.widget = self.fig.canvas
+        self.widget.header_visible = False
         self.axes = [self.ax]
         self.ax_data = {self.ax: {'x': [], 'y': []}}
         self.marker = []
