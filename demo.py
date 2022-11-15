@@ -370,8 +370,7 @@ class ClickButton(PseudoChangeable):
             tooltip=tooltip
         ))
         self.widget.add_class('btn_class')
-        # self.widget.style.button_color = THEME[theme]
-        # self.widget.style.text_color = THEME[text_col]
+        self.widget.button_style = button_style
         self.display = self.widget
         self.should_update = False
 
@@ -475,7 +474,7 @@ class ChangeableContainer:
     containing all the Changeables.
     """
 
-    def __init__(self, changeables: [Changeable], orientation='vertical'):
+    def __init__(self, changeables: [Changeable], orientation='vertical', alignment='center'):
         """
         Initializes this container with changeable list and orientation
 
@@ -484,6 +483,7 @@ class ChangeableContainer:
                                 [Default: vertical]
         """
         self.params = changeables
+        self.alignment = alignment
         self.update(orientation)
 
     def add(self, changeable: Changeable):
@@ -517,6 +517,7 @@ class ChangeableContainer:
             self.display = widgets.VBox([param.display for param in self.params if param.isActive])
         else:
             self.display = widgets.HBox([param.display for param in self.params if param.isActive])
+        self.display.layout.align_items = self.alignment
 
 
 class Demo:

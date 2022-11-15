@@ -33,19 +33,18 @@ class Angle(Model):
         pass
 
     def __init__(self, mass, feather, start_angle, c=None):
-        descriptions = ['Masse m', 'Federkonstante k', 'Anfangswinkelgeschwindigkeit phi_000000000']
-        max_desc = max([len(desc) for desc in descriptions])
-        self.mass = FloatChangeable(mass, unit="kg", base=0, _min=1.0, desc="Masse $m" + "~" * (max_desc - len(descriptions[0])) + "~~~$")
-        self.feather = FloatChangeable(feather, unit="kN/m", base=3, _min=1.0, desc="Federsteifigkeit $k" + "~" * (max_desc - len(descriptions[1])) + "$")
-        self.start_angle = FloatChangeable(start_angle, unit="rad/s", _min=0.1, _max=pymath.pi / 2, step=0.001, desc="Anfangswinkelgeschwindigkeit $\Phi_0" + "~" * (max_desc - len(descriptions[2])) + "$")
+        self.mass = FloatChangeable(mass, unit="kg", base=0, _min=1.0, desc="Masse $m$")
+        self.feather = FloatChangeable(feather, unit="kN/m", base=3, _min=1.0, desc="Federsteifigkeit $k$")
+        self.start_angle = FloatChangeable(start_angle, unit="rad/s", _min=0.1, _max=pymath.pi / 2, step=0.001, desc="Anfangswinkelgeschwindigkeit $\Phi_0$")
 
         self.w_0 = self.circular_frequency().real()
         self.t = FloatChangeable(0, unit="s", _min=-self.duration().real() * 3, _max=self.duration().real() * 3, desc="$t$", continuous_update=True, step=self.duration().real() / 100, should_update=True)
         self.canvas = c
 
         self.params = [
-            ChangeableContainer([self.mass, self.feather, self.start_angle]),
-            ChangeableContainer([self.t])
+            ChangeableContainer([self.mass, self.feather, self.start_angle], alignment='flex-end'),
+            ChangeableContainer([HorizontalSpace(10)]),
+            ChangeableContainer([self.t], alignment='flex-start')
         ]
 
     def circular_frequency(self):
@@ -126,7 +125,7 @@ class AngleCanvas:
         self.play_btn = ClickButton(
             description="Schwingung starten",
             disabled=False,
-            button_style='',
+            button_style='primary',
             tooltip='Starts an animation of the model.',
         )
         self.play_btn.observe(self.start_oscilate)
@@ -134,7 +133,7 @@ class AngleCanvas:
         self.stop_btn = ClickButton(
             description="Schwingung stoppen",
             disabled=False,
-            button_style='',
+            button_style='danger',
             tooltip='Stops the animation of the model.',
         )
         self.stop_btn.observe(self.stop_oscilate)
