@@ -20,32 +20,10 @@ THEME = {
 }
 
 
-class Grid:
-    def __init__(self, width, height, cell_width, cell_height):
-        self.cell_width = cell_width
-        self.cell_height = cell_height
-        self.size = (width // cell_width, height // cell_height)
-        self.grid = [[None] * (width // cell_width)] * (height // cell_height)
-
-    def print2D(self):
-        for line in self.grid:
-            print('|', end=' ')
-            for cell in line:
-                print(cell, end=" | ")
-            print()
-            print('-' * self.size[0] * self.cell_width)
-
-    def place(self, x, y, obj):
-        if not self.inside(x, y):
-            return False
-        self.grid[x][y] = obj
-        return True
-
-    def inside(self, x, y):
-        return 0 <= x < self.size[0] and 0 <= y < self.size[1]
-
-
 class Hole:
+    """
+    Represents a hole in the tank
+    """
     def __init__(self, diameter):
         self.d: float = diameter
 
@@ -71,6 +49,7 @@ class Tank(Model):
     def update(self, args):
         """
         Starts adding or draining water, by starting the lerp_water() thread
+
         :param args: not used
         :return: None
         """
@@ -78,25 +57,31 @@ class Tank(Model):
             t = threading.Thread(target=self.lerp_water, args=[0.01])  # self.canvas.on_client_ready(self.draw)
             t.start()
 
-        # self.tank_pivot.scale = [1, self.depth.real(), 1]
         if self.threejs_scene is not None:
             self.draw_holes3D(self.threejs_scene)
-        #self.water_pivot.scale = [1, self.get_depth().real(), 1]
 
         super().update(args)
 
     def set_threejs_scene(self, scene):
+        """
+        Sets the pythreejs scene for the 3D visualization
+
+        :param scene: the pythreejs scene
+        :return: None
+        """
         self.threejs_scene = scene
 
     def __init__(self, holes, q: float, max_depth=1, max_holes=50, width=200, c=None, height=150):
+        descriptions = ['Discharge $Q_{in}$:', 'Tank depth $D$:','Number of Holes $n_{holes}$:', 'Diameter of Holes $d_{holes}$:']
+        max_desc = max([len(desc) for desc in descriptions])
         self.holes = holes
         self.hole_callback = self.holes + create_holes(max_holes - len(self.holes), self.holes[0].d)
         self.canvas = c
-        self.q = FloatChangeable(q, _min=0.01, _max=1.0, desc="Discharge $Q_{in}$:", unit="m³s⁻¹", step=0.01)
-        self.depth = FloatChangeable(max_depth, _min=0.5, _max=5.0, desc="Tank depth $D$:", unit="m")
+        self.q = FloatChangeable(q, _min=0.01, _max=1.0, desc="Discharge $Q_{in}$:" + " " * (max_desc - len(descriptions[0])), unit="m³s⁻¹", step=0.01)
+        self.depth = FloatChangeable(max_depth, _min=0.5, _max=5.0, desc="Tank depth $D$:" + " " * (max_desc - len(descriptions[1])), unit="m")
         #self.depth.observe(self.draw)
-        self.nHoles = IntChangeable(len(holes), _min=5, _max=max_holes, desc="Number of holes $n_{holes}$:")
-        self.dHoles = FloatChangeable(holes[0].d * 10**(-2), unit="m", base=0, _min=0.005, _max=0.1, desc="Diameter $d_{holes}$:", step=0.001)
+        self.nHoles = IntChangeable(len(holes), _min=5, _max=max_holes, desc="Number of holes $n_{holes}$:" + " " * (max_desc - len(descriptions[2])))
+        self.dHoles = FloatChangeable(holes[0].d * 10**(-2), unit="m", base=0, _min=0.005, _max=0.1, desc="Diameter $d_{holes}$:" + " " * (max_desc - len(descriptions[3])), step=0.001)
 
         self.plot_selection = ToggleGroup(["Discharge", "Number of Holes", "Diameter of Holes"], tooltips=["Shows the plot in dependence of Discharge Q",
                                                                                                             "Shows the plot in dependence of Number of Holes N",
@@ -110,8 +95,6 @@ class Tank(Model):
             ChangeableContainer([self.q, self.depth]),
             ChangeableContainer([HorizontalSpace(10)]),
             ChangeableContainer([self.nHoles, self.dHoles]),
-            #ChangeableContainer([HorizontalSpace(20)]),
-            #ChangeableContainer([self.plot_selection]),
         ]
         self.width = width
         self.height = height
@@ -167,6 +150,12 @@ class Tank(Model):
         self.scale = self.canvas.width / self.canvas.height * 1.5
 
     def select_plot(self, args):
+        """
+        Selects the plot to be shown
+
+        :param args: catcher param
+        :return: None
+        """
         if self.plot_selection.value == "Discharge":
             self.plot.set_visible(self.in_flow_plot)
         elif self.plot_selection.value == "Number of Holes":
@@ -175,6 +164,11 @@ class Tank(Model):
             self.plot.set_visible(self.d_plot)
 
     def update_plots(self, args):
+        """
+        Updates the plots
+        :param args: catcher param
+        :return: None
+        """
         self.plot.set_data(self.in_flow_plot, self.q_vars, (1 / (2 * G)) * ((4 * self.q_vars) / (self.nHoles.real() * pymath.pi * self.dHoles.real() ** 2)) ** 2)
         self.plot.set_data(self.d_plot, self.d_vars, (1 / (2 * G)) * ((4 * self.q.real()) / (self.nHoles.real() * pymath.pi * self.d_vars ** 2)) ** 2)
         self.plot.set_data(self.n_plot, self.n_vars, (1 / (2 * G)) * ((4 * self.q.real()) / (self.n_vars * pymath.pi * self.dHoles.real() ** 2)) ** 2, scatter=True)
@@ -537,9 +531,3 @@ class Tank(Model):
 
 def create_holes(n: int, d: float):
     return [Hole(d) for i in range(n)]
-
-
-if __name__ == '__main__':
-    grid = Grid(16, 16, 2, 2)
-    grid.place(0, 3, Variable(18, 0, 'cm'))
-    grid.print2D()

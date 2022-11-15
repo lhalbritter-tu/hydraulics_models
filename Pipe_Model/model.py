@@ -51,6 +51,15 @@ class IntersectionForm(ABC):
 
     @abc.abstractmethod
     def describe(self, canvas, label="S", scale=1, y=0):
+        """
+        Draws a pin on the canvas, with the given label, marking the corresponding end of the pipe
+
+        :param canvas: the canvas to draw on
+        :param label: the label of the pin
+        :param scale: the scale of the canvas
+        :param y: the y coordinate of the pin
+        :return: None
+        """
         if canvas is None:
             print("Please specify a canvas")
             return self.type + "\n" + str(self)
@@ -139,7 +148,7 @@ class Rect(IntersectionForm):
     def display(self, dw=0):
         self.x = dw
         self.rx = 8
-        self.ry = self.h * 20 / 2
+        self.ry = self.h * 5
         return self.x, self.y - self.ry / 2, 2, self.ry
 
     def describe(self, canvas, label="S", scale=1, model=None, y=0):
@@ -296,38 +305,38 @@ class AdvancedPipe(Model):
         )
 
         self.u1Param = FloatChangeable(u1, _min=u1, _max=u1 * 5, desc="$U_1$: ", unit="ms^{-1}")
-        self.qParam = FloatChangeable(7.85, _min=0, _max=100, desc="$Q_1$: ", unit="m^3s^{-1}", step=0.01)
+        self.qParam = FloatChangeable(7.85, _min=0, _max=100, desc="$Q_1$", unit="m^3s^{-1}", step=0.01)
         self.q = self.qParam.real()
         shLabel = widgets.HTML(f"SHAPE")
         shLabel.add_class("heading")
         self.i1ChoiceGroup = DropDownGroup(['Circle', 'Rectangle'], ['Choose a circular end', 'Choose a rectangular end'])
         self.i1ChoiceWidget = BoxVertical([shLabel, self.i1ChoiceGroup.display])
-        self.i1dParam = FloatChangeable(self.i1.d if self.i1.type == "Circle" else 1, _min=0.1, _max=5, desc="Diameter: $D_1$",
+        self.i1dParam = FloatChangeable(self.i1.d if self.i1.type == "Circle" else 1, _min=0.1, _max=5, desc="Diameter $D_1$",
                                         unit="m", step=0.01)
         self.i1dParam.set_active(self.i1.type == "Circle")
 
-        self.i1wParam = FloatChangeable(self.i1.w if self.i1.type != "Circle" else 1, _min=1, _max=5, desc="Width: $W_1$",
+        self.i1wParam = FloatChangeable(self.i1.w if self.i1.type != "Circle" else 1, _min=1, _max=5, desc="Width $W_1$",
                                         unit="m")
-        self.i1hParam = FloatChangeable(self.i1.h if self.i1.type != "Circle" else 1, _min=1, _max=5, desc="Height: $H_1$",
+        self.i1hParam = FloatChangeable(self.i1.h if self.i1.type != "Circle" else 1, _min=1, _max=5, desc="Height $H_1$",
                                         unit="m")
         self.i1wParam.set_active(self.i1.type == "Rectangle")
         self.i1hParam.set_active(self.i1.type == "Rectangle")
-        self.i1yParam = FloatChangeable(self.i1.y, _min=-25, _max=25, desc="Z Position: $z_1$", unit="m")
+        self.i1yParam = FloatChangeable(self.i1.y, _min=-25, _max=25, desc="Z Position $z_1$", unit="m")
 
         self.i2ChoiceGroup = DropDownGroup(['Circle', 'Rectangle'],
                                            ['Choose a circular end', 'Choose a rectangular end'])
         self.i2ChoiceWidget = BoxVertical([shLabel, self.i2ChoiceGroup.display], spacing=0)
-        self.i2dParam = FloatChangeable(self.i2.d if self.i2.type == "Circle" else 1, _min=0.1, _max=5, desc="Diameter: $D_2$",
+        self.i2dParam = FloatChangeable(self.i2.d if self.i2.type == "Circle" else 1, _min=0.1, _max=5, desc="Diameter $D_2$",
                                         unit="m", step=0.01)
         self.i2dParam.set_active(self.i2.type == "Circle")
 
-        self.i2wParam = FloatChangeable(self.i2.w if self.i2.type != "Circle" else 1, _min=1, _max=5, desc="Width: $W_2$",
+        self.i2wParam = FloatChangeable(self.i2.w if self.i2.type != "Circle" else 1, _min=1, _max=5, desc="Width $W_2$",
                                         unit="m")
-        self.i2hParam = FloatChangeable(self.i2.h if self.i2.type != "Circle" else 1, _min=1, _max=5, desc="Height: $H_2$",
+        self.i2hParam = FloatChangeable(self.i2.h if self.i2.type != "Circle" else 1, _min=1, _max=5, desc="Height $H_2$",
                                         unit="m")
         self.i2wParam.set_active(self.i2.type == "Rectangle")
         self.i2hParam.set_active(self.i2.type == "Rectangle")
-        self.i2yParam = FloatChangeable(self.i2.y, _min=-25, _max=25, desc="Z Position: $z_2$", unit="m")
+        self.i2yParam = FloatChangeable(self.i2.y, _min=-25, _max=25, desc="Z Position $z_2$", unit="m")
 
         self.params = [
             ChangeableContainer(
@@ -363,9 +372,19 @@ class AdvancedPipe(Model):
         return self.i2.area() * self.u2()
 
     def u1(self):
+        """
+        Calculates the velocity of the water flowing in the pipe
+
+        :return: the velocity of the water flowing in the pipe (q / side 1 area)
+        """
         return self.q / self.i1.area()
 
     def u1Var(self):
+        """
+        Returns u1 as Variable object with unit "ms^{-1}"
+
+        :return: Variable object of u1
+        """
         return Variable(self.u1(), "ms^{-1}")
 
     def u2(self):
@@ -378,6 +397,11 @@ class AdvancedPipe(Model):
         return self.i1.area() / self.i2.area() * self.u1()
 
     def u2Var(self):
+        """
+        Returns u2 as Variable object with unit "ms^{-1}"
+
+        :return: Variable object of u2
+        """
         return Variable(self.u2(), "ms^{-1}")
 
     def dp(self):
@@ -433,13 +457,18 @@ class AdvancedPipe(Model):
                f'<thead><tr><th class="tg-0gzz"><h1>Difference in Pressure</h1></th></tr></thead>' \
                f'<tbody><tr><td class="tg-tdqd">$\Delta E = \Delta h + \\frac{{\Delta p}}{{\\rho \cdot g}} + \\frac{{\Delta U^2}}{{2 \cdot g}}$</td></tr>' \
                f'<tr><td class="tg-tdqd">$\Delta E = 0$ - energy conservation, because of frictionless flow</td></tr>' \
-               f'<tr><td class="tg-tdqd">$\\rightarrow 0 = (h_1 - h_2) + \\frac{{\Delta p}}{{\\rho \cdot g}} + \\frac{{(U_1^2 - U_2^2)}}{{2 \cdot g}}$</td></tr>' \
+               f'<tr><td class="tg-tdqd">$\\rightarrow 0 = (z_1 - z_2) + \\frac{{\Delta p}}{{\\rho \cdot g}} + \\frac{{(U_1^2 - U_2^2)}}{{2 \cdot g}}$</td></tr>' \
                f'<tr><td class="tg-tdqd">$\\Rightarrow \\frac{{\Delta p}}{{\\rho \cdot g}} = \\frac{{({u1.real()**2:.3f} - {u2.real()**2:.3f})}}{{2 \cdot g}} + ({self.i1yParam.real():.3f} - {self.i2yParam.real():.3f})$</td></tr>' \
                f'<tr><td class="tg-tdqd">$\\frac{{\Delta p}}{{\\rho \cdot g}} = {(u1.real()**2 - u2.real()**2) / (2 * G_CONSTANT):.3f} + {self.i1yParam.real() - self.i2yParam.real():.3f} = {dp.rounded_latex(3)}$</td></tr>' \
                f'</tbody></table>' \
 
 
     def lines(self):
+        """
+        Returns the lines of the pipe between the two ends with horizontal sections before and after the ends
+
+        :return: List of lines inbetween the two ends [size: 6]
+        """
         margin = 450
         i1Lines = get_lines("CIRC" if self.i1.type == "Circle" else "RECT", self.i1, 50)
         i2Lines = get_lines("CIRC" if self.i2.type == "Circle" else "RECT", self.i2, margin, end=True)
@@ -461,6 +490,11 @@ class AdvancedPipe(Model):
         # return [l1c1, l2c1, l1c2, l2c2, l1c1c2, l2c1c2]
 
     def direct_lines(self):
+        """
+        Returns the lines of the pipe between the two ends with no horizontal sections before and after the ends
+
+        :return: List of lines inbetween the two ends [size: 2]
+        """
         i1Lines = get_lines("CIRC" if self.i1.type == "Circle" else "RECT", self.i1, self.margin_left / self.scale)
         i2Lines = get_lines("CIRC" if self.i2.type == "Circle" else "RECT", self.i2, self.margin / self.scale, end=True)
 
@@ -573,6 +607,17 @@ class AdvancedPipe(Model):
         pass
 
     def draw_ellipse(self, x, y, rx, ry, fill_col="white", rot=0):
+        """
+        Draw an ellipse on the canvas
+
+        :param x: the x-position of the ellipse
+        :param y: the y-position of the ellipse
+        :param rx: the x-radius of the ellipse
+        :param ry: the y-radius of the ellipse
+        :param fill_col: the fill color of the ellipse
+        :param rot: the rotation of the ellipse
+        :return: None
+        """
         self.canvas.begin_path()
         self.canvas.ellipse(x, y, rx, ry, rot, 0, 2 * pymath.pi)
         self.canvas.fill_style = fill_col
@@ -581,30 +626,30 @@ class AdvancedPipe(Model):
         # self.canvas.end_path()
 
     def dash_ellipse(self, x, y, rx, ry, fill_col="white", rot=0):
+        """
+        Draw an ellipse on the canvas with a dashed line
+        See draw_ellipse for parameters
+
+        :return: None
+        """
         i = 0
-        #self.canvas.ellipse(x, y, rx, ry, rot, 0.5 * pymath.pi, pymath.pi)
-        #self.canvas.stroke()
-        #time.sleep(5)
         while i <= 2:
             self.canvas.begin_path()
             self.canvas.ellipse(x, y, rx, ry, rot, i * pymath.pi, (i + 0.2) * pymath.pi)
             i += 0.3
             self.canvas.stroke()
-            #time.sleep(0.5)
-            #self.canvas.end_path()
-        #self.canvas.fill()
-        # self.canvas.end_path()
 
     def draw_details(self):
+        """
+        Draws the details of the model, such as the height lines and the coordinate system
+        :return:
+        """
         hi1 = self.i1.y + self.i1.ry / 8
-        #hi1 /= self.scale
         hi2 = self.i2.y + self.i2.ry / 8
-        #hi2 /= self.scale
         xi = self.i2.rx / 2 + self.i2.x + 25
         if self.i1.y != self.i2.y:
             self.draw_heights(hi1, hi2)
         x1 = self.i1.x + (self.i1.rx / 4)
-        #x1 /= self.scale
         x2 = x1 + 50
         self.draw_arrow_hor(x1, x2, (hi1 - self.i1.ry / 4), 5, 10, (50, 50, 130), "U₁")
         self.canvas.stroke_style = hexcode((50, 50, 130))
@@ -613,6 +658,13 @@ class AdvancedPipe(Model):
         self.draw_arrow_vert(xi / 2, 25, 5, 5, 10, (0, 0, 0), label="z", top=True)
 
     def draw_heights(self, hi1, hi2):
+        """
+        Draws the heights of the two ends of the pipe
+
+        :param hi1: the height of the first end
+        :param hi2: the height of the second end
+        :return:
+        """
         halfLine1 = (0.0, hi1, self.canvas.width, hi1)
         halfLine2 = (0.0, hi2, self.canvas.width, hi2)
 
@@ -628,10 +680,21 @@ class AdvancedPipe(Model):
         self.draw_arrow_vert(xi, hi1, hi2, -2.5, 4, (0, 0, 0), label="Δh", top=True)
         self.draw_arrow_vert(xi, hi2, hi1, 2.5, 4, (0, 0, 0), label="", top=False)
         return xi
-        #self.canvas.stroke_line(xi, hi1, xi, hi2)
-        #self.canvas.stroke_text("Delta H", xi + 25, (hi1 + hi2) / 2)
 
     def draw_arrow_hor(self, x1, x2, y, y_offs, x_offs, rgb, label="", left=True):
+        """
+        Draws a horizontal arrow on the canvas
+
+        :param x1: the x-position of the start of the arrow
+        :param x2: the x-position of the end of the arrow
+        :param y: the y-position of the arrow
+        :param y_offs: the y-offset of the arrow head
+        :param x_offs: the x-offset of the arrow head
+        :param rgb: the color of the arrow as a tuple of form (r, g, b)
+        :param label: the label of the arrow, written on the arrow head
+        :param left: whether the arrow points to the left or to the right
+        :return: None
+        """
         self.canvas.stroke_style = hexcode(rgb)
         self.canvas.begin_path()
         self.canvas.move_to(x1, y)
@@ -650,6 +713,19 @@ class AdvancedPipe(Model):
         self.canvas.fill_style = old_fill_style
 
     def draw_arrow_vert(self, x, y1, y2, x_offs, y_offs, rgb, label="", top=True):
+        """
+        Draws a vertical arrow on the canvas
+
+        :param x: the x-position of the arrow
+        :param y1: the y-position of the start of the arrow
+        :param y2: the y-position of the end of the arrow
+        :param x_offs: the x-offset of the arrow head
+        :param y_offs: the y-offset of the arrow head
+        :param rgb: the color of the arrow as a tuple of form (r, g, b)
+        :param label: the label of the arrow, written on the arrow head
+        :param top: whether the arrow points to the top or to the bottom
+        :return: None
+        """
         self.canvas.stroke_style = hexcode(rgb)
         y_top = min(y1, y2)
         y_bot = max(y1, y2)
@@ -688,6 +764,15 @@ class AdvancedPipe(Model):
         return dat_tex
 
     def dash_rect(self, x, y, sx, sy):
+        """
+        Draws a dashed rectangle on the canvas
+
+        :param x: the x-position of the top-left corner of the rect
+        :param y: the y-position of the top-left corner of the rect
+        :param sx: the scale to the x-direction
+        :param sy: the scale to the y-direction
+        :return: None
+        """
         c = self.canvas
         c.set_line_dash([1, 0.5])
         c.stroke_rect(x, y, sx, sy)
@@ -695,6 +780,15 @@ class AdvancedPipe(Model):
 
 
 def get_lines(selected, i, margin=0, end=False):
+    """
+    Gets the lines of the selected Side
+
+    :param selected: the selected Side ["CIRC", "RECT"]
+    :param i: the side object
+    :param margin: the margin to the side
+    :param end: whether this side is the end or start
+    :return: the lines of the selected Side
+    """
     offset = i.rx / 2
     py1 = i.ry + i.y - (0 if selected == "CIRC" else i.ry / 2)
     py2 = py1 - i.ry * (2 if selected == "CIRC" else 1)
@@ -703,10 +797,3 @@ def get_lines(selected, i, margin=0, end=False):
     px2 = margin - i.rx if end else margin + i.rx
 
     return [(px1, py1, px2, py1), (px1, py2, px2, py2)]
-
-
-if __name__ == '__main__':
-    m = AdvancedPipe(Circle(43, 30), Circle(43, 10), 20)
-    m.i1.draw(50)
-    m.i2.draw(450)
-    print(m.i1.describe(None))

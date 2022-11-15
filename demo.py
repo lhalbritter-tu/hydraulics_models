@@ -214,13 +214,12 @@ class IntChangeable(Changeable):
             value=value,
             min=_min,
             max=_max,
-            description=desc,
             step=step,
             continuous_update=False
         ), base, unit)
         self.widget.style.handle_color = THEME[theme]
         self.unitLabel = widgets.Label(f'${self.rmunit()}$')
-        self.display = widgets.HBox([self.widget, self.unitLabel])
+        self.display = widgets.HBox([widgets.Label(desc), self.widget, self.unitLabel])
 
 
 class FloatChangeable(Changeable):
@@ -241,13 +240,12 @@ class FloatChangeable(Changeable):
             value=value,
             min=_min,
             max=_max,
-            description=desc,
             step=step,
-            continuous_update=continuous_update
+            continuous_update=continuous_update,
         ), base, unit, should_update=should_update)
         self.widget.style.handle_color = THEME[theme]
         self.unitLabel = widgets.Label(f"${self.rmunit()}$")
-        self.display = widgets.HBox([self.widget, self.unitLabel])
+        self.display = widgets.HBox([widgets.Label(desc), self.widget, self.unitLabel])
 
 
 class ToggleGroup(Changeable):
@@ -828,23 +826,57 @@ class MarkerPlot:
         self.widget.flush_events()
 
     def grid(self, axis='both', color='gray', linestyle='-', linewidth=0.2):
+        """
+        Toggles the plot's grid
+
+        :param axis: the axis on which the grid should be active [Default: 'both']
+        :param color: the color of the grid [Default: 'gray', can be hex]
+        :param linestyle: the linestyle of the grid lines [Default: '-']
+        :param linewidth: the width of the grid lines [Default: 0.2]
+        :return: None
+        """
         self.ax.grid(axis=axis, color=color, linestyle=linestyle, linewidth=linewidth)
         self.widget.draw()
         self.widget.flush_events()
 
 
 def from_geometry(geom):
+    """
+    pythreejs.BufferGeometry.from_geometry() wrapper
+
+    :param geom: geometry object to build attributes from
+    :return: BufferGeometry Object with the attributes of the given geometry object
+    """
     return BufferGeometry.from_geometry(geom)
 
 
 def get_attribute(geom, name):
+    """
+    Gets an attribute with given name of the given geometry geom if the name exists
+
+    :param geom: the geometry to get attribute from
+    :param name: the name of the attribute to get
+    :return: -1, if the attribute does not exist, else the attribute's value
+    """
     if name not in geom.attributes:
         return -1
     return geom.attributes[name]
 
 
 class Cylinder:
+    """
+    This class generates the vertices, normals and uvs of a 3D Cylinder and can be used in any pythreejs scene
+    """
     def __init__(self, radiusTop, radiusBottom, height, segments, h_segments):
+        """
+        Calculates the vertices, normals and uvs of the cylinder
+
+        :param radiusTop: the radius of the top circular end of the cylinder
+        :param radiusBottom: the radius of the bottom circular end of the cylinder
+        :param height: the height of the cylinder
+        :param segments: the number of vertical segments of the cylinder
+        :param h_segments: the number of horizontal segments of the cylinder
+        """
         self.vertices = []
         self.indices = []
         self.uv = []
@@ -971,6 +1003,11 @@ class Cylinder:
             # self.uv.append([0., min_height + offset * (h - 1)])
 
     def my_cyl(self):
+        """
+        Returns a pythreejs.BufferGeometry with the calculated vertices, normals and uvs, that can be used in any pythreejs scene
+
+        :return: pythreejs.BufferGeometry object with cylinder's attributes
+        """
         return BufferGeometry(index=BufferAttribute(array=np.array(self.indices, dtype=np.uint16)), attributes={
             'position': BufferAttribute(array=np.array(self.vertices, dtype=np.float32), normalized=True),
             'normal': BufferAttribute(array=np.array(self.normals, dtype=np.float32), normalized=True),
@@ -978,6 +1015,12 @@ class Cylinder:
         })
 
     def set_radiusTop(self, radiusTop):
+        """
+        Sets the radius of the top circular end and recalculates the relevant vertices
+
+        :param radiusTop: the new radius of the top circular end
+        :return: None
+        """
         self.radiusTop = radiusTop
         step = 2. * np.pi / self.segments
         for h in range(1, self.h_segments + 1):
@@ -989,6 +1032,12 @@ class Cylinder:
                                                                                   rt * np.sin(angle)]
 
     def set_radiusBottom(self, radiusBottom):
+        """
+        Sets the radius of the bottom circular end and recalculates the relevant vertices
+
+        :param radiusBottom: the new radius of the bottom circular end
+        :return: None
+        """
         self.radiusBottom = radiusBottom
         step = 2. * np.pi / self.segments
         for h in range(1, self.h_segments + 1):
@@ -1001,34 +1050,76 @@ class Cylinder:
 
 
 def normalize(vec: list):
+    """
+    Normalizes a three-dimensional vector
+
+    :param vec: a three-dimensional vector to normalize
+    :return: the normalized three-dimensional vector
+    """
     x, y, z = vec[0], vec[1], vec[2]
     l = np.sqrt(x ** 2 + y ** 2 + z ** 2)
     return [x / l, y / l, z / l]
 
 
 def lerp(v0, v1, t):
+    """
+    Returns a linear interpolation between two values v0 and v1 at approximation degree t
+
+    :param v0: the first value
+    :param v1: the second value
+    :param t: the approximation degree [0;1]
+    :return: interpolated value between v0 and v1 at t
+    """
     return (1 - t) * v0 + t * v1
 
 
 class MultiPlot:
+    """
+    Wrapper class for matplotlib.pyplot which supports multiple plots on one figure
+    """
     def __init__(self, width=3, height=3):
         self.width = width
         self.height = height
         self.clear()
 
     def add_plot(self, x, y, color='blue', xlim=None, ylim=None, xlabel=None, ylabel=None, title=None):
+        """
+        Adds a plot with range x and function y to the figure
+
+        :param x: the x-range of the plot
+        :param y: the function of the plot
+        :param color: the color of the line of the plot
+        :param xlim: the limits of the x-axis
+        :param ylim: the limits of the y-axis
+        :param xlabel: the label of the x-axis
+        :param ylabel: the label of the y-axis
+        :param title: the title of the plot
+        :return: the index of the added plot
+        """
         self.axes[-1].plot(x, y, color=color)
         self.marker.append(None)
         self.mark(len(self.axes) - 1, x[0], y[0])
         return self.add_ax(xlim, ylim, xlabel, ylabel, title)
 
     def add_scatter(self, x, y, color='blue', xlim=None, ylim=None, xlabel=None, ylabel=None, title=None):
+        """
+        Adds a scatter plot with range x and function y to the figure
+        See add_plot.params for detailed explanation of the params
+
+        :return: the index of the added plot
+        """
         self.axes[-1].scatter(x, y, color=color)
         self.marker.append(None)
         self.mark(len(self.axes) - 1, x[0], y[0])
         return self.add_ax(xlim, ylim, xlabel, ylabel, title, color=color)
 
     def add_ax(self, xlim=None, ylim=None, xlabel=None, ylabel=None, title=None, color=None):
+        """
+        Function that implements the common functionality for adding (scatter) plots to the figure
+        See add_plot.params for detailed explanation of the params
+
+        :return: the index of the added plot
+        """
         self.ax_data[self.axes[-1]] = {'xlim': xlim, 'ylim': ylim, 'xlabel': xlabel, 'ylabel': ylabel, 'title': title,
                                        'color': color}
         self.axes[-1].set_xlabel(xlabel)
@@ -1038,11 +1129,27 @@ class MultiPlot:
         return len(self.axes) - 2
 
     def grid(self, i, axis='both', color='gray', linestyle='-', linewidth=0.2):
+        """
+        Toggles the grid of the plot with index i
+
+        :param i: index of the plot
+        :param axis: the axis of the grid [Default: 'both']
+        :param color: the color of the grid lines [Default: 'gray', can be hex]
+        :param linestyle: the style of the grid lines [Default: '-']
+        :param linewidth: the width of the grid lines [Default: 0.2]
+        :return: None
+        """
         self.axes[i].grid(axis=axis, color=color, linestyle=linestyle, linewidth=linewidth)
         self.widget.draw()
         self.widget.flush_events()
 
     def set_visible(self, i):
+        """
+        Sets the plot with index i to be visible and all other plots to be invisible
+
+        :param i: the index of the plot to set visible
+        :return: None
+        """
         for j in range(len(self.axes)):
             self.axes[j].set_visible(i == j)
         xlim = self.ax_data[self.axes[i]]['xlim']
@@ -1050,13 +1157,22 @@ class MultiPlot:
         xlabel = self.ax_data[self.axes[i]]['xlabel']
         ylabel = self.ax_data[self.axes[i]]['ylabel']
         title = self.ax_data[self.axes[i]]['title']
-        print(xlim, ylim)
+
         self.axes[i].set_xlim(xlim)
         self.axes[i].set_ylim(ylim)
         self.widget.draw()
         self.widget.flush_events()
 
     def set_data(self, i, x, y, scatter=False):
+        """
+        Sets the data of the plot with index i to x and y
+
+        :param i: the index of the plot
+        :param x: the x-range of the plot
+        :param y: the function of the plot
+        :param scatter: flag if the plot is a scatter plot
+        :return: False, if the plot with index i does not exist, True otherwise
+        """
         if i < 0 or i >= len(self.axes):
             return False
         ax = self.axes[i]
@@ -1076,11 +1192,14 @@ class MultiPlot:
         ax.set_ylabel(ylabel)
         ax.set_title(title)
         self.marker[i] = None
-        # self.mark(i, x[0], y[0])
-        # self.axes[i].set_data(x, y)
         return True
 
     def clear(self):
+        """
+        Clears the figure and removes all added plots
+
+        :return: None
+        """
         self.fig, self.ax = plt.subplots(figsize=(self.width, self.height))
         self.widget = self.fig.canvas
         self.widget.header_visible = False
@@ -1098,6 +1217,15 @@ class MultiPlot:
         self.fig.show()
 
     def mark(self, i, x, y, symbol='o'):
+        """
+        Marks the point (x, y) on the plot with index i
+
+        :param i: the index of the plot
+        :param x: the x-position of the marker
+        :param y: the y-position of the marker
+        :param symbol: the symbol of the marker
+        :return: None
+        """
         if self.marker[i] is None:
             self.marker[i] = self.axes[i].plot([x], [y], marker=symbol)[0]
         self.marker[i].set_data([x], [y])
@@ -1106,7 +1234,23 @@ class MultiPlot:
 
 
 class ScatterPlot(Plot):
+    """
+    Class that implements a scatter plot
+    """
     def __init__(self, x, y, width=5, height=3.5, title="Plot", xlabel="x", ylabel="y", xlim=None, ylim=None):
+        """
+        Initializes a scatter plot with given values
+
+        :param x: the x-range of the plot
+        :param y: the function of the plot
+        :param width: the width of the figure
+        :param height: the height of the figure
+        :param title: the title of the plot
+        :param xlabel: the label of the x-axis
+        :param ylabel: the label of the y-axis
+        :param xlim: the x-limits of the plot
+        :param ylim: the y-limits of the plot
+        """
         self.x = x
         self.y = y
         self.xlim = xlim
@@ -1122,6 +1266,12 @@ class ScatterPlot(Plot):
         self.update_plot(self.x, self.y, self.title, self.xlabel, self.ylabel, self.xlim, self.ylim)
 
     def update_plot(self, x=None, y=None, title=None, xlabel=None, ylabel=None, xlim=None, ylim=None):
+        """
+        Updates the plot with new values
+        See __init__ for parameter description
+
+        :return: None
+        """
         super().update_plot(None, None, title, xlabel, ylabel, xlim, ylim)
         if x is not None:
             self.x = x
@@ -1132,10 +1282,20 @@ class ScatterPlot(Plot):
 
 
 def spaces(n=10):
+    """
+    Returns a string of n spaces
+
+    :param n: the number of spaces
+    :return: the string of n spaces
+    """
     return ' &nbsp ' * n
 
 
 def table_style():
+    """
+    Returns the common table style for Demos
+    :return: css of the table style
+    """
     return f"""<style type="text/css">
                 .tg  {{border-collapse:collapse;border-color:#9ABAD9;border-spacing:0;border-style:solid;border-width:1px;}}
                 .tg td{{background-color:#EBF5FF;border-color:#9ABAD9;border-style:solid;border-width:0px;color:#444;
@@ -1164,29 +1324,3 @@ def table_style():
                     margin-bottom:0px;
                 }}
                 </style>"""
-
-
-if __name__ == '__main__':
-    mp = MultiPlot()
-    # mp.add_ax([0, 1, 2, 3, 4], [2, 4, 6, 8, 10], color='orange')
-    # mp.add_ax([0, 1, 2, 3, 4], [3, 6, 9, 25, 15], color='green')
-    # mp.add_ax([5, 6, 7, 8], [0, -2, -5, 10], color='red')
-    # mp.add_ax([0, 1, 2, 3, 4], [30, 10, 30, 10, 30], color='yellow')
-    # mp.add_ax([0, 1, 2, 3, 4], [5, 0, -5, 0, 5], color='purple')
-    mp.add_ax([0, 0.01, 2, 3], [10, 0, 0, 0])
-    mp.add_ax([4, 4.01], [10, 0], color='red')
-    mp.add_ax([4.01, 5, 6], [10, 10, 10], color='red')
-    mp.add_ax([4.01, 5.5], [5, 5], color='red')
-    mp.add_ax([4.01, 5, 6], [0, 0, 0], color='red')
-    mp.add_ax([7, 10], [10, 10], color='green')
-    mp.add_ax([7, 7.01], [9, 1], color='green')
-    mp.add_ax([7, 10], [0, 0], color='green')
-    mp.add_ax([10, 10.01], [9, 1], color='green')
-    mp.show()
-    while True:
-        n = input("Enter Plot to show [0-" + str(len(mp) - 1) + "]: ")
-        if int(n) > len(mp) - 1 or int(n) < 0:
-            mp.clear()
-            continue
-        mp.set_visible(int(n))
-        mp.show()
