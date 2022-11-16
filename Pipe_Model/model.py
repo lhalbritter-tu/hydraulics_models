@@ -310,7 +310,7 @@ class AdvancedPipe(Model):
         shLabel = widgets.HTML(f"SHAPE")
         shLabel.add_class("heading")
         self.i1ChoiceGroup = DropDownGroup(['Circle', 'Rectangle'], ['Choose a circular end', 'Choose a rectangular end'])
-        self.i1ChoiceWidget = BoxVertical([shLabel, self.i1ChoiceGroup.display])
+        self.i1ChoiceWidget = BoxHorizontal([shLabel, self.i1ChoiceGroup.display])
         self.i1dParam = FloatChangeable(self.i1.d if self.i1.type == "Circle" else 1, _min=0.1, _max=5, desc="Diameter $D_1$",
                                         unit="m", step=0.01)
         self.i1dParam.set_active(self.i1.type == "Circle")
@@ -325,7 +325,7 @@ class AdvancedPipe(Model):
 
         self.i2ChoiceGroup = DropDownGroup(['Circle', 'Rectangle'],
                                            ['Choose a circular end', 'Choose a rectangular end'])
-        self.i2ChoiceWidget = BoxVertical([shLabel, self.i2ChoiceGroup.display], spacing=0)
+        self.i2ChoiceWidget = BoxHorizontal([shLabel, self.i2ChoiceGroup.display], spacing=0)
         self.i2dParam = FloatChangeable(self.i2.d if self.i2.type == "Circle" else 1, _min=0.1, _max=5, desc="Diameter $D_2$",
                                         unit="m", step=0.01)
         self.i2dParam.set_active(self.i2.type == "Circle")
