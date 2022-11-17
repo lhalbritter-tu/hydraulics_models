@@ -282,7 +282,8 @@ class DropDownGroup(Changeable):
         """
         super().__init__(widgets.Dropdown(
             options=options,
-            tooltips=tooltips
+            tooltips=tooltips,
+            layout=widgets.Layout(alignment='left'),
         ))
         self.widget.add_class('dropdown')
         self.display = self.widget
@@ -304,6 +305,7 @@ class BoxHorizontal(PseudoChangeable):
             children=children, spacing=spacing
         ))
         self.display = self.widget
+        # self.display.align_content = 'flex-start'
         self.should_update = True
         self.children = children
 

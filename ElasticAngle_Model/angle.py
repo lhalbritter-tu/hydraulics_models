@@ -33,16 +33,16 @@ class Angle(Model):
         pass
 
     def __init__(self, mass, feather, start_angle, c=None):
-        self.mass = FloatChangeable(mass, unit="kg", base=0, _min=1.0, desc="Masse $m$")
-        self.feather = FloatChangeable(feather, unit="kN/m", base=3, _min=1.0, desc="Federsteifigkeit $k$")
-        self.start_angle = FloatChangeable(start_angle, unit="rad/s", _min=0.1, _max=pymath.pi / 2, step=0.001, desc="Anfangswinkelgeschwindigkeit $\Phi_0$")
+        self.mass = FloatChangeable(mass, unit="kg", base=0, _min=1.0, desc="Masse $~~m$")
+        self.feather = FloatChangeable(feather, unit="kN/m", base=3, _min=1.0, desc="Federsteifigkeit $~~k$")
+        self.start_angle = FloatChangeable(start_angle, unit="rad/s", _min=0.1, _max=pymath.pi / 2, step=0.001, desc="Anfangswinkelgeschwindigkeit $~~\Phi_0$")
 
         self.w_0 = self.circular_frequency().real()
-        self.t = FloatChangeable(0, unit="s", _min=-self.duration().real() * 3, _max=self.duration().real() * 3, desc="$t$", continuous_update=True, step=self.duration().real() / 100, should_update=True)
+        self.t = FloatChangeable(0, unit="s", _min=-self.duration().real() * 3, _max=self.duration().real() * 3, desc="Zeit $~~t$", continuous_update=True, step=self.duration().real() / 100, should_update=True)
         self.canvas = c
 
         self.params = [
-            ChangeableContainer([self.mass, self.feather, self.start_angle], alignment='flex-end'),
+            ChangeableContainer([self.mass, self.feather, self.start_angle], alignment='flex-start'),
             ChangeableContainer([HorizontalSpace(10)]),
             ChangeableContainer([self.t], alignment='flex-start')
         ]
@@ -99,7 +99,7 @@ class Angle(Model):
                                f'<tr><td class="tg-tdqd">Schwingungsdauer $T = {self.duration().rounded_latex(2)}$</td></tr>' \
                                f'<tr><td class="tg-tdqd">Eigenfrequenz $f_0 = {self.frequency().rounded_latex(2)}$</td></tr>' \
                                f'<tr><td class="tg-tdqd">Lösung des Anfangswertproblems $\phi(t) = {self.get_evaluation()} ~~ [\mathrm{{rad}}]$</td></tr>' \
-                               f'<tr><td class="tg-tdqd">Lösung für $\phi({self.t.real()}) = {self.evaluate(self.t.real()).rounded_latex(2)}$</td></tr></tbody></table>' \
+                               f'<tr><td class="tg-tdqd">Lösung für $\phi({self.t.rounded()}) = {self.evaluate(self.t.real()).rounded_latex(2)}$</td></tr></tbody></table>' \
 
     def __str__(self):
         return self.__repr__()

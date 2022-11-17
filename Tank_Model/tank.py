@@ -42,7 +42,9 @@ class Tank(Model):
         :return: the string representation of this model
         """
         return table_style() + f'<table class="tg" width="100%"><thead><tr><th class="tg-0gzz"><h1>Water Depth {spaces(10)}</h1></th></tr></thead>' \
-               f'<tbody><tr><td class="tg-tdqd">Depth $h = \\frac{{1}}{{2g}} \cdot \left( \\frac{{4 \cdot Q_{{in}}}}{{n_{{holes}} \cdot \pi \cdot d^2_{{holes}}}} \\right)^2 [m]$ - Combination of Bernoulli and mass conservation</td></tr>' \
+               f'<tbody><tr><td class="tg-tdqd">Depth $h = \\frac{{1}}{{2g}} \cdot \left( \\frac{{4 \cdot Q_{{in}}}}{{n_{{holes}} ' \
+                               f'\cdot \pi \cdot d^2_{{holes}}}} \\right)^2 [m]$ - ' \
+                               f'combination of Bernoulli equation and mass conservation</td></tr>' \
                f'<tr><td class="tg-tdqd">${{ h = \\frac{{1}}{{2 \cdot 9.81}} \cdot \left( \\frac{{4 \cdot {self.q.real()}}}{{{self.nHoles.real()} \cdot \pi \cdot {self.dHoles.real()}^2}}\\right)^2[m] }}$</td></tr>' \
                f'<tr><td class="tg-tdqd">${{h = {self.get_depth().rounded_latex(cut=3)}}}$</td></tr></tbody></table>'
 
@@ -75,11 +77,11 @@ class Tank(Model):
         self.holes = holes
         self.hole_callback = self.holes + create_holes(max_holes - len(self.holes), self.holes[0].d)
         self.canvas = c
-        self.q = FloatChangeable(q, _min=0.01, _max=1.0, desc="Discharge $Q_{in}$", unit="m³s⁻¹", step=0.01)
-        self.depth = FloatChangeable(max_depth, _min=0.5, _max=5.0, desc="Tank depth $D$", unit="m")
+        self.q = FloatChangeable(q, _min=0.01, _max=1.0, desc="Discharge $~~Q_{in}$", unit="m³s⁻¹", step=0.01)
+        self.depth = FloatChangeable(max_depth, _min=0.5, _max=5.0, desc="Tank depth $~~D$", unit="m")
         #self.depth.observe(self.draw)
-        self.nHoles = IntChangeable(len(holes), _min=5, _max=max_holes, desc="Number of holes $n_{holes}$")
-        self.dHoles = FloatChangeable(holes[0].d * 10**(-2), unit="m", base=0, _min=0.005, _max=0.1, desc="Diameter $d_{holes}$", step=0.001)
+        self.nHoles = IntChangeable(len(holes), _min=5, _max=max_holes, desc="Number of holes $~~n_{holes}$", unit="~~")
+        self.dHoles = FloatChangeable(holes[0].d * 10**(-2), unit="m", base=0, _min=0.005, _max=0.1, desc="Diameter $~~d_{holes}$", step=0.001)
 
         self.plot_selection = ToggleGroup(["Discharge", "Number of Holes", "Diameter of Holes"], tooltips=["Shows the plot in dependence of Discharge Q",
                                                                                                             "Shows the plot in dependence of Number of Holes N",
@@ -101,13 +103,12 @@ class Tank(Model):
             BoxBufferGeometry(self.width / 100, 1, 1),
             MeshPhongMaterial(transparent=True, opacity=0.4, color='gray'),
             scale=[1, 1, 1],
-            position=[0, -0.5, 0]
+            position=[0, -0.5, 0],
         )
-        self.tank_pivot = Object3D()
+        self.tank_pivot = Object3D(rotation=[pymath.pi, 0, 0, "XYZ"])
         self.tank_pivot.add(self.tank_rendering)
         self.tank_pivot.scale = [1, self.depth.real(), 1]
         self.tank_pivot.position = [0, -1, 0]
-        self.tank_pivot.rotation = [pymath.pi, 0, 0, 'XYZ']
 
         self.water_rendering = Mesh(
             BoxBufferGeometry(self.width / 100, 1, 1),
@@ -115,12 +116,10 @@ class Tank(Model):
             scale=[0.99, 1, 0.99],
             position=[0, -0.5, 0]
         )
-        self.water_pivot = Object3D()
+        self.water_pivot = Object3D(rotation=[pymath.pi, 0, 0, "XYZ"])
         self.water_pivot.add(self.water_rendering)
         self.water_pivot.position = [0, -1, 0]
         self.water_pivot.scale = [1, min(1.05, self.get_depth().real()), 1]
-        self.water_pivot.rotation = [pymath.pi, 0, 0, 'XYZ']
-
         self.current_water_depth = self.get_depth()
 
         self.hole_meshes = []
