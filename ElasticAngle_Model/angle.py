@@ -29,9 +29,6 @@ class Angle(Model):
             self.t = (self.t + 1) % 20
             self.canvas.sleep(20)
 
-    def lines(self):
-        pass
-
     def __init__(self, mass, feather, start_angle, c=None):
         self.mass = FloatChangeable(mass, unit="kg", base=0, _min=1.0, desc="Masse $~~m$")
         self.feather = FloatChangeable(feather, unit="kN/m", base=3, _min=1.0, desc="Federsteifigkeit $~~k$")

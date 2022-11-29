@@ -40,5 +40,157 @@ Der letzte Schritt startet mit der Applikation auch den Standard-Browser des Sys
 
 In jedem dieser Ordner befindet sich jeweils ein ".ipynb" File, welches jeweils ein Modell simuliert. Ein Klick auf eines der Files startet die jeweilige Simulation.
 
-### Pipe Model
+### Jupyter Lab
 
+Während der `voila` Befehl nur die Applikation ohne Anzeige des Codes startet, wird mit dem Befehl `jupyter lab` eine grafische Oberfläche ausgeführt, in der der Code bearbeitet werden kann.
+Es empfiehlt sich neu geschriebene Funktionalitäten in der `jupyter lab` Umgebung zu testen, bevor diese in der Applikation übernommen werden.
+
+## Modellierung
+
+Wollen Sie nun selbst ein Modell in eine `jupyter` Applikation einbinden, so eignet sich der folgende Workflow:
+
+### 1. Grundfunktionalität implementieren
+
+Bevor es an die grafische Darstellung geht ist es sinnvoll zunächst einmal die Grundfunktionalität zu implementieren.
+Am Besten wie in der bisherigen Projektstruktur einen neuen Ordner mit dem Namen 'Modellname_Model' anlegen und dort ein neues python file mit dem Namen 'Modellname.py' anlegen.
+Um die Arbeit möglichst einheitlich zu gestalten empfiehlt es sich zunächst einmal alle Funktionen und Klassen der `demo.py` Bibliothek zu importieren und das Modell als Klasse zu implementieren, welche von `Model` erbt.
+Dazu einfach folgenden Code in das neue python file kopieren:
+
+```python
+from demo import *
+
+class ModellName(Model):
+    # Hier kommt der Code für das Modell
+```
+
+Nun ist es unbedingt notwendig zumindest die Methode `calculate` zu implementieren, welche einen String zurückgibt, der die Berechnung des Modells enthält.
+Diese Methode wird intern ausgeführt und zeigt das Ergebnis in der Applikation an.
+
+**Beispiel:**
+
+```python
+from demo import *
+
+class Addition(Model):
+    # Ein Modell, welches zwei Zahlen addiert
+    def calculate(self):
+        return f"{self.a} + {self.b} = {self.a + self.b}"
+```
+
+### 2. Grafische Oberfläche implementieren
+
+Damit die Nutzer:innen nun auch die Möglichkeit haben das Modell zu bedienen, muss eine grafische Oberfläche implementiert werden.
+Es empfiehlt sich hierfür das von `demo` bereitgestellte `Changeable` Framework zu verwenden. In diesem Framework finden sich viele
+Implementierungen von Widgets, welche die Nutzer:innen angezeigt bekommen. Sehr häufig verwendete Beispiele dieser Widgets wären unter anderem:
+
+- 'IntChangeable' - Ein Slider, der die Eingabe einer ganzen Zahl ermöglicht
+- 'FloatChangeable' - Ein Slider, der die Eingabe einer Fließkommazahl ermöglicht
+- 'DropdownGroup' - Ein Dropdown-Menü, welches die Auswahl zwischen mehreren Optionen ermöglicht
+- 'ClickButton' - Ein Button, welcher bei einem Klick eine Funktion ausführt
+- 'HorizontalSpace' - Ein Objekt um einen horizontalen Abstand einzufügen
+
+Es ist wichtig, dass vor der Implementierung geplant wird, welche Eingaben von den Nutzer:innen erfolgen und welche Eingaben statisch sind.
+Sind die dynamischen Eingaben klar, kann wie folgt vorgegangen werden:
+
+```python
+from demo import *
+
+class Addition(Model):
+    # Ein Modell, welches zwei Zahlen addiert
+    
+    def __init__(self):
+        self.a = IntChangeable(
+            0, # Startwert
+            0, # Exponent der Einheit
+            "m", # Einheit
+            0, # Minimalwert
+            10, # Maximalwert
+            "Erste Zahl", # Beschreibung,
+            step=1 # Schrittweite
+        )
+        self.b = IntChangeable(0, 0, "m", 0, 10, "Zweite Zahl", step=1)
+        
+        # Dieser Schritt ist sehr wichtig, um die Eingaben später an die Simulation zu übergeben
+        self.params = [ChangeableContainer([self.a, self.b])]
+    
+    def calculate(self):
+        return f"{self.a} + {self.b} = {self.a + self.b}"
+```
+
+In diesem Beispiel werden zwei `IntChangeable` Objekte erstellt, welche die Eingabe einer ganzen Zahl ermöglichen. Im letzten Schritt
+wird ein sogenannter 'ChangeableContainer' erstellt, der die beiden Eingaben enthält. Dieser Container ist notwendig, damit die 
+Eingaben im nächsten Schritt an die Simulation weitergegeben werden. Es ist wichtig, dass das Attribut `params` heißt und eine
+Liste an `ChangeableContainer`s enthält, da jedes Listenelement eine neue Spalte in der Applikation darstellt.
+
+
+### 3. Simulation in die Applikation einbinden
+
+Als letzter Schritt muss nun die `jupyter` Applikation erstellt werden. Dazu am Besten im selben Ordner des Modells ein neues jupyter
+notebook file anlegen. Am einfachsten geht das, wenn vorher in dem Modellordner die `jupyter lab` Umgebung gestartet wird und dann
+in der grafischen Oberfläche ein neues Notebook erstellt wird.
+
+In diesem Notebook wird nun der Code für die Applikation geschrieben. Dazu muss zunächst die Bibliothek `demo` importiert werden.
+Das ist im Notebook etwas komplizierter als in einem normalen python file, da die Bibliothek nicht im `sys.path` ist. Dazu muss
+folgender Code in einer eigenen Zelle ausgeführt werden:
+
+```python
+import sys
+sys.path.append("../")
+from demo import *
+# Das Modell muss auch noch importiert werden
+from Modellname import Modellname
+```
+
+Jetzt ist es gar nicht mehr schwierig die Applikation einzubinden. Dazu muss lediglich ein `Model`, sowie ein `Demo` Objekt erstellt werden.
+In dem Beispiel der Addition sieht das wie folgt aus:
+
+```python
+# Erstellen des Modells
+model = Addition()
+
+# Erstellen der Demo
+demo = Demo(model)
+
+# ---------------- Neue Zelle --------------- #
+demo.show()
+```
+
+In der ersten Zelle werden alle notwendigen Objekte erstellt und in der zweiten Zelle wird die Applikation gestartet.
+Das `Demo` Objekt extrahiert automatisiert die Parameter des Modells und erstellt anhand des `ChangeableContainer`s die grafische Oberfläche.
+Die Ausgabe der Ergebnisse erfolgt über die `calculate` Methode im Model, welche beim Ändern eines beliebigen `Changeable` Objekts neu berechnet wird.
+Die Methode `show()` startet die Applikation und zeigt diese an.
+
+Wurden die Schritte bis jetzt korrekt ausgeführt, sollte die Applikation wie folgt aussehen:
+
+![Addition Beispiel](resources/addition_example.png)
+
+Wie Sie sehen, ist das Notebook so sehr klein gehalten. Die Eingaben sind nun untereinander aufgelistet, das lässt sich sehr einfach ändern, indem
+die `params` Liste in der `Addition` Klasse um ein weiteres `ChangeableContainer` Objekt erweitert wird. Das Ergebnis sieht dann wie folgt aus:
+
+```python
+# Addition.__init__(self)
+self.params = [
+    ChangeableContainer([self.a),
+    ChangeableContainer([self.b])
+]
+```
+
+So werden die Eingaben nebeneinander angezeigt:
+
+![Addition Beispiel alternativ](resources/addition_example2.png)
+
+*Tipp: Damit die 'Zweite Zahl' nicht so nah an der Einheit der 'Erste Zahl' Eingabe steht, kann noch zusätzlich ein `HorizontalSpace` Objekt in einem weiteren ChangeableContainer dazwischen eingefügt werden.*
+
+### 4. Visualisierung (Optional)
+
+Die Applikation kann auch mit einer visuellen Darstellung in 2D und/oder 3D erweitert werden. Für die Visualisierung werden die Bibliotheken
+
+- `matplotlib` - Für das Darstellen von mathematischen Funktionen ([Dokumentation](https://matplotlib.org/))
+- `ipycanvas` - Für das Zeichnen von geometrischen Objekten ([Dokumentation](https://ipycanvas.readthedocs.io/en/latest/))
+- `pythreejs` - Für das Rendern von 3D Objekten ([Documentation](https://pythreejs.readthedocs.io/en/stable/))
+
+verwendet. Ein Demo-Objekt nimmt als optionalen Parameter ein `drawable` Objekt an, welches am Besten mit einer `widgets.HBox` erstellt wird.
+Die `widgets.HBox` ist eine Box, welche die Widgets horizontal anordnet. Die Widgets können entweder `pythreejs.Renderer`, `ipycanvas.canvas.Canvas` oder
+`matplotlib.pyplot.figure.canvas` Objekte sein.
+
+#### Visualisierung mit ipycanvas

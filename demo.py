@@ -130,6 +130,9 @@ class Variable:
     def __ge__(self, other):
         return self.value >= other.value and self.real() >= other.real()
 
+    def __add__(self, other):
+        return Variable(self.value + other.value, self.base, self.unit)
+
 
 class Changeable(Variable):
     """
@@ -215,11 +218,12 @@ class IntChangeable(Changeable):
             min=_min,
             max=_max,
             step=step,
-            continuous_update=False
+            continuous_update=False,
+            layout=widgets.Layout(align_self='center', flex='1 1 auto')
         ), base, unit)
         self.widget.style.handle_color = THEME[theme]
         self.unitLabel = widgets.Label(f'${self.rmunit()}$')
-        self.display = widgets.HBox([widgets.Label(desc), self.widget, self.unitLabel])
+        self.display = BoxHorizontal([widgets.Label(desc), self.widget, self.unitLabel]).display
 
 
 class FloatChangeable(Changeable):
@@ -242,10 +246,11 @@ class FloatChangeable(Changeable):
             max=_max,
             step=step,
             continuous_update=continuous_update,
+            layout=widgets.Layout(align_self='center', flex='0 1 auto')
         ), base, unit, should_update=should_update)
         self.widget.style.handle_color = THEME[theme]
         self.unitLabel = widgets.Label(f"${self.rmunit()}$")
-        self.display = widgets.HBox([widgets.Label(desc), self.widget, self.unitLabel])
+        self.display = BoxHorizontal([widgets.Label(desc), self.widget, self.unitLabel]).display
 
 
 class ToggleGroup(Changeable):
@@ -301,8 +306,9 @@ class BoxHorizontal(PseudoChangeable):
         :param children: List of ipywidgets objects to be displayed in the HBox
         :param spacing: Spacing between each child [Default: 10]
         """
+        box_layout = widgets.Layout(display='flex', flex_flow='row', align_items='stretch', width='100%', justify_content='space-between')
         super().__init__(widgets.HBox(
-            children=children, spacing=spacing
+            children=children, spacing=spacing, layout=box_layout
         ))
         self.display = self.widget
         # self.display.align_content = 'flex-start'
@@ -332,8 +338,10 @@ class BoxVertical(PseudoChangeable):
         :param children: List of ipywidgets objects to be displayed in the VBox
         :param spacing: Spacing between each child [Default: 10]
         """
+        # box_layout = widgets.Layout(display='flex', flex_flow='column', align_items='center', width='100%', justify_content='space-between')
         super().__init__(widgets.VBox(
             children=children, spacing=spacing
+            # , layout=box_layout
         ))
         self.display = self.widget
         self.should_update = True
@@ -434,14 +442,6 @@ class Model(abc.ABC):
         """
         pass
 
-    @abc.abstractmethod
-    def lines(self):
-        """
-        Returns lines, connecting IntersectionForm 1 with IntersectionForm 2 of this Pipe
-        :return: A list of points, which will create a pipe from i1 to i2
-        """
-        pass
-
     def render(self):
         """
         Returns a 3D representation of this model
@@ -516,7 +516,7 @@ class ChangeableContainer:
         :return: None
         """
         if orientation == 'vertical':
-            self.display = widgets.VBox([param.display for param in self.params if param.isActive])
+            self.display = BoxVertical([param.display for param in self.params if param.isActive]).display
         else:
             self.display = widgets.HBox([param.display for param in self.params if param.isActive])
         self.display.layout.align_items = self.alignment
@@ -527,7 +527,7 @@ class Demo:
     Class for setting up a Jupyter interactive Demo of any given implementation of Model
     """
 
-    def __init__(self, params: [ChangeableContainer], model: Model, drawable=None, extra_output=None):
+    def __init__(self, model: Model, drawable=None, extra_output=None, params=None):
         """
         Initializes the demo object with the interactable params of the model and optionally a drawable widget
 
@@ -536,13 +536,13 @@ class Demo:
         :param drawable: [optional] a canvas or similar widget to draw on
         """
         self.model = model
-        self.params = params
+        self.params = self.model.params
         self.canvas = drawable
         self.model.set_callback(self)
         self.widget_output = widgets.Output()
         self.output = widgets.Output()
         self.extra_output = extra_output
-        for container in params:
+        for container in self.params:
             for param in container.params:
                 if param.should_update:
                     param.observe(model.update)

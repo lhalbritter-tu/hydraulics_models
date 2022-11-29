@@ -32,8 +32,6 @@ class Tank(Model):
     """
     Concrete Implementation of demo::Model for simulating a tank with holes
     """
-    def lines(self):
-        pass
 
     def calculate(self):
         """
