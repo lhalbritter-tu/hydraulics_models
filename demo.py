@@ -1,8 +1,37 @@
 import abc
 import ipywidgets as widgets
 import numpy as np
-from IPython.display import display, Latex
+from IPython.display import display, Latex, HTML
 from pythreejs import *
+
+CSS = HTML("""
+<style>
+.output-box {
+    background: #D0E4F5 none no-repeat scroll 22px 17px;
+    font-size: 18px;
+}
+
+.seperator {
+    border-bottom: 2px solid #000;
+}
+
+.heading {
+    // color: #e0eff2;
+    // background: #3a50d9;
+    font: italic bold Georgia, Serif;
+    color: #000000;
+    background:#ffffff;
+    text-align: left;
+    width: 100%;
+}
+
+.dropdown > select {
+    background-color:#d0e4f5;
+    margin-left:0px;
+    width: 100%;
+}
+</style>
+""")
 
 THEME = {
     'slider': "#F2F2F2",
@@ -527,7 +556,7 @@ class Demo:
     Class for setting up a Jupyter interactive Demo of any given implementation of Model
     """
 
-    def __init__(self, model: Model, drawable=None, extra_output=None, params=None):
+    def __init__(self, model: Model, drawable=None, extra_output=None, params=None, custom_css=""):
         """
         Initializes the demo object with the interactable params of the model and optionally a drawable widget
 
@@ -542,6 +571,7 @@ class Demo:
         self.widget_output = widgets.Output()
         self.output = widgets.Output()
         self.extra_output = extra_output
+        self.css = custom_css
         for container in self.params:
             for param in container.params:
                 if param.should_update:
@@ -553,6 +583,8 @@ class Demo:
 
         :return: None
         """
+        display(CSS)
+        display(HTML(self.css))
         display(self.widget_output)
         display(widgets.HTML("<div class='seperator'></div> <br />"))
         if self.canvas is not None:
@@ -595,8 +627,8 @@ class PipeDemo(Demo):
     Implementation of Demo specifically for Pipe Models
     """
 
-    def __init__(self, params: [ChangeableContainer], model: Model, drawable=None, extra_output=None):
-        super().__init__(params, model, drawable, extra_output)
+    def __init__(self, model: Model, drawable=None, extra_output=None):
+        super().__init__(model, drawable=drawable, extra_output=extra_output)
 
     def show(self):
         """

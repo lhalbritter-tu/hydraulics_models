@@ -39,9 +39,9 @@ class Angle(Model):
         self.canvas = c
 
         self.params = [
-            ChangeableContainer([self.mass, self.feather, self.start_angle], alignment='flex-start'),
+            ChangeableContainer([self.mass, self.feather, self.start_angle]),
             ChangeableContainer([HorizontalSpace(10)]),
-            ChangeableContainer([self.t], alignment='flex-start')
+            ChangeableContainer([self.t])
         ]
 
     def circular_frequency(self):
@@ -123,7 +123,7 @@ class AngleCanvas:
             description="Schwingung starten",
             disabled=False,
             button_style='primary',
-            tooltip='Starts an animation of the model.',
+            tooltip='Startet die Schwingung mit den gegebenen Parametern des Winkels. Startet bei t=0s.',
         )
         self.play_btn.observe(self.start_oscilate)
 
@@ -131,7 +131,7 @@ class AngleCanvas:
             description="Schwingung stoppen",
             disabled=False,
             button_style='danger',
-            tooltip='Stops the animation of the model.',
+            tooltip='Stoppt die Schwingung, sobald sie die nächste Ruhelage (t=k*T) erreicht hat. Setzt t=0s.',
         )
         self.stop_btn.observe(self.stop_oscilate)
 
