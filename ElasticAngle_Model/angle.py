@@ -91,7 +91,7 @@ class Angle(Model):
         return f'{(self.start_angle.real() / w_0.real()):.2f} * sin({w_0.real():.2f}t)'
 
     def __repr__(self):
-        return table_style() + f'<table class="tg"><thead><tr><th class="tg-0gzz"><h1>Ergebnisse</h1></th></tr></thead>' \
+        return table_style() + f'<table class="tg"><thead><tr><th class="tg-0gzz"><h1>Ergebnisse {spaces(10)}</h1></th></tr></thead>' \
                                f'<tbody><tr><td class="tg-tdqd">Eigenkreisfrequenz $w_0 = {self.circular_frequency().rounded_latex(2)}$</td></tr>' \
                                f'<tr><td class="tg-tdqd">Schwingungsdauer $T = {self.duration().rounded_latex(2)}$</td></tr>' \
                                f'<tr><td class="tg-tdqd">Eigenfrequenz $f_0 = {self.frequency().rounded_latex(2)}$</td></tr>' \

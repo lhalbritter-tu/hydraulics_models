@@ -1352,7 +1352,7 @@ def table_style():
                 }}
                 @media screen and (max-width: 600px) {{
                   .column {{
-                    width: 100%;
+                    width: 50%;
                   }}
                 }}
                 h1 {{
