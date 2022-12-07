@@ -305,43 +305,51 @@ class AdvancedPipe(Model):
         )
 
         self.u1Param = FloatChangeable(u1, _min=u1, _max=u1 * 5, desc="$U_1$: ", unit="ms^{-1}")
-        self.qParam = FloatChangeable(7.85, _min=0, _max=100, desc="Discharge $~~Q_1$", unit="m^3s^{-1}", step=0.01)
+        self.qParam = FloatChangeable(7.85, _min=0, _max=100, desc="Discharge $~~Q_1$", unit="m^3s^{-1}", step=0.01,
+                                      width='100px')
         self.q = self.qParam.real()
         shLabel = widgets.HTML(f"Cross-sectional shape")
-        shLabel.add_class("heading")
+        # shLabel.add_class("heading")
         self.i1ChoiceGroup = DropDownGroup(['Circle', 'Rectangle'], ['Choose a circular end', 'Choose a rectangular end'])
         self.i1ChoiceWidget = BoxHorizontal([shLabel, self.i1ChoiceGroup.display])
         self.i1dParam = FloatChangeable(self.i1.d if self.i1.type == "Circle" else 1, _min=0.1, _max=5, desc="Diameter $~~D_1$",
-                                        unit="m", step=0.01)
+                                        unit="m", step=0.01,
+                                      width='100px')
         self.i1dParam.set_active(self.i1.type == "Circle")
 
         self.i1wParam = FloatChangeable(self.i1.w if self.i1.type != "Circle" else 1, _min=1, _max=5, desc="Width $~~W_1$",
-                                        unit="m")
+                                        unit="m",
+                                      width='100px')
         self.i1hParam = FloatChangeable(self.i1.h if self.i1.type != "Circle" else 1, _min=1, _max=5, desc="Height $~~H_1$",
-                                        unit="m")
+                                        unit="m",
+                                      width='100px')
         self.i1wParam.set_active(self.i1.type == "Rectangle")
         self.i1hParam.set_active(self.i1.type == "Rectangle")
-        self.i1yParam = FloatChangeable(self.i1.y, _min=-25, _max=25, desc="Z Position $~~z_1$", unit="m")
+        self.i1yParam = FloatChangeable(self.i1.y, _min=-25, _max=25, desc="Z Position $~~z_1$", unit="m",
+                                      width='100px')
 
         self.i2ChoiceGroup = DropDownGroup(['Circle', 'Rectangle'],
                                            ['Choose a circular end', 'Choose a rectangular end'])
         self.i2ChoiceWidget = BoxHorizontal([shLabel, self.i2ChoiceGroup.display], spacing=0)
         self.i2dParam = FloatChangeable(self.i2.d if self.i2.type == "Circle" else 1, _min=0.1, _max=5, desc="Diameter $~~D_2$",
-                                        unit="m", step=0.01)
+                                        unit="m", step=0.01,
+                                      width='100px')
         self.i2dParam.set_active(self.i2.type == "Circle")
 
         self.i2wParam = FloatChangeable(self.i2.w if self.i2.type != "Circle" else 1, _min=1, _max=5, desc="Width $~~W_2$",
-                                        unit="m")
+                                        unit="m",
+                                      width='100px')
         self.i2hParam = FloatChangeable(self.i2.h if self.i2.type != "Circle" else 1, _min=1, _max=5, desc="Height $~~H_2$",
-                                        unit="m")
+                                        unit="m",
+                                      width='100px')
         self.i2wParam.set_active(self.i2.type == "Rectangle")
         self.i2hParam.set_active(self.i2.type == "Rectangle")
-        self.i2yParam = FloatChangeable(self.i2.y, _min=-25, _max=25, desc="Z Position $~~z_2$", unit="m")
+        self.i2yParam = FloatChangeable(self.i2.y, _min=-25, _max=25, desc="Z Position $~~z_2$", unit="m",
+                                      width='100px')
 
         self.params = [
             ChangeableContainer(
                 [self.i1ChoiceWidget, self.i1dParam, self.i1wParam, self.i1hParam, self.i1yParam]),
-            ChangeableContainer([HorizontalSpace(count=15)]),
             ChangeableContainer([self.i2ChoiceWidget, self.i2dParam, self.i2wParam, self.i2hParam, self.i2yParam]),
             ChangeableContainer([self.qParam])
         ]

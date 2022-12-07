@@ -230,7 +230,7 @@ class IntChangeable(Changeable):
     Concrete Implementation of Changeable which implements an IntSlider as UI Widget
     """
 
-    def __init__(self, value, base=0, unit=" ", _min=0, _max=10, desc="", step=1, theme='slider'):
+    def __init__(self, value, base=0, unit=" ", _min=0, _max=10, desc="", step=1, theme='slider', width='250px'):
         """
         Initializes the internal Variable and Changeable with an ipywidgets.IntSlider with the following attributes:
 
@@ -248,16 +248,19 @@ class IntChangeable(Changeable):
             max=_max,
             step=step,
             continuous_update=False,
-            layout=widgets.Layout(align_self='center', flex='1 1 auto')
+            layout=widgets.Layout(align_self='flex-end', width='250px')
         ), base, unit)
         self.widget.style.handle_color = THEME[theme]
-        self.unitLabel = widgets.Label(f'${self.rmunit()}$')
-        self.display = BoxHorizontal([widgets.Label(desc), self.widget, self.unitLabel]).display
+        self.unitLabel = widgets.Label(f'${self.rmunit()}$',
+                                       layout=widgets.Layout(align_self='flex-end', width='150px'))
+        self.display = BoxHorizontal(
+            [widgets.Label(desc, layout=widgets.Layout(justify_content="flex-end", width=width)),
+             self.widget, self.unitLabel]).display
 
 
 class FloatChangeable(Changeable):
     def __init__(self, value, base=0, unit=" ", _min=.0, _max=10.0, desc="", step=0.1, continuous_update=False,
-                 should_update=True, theme='slider'):
+                 should_update=True, theme='slider', width='250px'):
         """
         Initializes the internal Variable and Changeable with an ipywidgets.FloatSlider with the following attributes:
 
@@ -275,11 +278,14 @@ class FloatChangeable(Changeable):
             max=_max,
             step=step,
             continuous_update=continuous_update,
-            layout=widgets.Layout(align_self='center', flex='0 1 auto')
+            layout=widgets.Layout(align_self='center', width='250px')
         ), base, unit, should_update=should_update)
         self.widget.style.handle_color = THEME[theme]
-        self.unitLabel = widgets.Label(f"${self.rmunit()}$")
-        self.display = BoxHorizontal([widgets.Label(desc), self.widget, self.unitLabel]).display
+        self.unitLabel = widgets.Label(f"${self.rmunit()}$",
+                                       layout=widgets.Layout(align_self='flex-end', width='150px'))
+        self.display = BoxHorizontal(
+            [widgets.Label(desc, layout=widgets.Layout(justify_content="flex-end", width=width)),
+             self.widget, self.unitLabel]).display
 
 
 class ToggleGroup(Changeable):
@@ -335,7 +341,9 @@ class BoxHorizontal(PseudoChangeable):
         :param children: List of ipywidgets objects to be displayed in the HBox
         :param spacing: Spacing between each child [Default: 10]
         """
-        box_layout = widgets.Layout(display='flex', flex_flow='row', align_items='stretch', width='100%', justify_content='space-between')
+        box_layout = widgets.Layout(display='flex', flex_flow='row', align_items='stretch', width='100%',
+                                    # justify_content='space-between'
+                                    )
         super().__init__(widgets.HBox(
             children=children, spacing=spacing, layout=box_layout
         ))
@@ -367,10 +375,10 @@ class BoxVertical(PseudoChangeable):
         :param children: List of ipywidgets objects to be displayed in the VBox
         :param spacing: Spacing between each child [Default: 10]
         """
-        # box_layout = widgets.Layout(display='flex', flex_flow='column', align_items='center', width='100%', justify_content='space-between')
+        box_layout = widgets.Layout(display='flex', flex_flow='column', align_items='center')
         super().__init__(widgets.VBox(
             children=children, spacing=spacing
-            # , layout=box_layout
+            , layout=box_layout
         ))
         self.display = self.widget
         self.should_update = True
@@ -423,6 +431,28 @@ class ClickButton(PseudoChangeable):
         self.widget.on_click(func)
 
 
+class SwitchClickButton(ClickButton):
+    def __init__(self, descriptions=["Button1", "Button2"], disabled=False, button_styles=['primary', 'danger'],
+                 tooltips=['tooltip1', 'tooltip2'], active=0):
+        super().__init__(
+            description=descriptions[active],
+            disabled=disabled,
+            button_style=button_styles[active],
+            tooltip=tooltips[active],
+        )
+        self.observe(self.switch)
+        self.active = active
+        self.descriptions = descriptions
+        self.button_styles = button_styles
+        self.tooltips = tooltips
+
+    def switch(self, args):
+        self.active = (self.active + 1) % 2
+        self.widget.description = self.descriptions[self.active]
+        self.widget.button_style = self.button_styles[self.active]
+        self.widget.tooltip = self.tooltips[self.active]
+
+
 class HorizontalDivider(PseudoChangeable):
     """
     Implementation of PseudoChangeable which implements a Horizontal Divider
@@ -444,6 +474,7 @@ class HorizontalSpace(PseudoChangeable):
     """
     Implementation of PseudoChangeable which implements a Horizontal Spacer
     """
+
     def __init__(self, count=3):
         """
         Initializes an ipywidgets.HTML Object with count non-breaking spaces
@@ -627,8 +658,8 @@ class PipeDemo(Demo):
     Implementation of Demo specifically for Pipe Models
     """
 
-    def __init__(self, model: Model, drawable=None, extra_output=None):
-        super().__init__(model, drawable=drawable, extra_output=extra_output)
+    def __init__(self, model: Model, drawable=None, extra_output=None, custom_css=""):
+        super().__init__(model, drawable=drawable, extra_output=extra_output, custom_css=custom_css)
 
     def show(self):
         """
@@ -636,6 +667,8 @@ class PipeDemo(Demo):
 
         :return: None
         """
+        display(CSS)
+        display(HTML(self.css))
         display(self.widget_output)
         display(widgets.HTML("<div class='seperator'></div> <br />"))
         if self.canvas is not None:
@@ -683,6 +716,7 @@ class Plot:
         self.ax.set_xlim(xlim)
         self.ax.set_ylim(ylim)
         self.widget = self.fig.canvas
+        self.widget.header_visible = False
 
     def update_plot(self, x=None, y=None, title=None, xlabel=None, ylabel=None, xlim=None, ylim=None):
         """
@@ -902,6 +936,7 @@ class Cylinder:
     """
     This class generates the vertices, normals and uvs of a 3D Cylinder and can be used in any pythreejs scene
     """
+
     def __init__(self, radiusTop, radiusBottom, height, segments, h_segments):
         """
         Calculates the vertices, normals and uvs of the cylinder
@@ -1112,6 +1147,7 @@ class MultiPlot:
     """
     Wrapper class for matplotlib.pyplot which supports multiple plots on one figure
     """
+
     def __init__(self, width=3, height=3):
         self.width = width
         self.height = height
@@ -1272,6 +1308,7 @@ class ScatterPlot(Plot):
     """
     Class that implements a scatter plot
     """
+
     def __init__(self, x, y, width=5, height=3.5, title="Plot", xlabel="x", ylabel="y", xlim=None, ylim=None):
         """
         Initializes a scatter plot with given values
@@ -1359,3 +1396,30 @@ def table_style():
                     margin-bottom:0px;
                 }}
                 </style>"""
+
+
+class Table:
+    def __init__(self, title, columns):
+        self.title = title
+        self.columns = columns
+        self.content = f'<table class="tg"><thead><tr>'
+        for col in title:
+            self.content += f'<th class="tg-0gzz"><h1>{col} {spaces(10)}</h1></th>'
+        self.content += f'</tr></thead><tbody>'
+
+    def add_row(self, content: []):
+        self.content += f'<tr>'
+        for col in content:
+            self.content += f'<td class="tg-tdqd">{col}</td>'
+        self.content += f'</tr>'
+
+    def add_rows(self, content: [[]]):
+        for row in content:
+            self.add_row(row)
+
+    def end_table(self):
+        self.content += f'</tbody></table>'
+
+    def show(self):
+        self.end_table()
+        return table_style() + self.content
