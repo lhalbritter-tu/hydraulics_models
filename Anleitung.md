@@ -12,7 +12,7 @@ Um die Modelle lokal auszuführen, sind die folgenden Tools notwendig:
 
 Ist die Anaconda Installation abgeschlossen muss nun unter Windows die *Anaconda Prompt* ausgeführt werden. In dieser kann ganz normal über den *cd \<path\>* Befehl in den Projekt-Ordner *hydraulics-models* navigiert werden. Das sollte dann in etwa so aussehen:
 
-<img src="C:\Users\halbritter\AppData\Roaming\Typora\typora-user-images\image-20221117114354560.png" alt="image-20221117114354560" style="zoom: 80%;" />
+![Terminal](resources/terminal1)
 
 ### Linux
 
@@ -22,7 +22,7 @@ Unter Linux kann das normale Terminal gestartet werden und die *Anaconda Umgebun
 
 In dem Projekt-Ordner sollte ein File mit dem Namen *environment.yml* zur Verfügung stehen. Die Umgebung *hydraulics* lässt sich einfach mit dem Befehl `conda env create -f environment.yml` installieren. Nach korrekter Ausführung sollte nun über den Befehl `conda activate hydraulics` die neue Umgebung aktiviert werden können. Ob das ganze erfolgreich war ist sichtbar anhand des Umgebungsnamen ganz links. Zeigt dieser *(hydraulics)* an, war die Installation erfolgreich.
 
-![image-20221117115018544](C:\Users\halbritter\AppData\Roaming\Typora\typora-user-images\image-20221117115018544.png)
+![Terminal](resources/terminal2)
 
 ## Benutzung
 
