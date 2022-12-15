@@ -35,12 +35,13 @@ class Angle(Model):
         self.start_angle = FloatChangeable(start_angle, unit="rad/s", _min=0.1, _max=pymath.pi / 2, step=0.001, desc="Anfangswinkelgeschwindigkeit $~~\Phi_0$")
 
         self.w_0 = self.circular_frequency().real()
-        self.t = FloatChangeable(0, unit="s", _min=-self.duration().real() * 3, _max=self.duration().real() * 3, desc="Zeit $~~t$", continuous_update=True, step=self.duration().real() / 100, should_update=True)
+        self.t = FloatChangeable(0, unit="s", _min=-self.duration().real() * 3, _max=self.duration().real() * 3,
+                                 desc="Zeit $~~t$", continuous_update=True, step=self.duration().real() / 100,
+                                 should_update=True, width='50px')
         self.canvas = c
 
         self.params = [
             ChangeableContainer([self.mass, self.feather, self.start_angle]),
-            ChangeableContainer([HorizontalSpace(10)]),
             ChangeableContainer([self.t])
         ]
 
@@ -91,12 +92,15 @@ class Angle(Model):
         return f'{(self.start_angle.real() / w_0.real()):.2f} * sin({w_0.real():.2f}t)'
 
     def __repr__(self):
-        return table_style() + f'<table class="tg"><thead><tr><th class="tg-0gzz"><h1>Ergebnisse</h1></th></tr></thead>' \
-                               f'<tbody><tr><td class="tg-tdqd">Eigenkreisfrequenz $w_0 = {self.circular_frequency().rounded_latex(2)}$</td></tr>' \
-                               f'<tr><td class="tg-tdqd">Schwingungsdauer $T = {self.duration().rounded_latex(2)}$</td></tr>' \
-                               f'<tr><td class="tg-tdqd">Eigenfrequenz $f_0 = {self.frequency().rounded_latex(2)}$</td></tr>' \
-                               f'<tr><td class="tg-tdqd">Lösung des Anfangswertproblems $\phi(t) = {self.get_evaluation()} ~~ [\mathrm{{rad}}]$</td></tr>' \
-                               f'<tr><td class="tg-tdqd">Lösung für $\phi({self.t.rounded()}) = {self.evaluate(self.t.real()).rounded_latex(2)}$</td></tr></tbody></table>' \
+        table = Table(["Funktion", "Ergebnis"], 2)
+        table.add_rows([
+            [f'Eigenkreisfrequenz $w_0 = $', f'${self.circular_frequency().rounded_latex(2)}$'],
+            [f'Schwingungsdauer $T = $', f'${self.duration().rounded_latex(2)}$'],
+            [f'Eigenfrequenz $f_0 = $', f'${self.frequency().rounded_latex(2)}$'],
+            [f'Lösung des Anfangswertproblems $\phi(t) = $', f'${self.get_evaluation()} ~~ [\mathrm{{rad}}]$'],
+            [f'Lösung für $\phi({self.t.rounded()}) = $',f'${self.evaluate(self.t.real()).rounded_latex(2)}$']
+        ])
+        return table.show()
 
     def __str__(self):
         return self.__repr__()
@@ -119,13 +123,14 @@ class AngleCanvas:
         self.plot.grid()
         self.line = self.plot.add_line(0, color='red')
         self.canvas = Canvas(width=width, height=height)
-        self.play_btn = ClickButton(
-            description="Schwingung starten",
+        self.ctrl_btn = SwitchClickButton(
+            descriptions=["Schwingung starten", "Schwingung stoppen"],
             disabled=False,
-            button_style='primary',
-            tooltip='Startet die Schwingung mit den gegebenen Parametern des Winkels. Startet bei t=0s.',
+            button_styles=['primary', 'danger'],
+            tooltips=['Startet die Schwingung mit den gegebenen Parametern des Winkels. Startet bei t=0s.',
+                      'Stoppt die Schwingung, sobald sie die nächste Ruhelage (t=k*T) erreicht hat. Setzt t=0s.'],
         )
-        self.play_btn.observe(self.start_oscilate)
+        self.ctrl_btn.observe(self.control_oscilation)
 
         self.stop_btn = ClickButton(
             description="Schwingung stoppen",
@@ -134,6 +139,8 @@ class AngleCanvas:
             tooltip='Stoppt die Schwingung, sobald sie die nächste Ruhelage (t=k*T) erreicht hat. Setzt t=0s.',
         )
         self.stop_btn.observe(self.stop_oscilate)
+
+        self.plot_box = BoxVertical([self.ctrl_btn.display, self.plot.widget]).display
 
         self.t = 0
         self.L = L
@@ -150,7 +157,7 @@ class AngleCanvas:
         :param args: Arguments for the oscilation
         :return: None
         """
-        self.start_oscilate(args)
+        self.control_oscilation(args)
 
     def oscilate(self):
         """
@@ -406,18 +413,25 @@ class AngleCanvas:
             self.canvas.stroke_line(x, y + y_offset, x + x_offset, y)
             x += x_offset
 
-    def start_oscilate(self, btn):
+    def control_oscilation(self, btn):
         """
         Start the oscillation thread of the system
 
         :param btn: catcher param
         :return: None
         """
-        if self.osc is None:
+        if not self.oscilating:
             self.oscilating = True
             self.osc = threading.Thread(target=self.oscilate)
             self.osc.start()
-            self.play_btn.disabled = True
+            return
+        if self.oscilating:
+            self.oscilating = False
+            self.osc.join()
+            self.osc = None
+            self.pl = None
+            self.draw(0)
+            return
 
     def stop_oscilate(self, btn):
         """

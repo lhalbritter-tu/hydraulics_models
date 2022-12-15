@@ -75,11 +75,11 @@ class Tank(Model):
         self.holes = holes
         self.hole_callback = self.holes + create_holes(max_holes - len(self.holes), self.holes[0].d)
         self.canvas = c
-        self.q = FloatChangeable(q, _min=0.01, _max=1.0, desc="Discharge $~~Q_{in}$", unit="m³s⁻¹", step=0.01)
-        self.depth = FloatChangeable(max_depth, _min=0.5, _max=5.0, desc="Tank depth $~~D$", unit="m")
+        self.q = FloatChangeable(q, _min=0.01, _max=1.0, desc="Discharge $~~Q_{in}~~$", unit="m³s⁻¹", step=0.01, width='150px')
+        self.depth = FloatChangeable(max_depth, _min=0.5, _max=5.0, desc="Tank depth $~~D$", unit="m", width='150px')
         #self.depth.observe(self.draw)
-        self.nHoles = IntChangeable(len(holes), _min=5, _max=max_holes, desc="Number of holes $~~n_{holes}$", unit="~~")
-        self.dHoles = FloatChangeable(holes[0].d * 10**(-2), unit="m", base=0, _min=0.005, _max=0.1, desc="Diameter $~~d_{holes}$", step=0.001)
+        self.nHoles = IntChangeable(len(holes), _min=5, _max=max_holes, desc="Number of holes $~~n_{holes}$", unit="~~", width='150px')
+        self.dHoles = FloatChangeable(holes[0].d * 10**(-2), unit="m", base=0, _min=0.005, _max=0.1, desc="Diameter $~~d_{holes}$" , step=0.001, width='150px')
 
         self.plot_selection = ToggleGroup(["Discharge", "Number of Holes", "Diameter of Holes"], tooltips=["Shows the plot in dependence of Discharge Q",
                                                                                                             "Shows the plot in dependence of Number of Holes N",
