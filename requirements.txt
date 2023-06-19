@@ -4,3 +4,4 @@ ipython~=8.4.0
 numpy~=1.22.4
 matplotlib
 ipympl
+jupyter-matlab-proxy
