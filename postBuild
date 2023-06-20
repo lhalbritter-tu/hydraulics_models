@@ -1,0 +1,8 @@
+wget -q https://www.mathworks.com/mpm/glnxa64/mpm && \
+chmod +x mpm && \
+./mpm install \
+--release=R2023a \
+--destination=/opt/matlab \
+--products MATLAB Simulink Signal_Processing_Toolbox && \
+rm -f mpm /tmp/mathworks_root.log && \
+ln -s /opt/matlab/bin/matlab /usr/local/bin/matlab
