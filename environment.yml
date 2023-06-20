@@ -12,4 +12,6 @@ dependencies:
   - ipympl
   - matplotlib
   - voila
-  - jupyter-matlab-proxy
+
+  - pip:
+    - jupyter-matlab-proxy
